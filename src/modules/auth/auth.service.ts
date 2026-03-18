@@ -109,6 +109,65 @@ export class AuthService {
   }
 
   /**
+   * Create a new user as an admin (bypasses rate limits and email confirmation)
+   */
+  async createAdminUser(data: SignUpData): Promise<AuthResponse> {
+    try {
+      const adminClient = createAdminClient();
+      
+      const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
+        email: data.email,
+        password: data.password,
+        email_confirm: true, // Auto confirm so they can login immediately
+        user_metadata: {
+          name: data.name,
+          phone: data.phone,
+          role: "member",
+        },
+      });
+
+      if (authError) {
+        if (authError.message.includes("already")) {
+          throw new ConflictError("Email already registered");
+        }
+        throw new AuthenticationError(authError.message);
+      }
+
+      if (!authData.user) {
+        throw new ServerError("Failed to create user");
+      }
+
+      // Create user profile in public.users table
+      await this.createUserProfile(adminClient, {
+        id: authData.user.id,
+        email: data.email,
+        name: data.name,
+        phone: data.phone,
+        role: "member",
+      });
+
+      return {
+        user: {
+          id: authData.user.id,
+          email: authData.user.email!,
+          name: data.name,
+          role: "member",
+        },
+        token: "", // No token when admin creates another user
+      };
+    } catch (error) {
+      if (
+        error instanceof ConflictError ||
+        error instanceof AuthenticationError ||
+        error instanceof ServerError
+      ) {
+        throw error;
+      }
+      throw new ServerError(`Create user failed: ${error}`);
+    }
+  }
+
+  /**
    * Sign in with email and password
    */
   async signIn(data: SignInData): Promise<AuthResponse> {

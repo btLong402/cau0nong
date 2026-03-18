@@ -35,7 +35,7 @@ export class UsersService {
     const authService = await createAuthService();
 
     // Sign up via AuthService (which also creates the profile)
-    const result = await authService.signUp({
+    const result = await authService.createAdminUser({
       email: data.email,
       password: data.password || "123456", // Default password if not provided
       name: data.name,

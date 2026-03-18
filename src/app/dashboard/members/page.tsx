@@ -67,7 +67,17 @@ export default function MembersPage() {
 
       if (!response.ok) {
         const result = await response.json();
-        throw new Error(result.error || 'Failed to create member');
+        let errorMessage = 'Failed to create member';
+        if (result.error) {
+          if (typeof result.error === 'string') {
+            errorMessage = result.error;
+          } else if (result.error.message) {
+            errorMessage = result.error.message;
+          } else {
+            errorMessage = JSON.stringify(result.error);
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       // Success
@@ -200,36 +210,36 @@ export default function MembersPage() {
               </div>
             )}
 
-            <form onSubmit={handleCreateMember} className="space-y-3">
+            <form onSubmit={handleCreateMember} className="space-y-4 mt-2">
               <div>
-                <label className="text-xs font-semibold uppercase text-[var(--muted)]">Họ tên</label>
+                <label className="mb-1 block text-xs font-medium text-[var(--muted)] uppercase">Họ tên</label>
                 <input
                   type="text"
                   required
-                  className="input mt-1"
+                  className="input-field"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Nguyễn Văn A"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold uppercase text-[var(--muted)]">Email</label>
+                  <label className="mb-1 block text-xs font-medium text-[var(--muted)] uppercase">Email</label>
                   <input
                     type="email"
                     required
-                    className="input mt-1"
+                    className="input-field"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="email@example.com"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold uppercase text-[var(--muted)]">Số điện thoại</label>
+                  <label className="mb-1 block text-xs font-medium text-[var(--muted)] uppercase">Số điện thoại</label>
                   <input
                     type="tel"
                     required
-                    className="input mt-1"
+                    className="input-field"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     placeholder="09xxx..."
@@ -237,19 +247,19 @@ export default function MembersPage() {
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold uppercase text-[var(--muted)]">Mật khẩu (mặc định: 123456)</label>
+                <label className="mb-1 block text-xs font-medium text-[var(--muted)] uppercase">Mật khẩu (mặc định: 123456)</label>
                 <input
                   type="password"
-                  className="input mt-1"
+                  className="input-field"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   placeholder="Để trống nếu dùng mặc định"
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold uppercase text-[var(--muted)]">Vai trò</label>
+                <label className="mb-1 block text-xs font-medium text-[var(--muted)] uppercase">Vai trò</label>
                 <select 
-                  className="input mt-1"
+                  className="input-field"
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                 >
@@ -258,7 +268,7 @@ export default function MembersPage() {
                 </select>
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-3 pt-2">
                 <button 
                   type="button" 
                   onClick={() => setIsModalOpen(false)}
