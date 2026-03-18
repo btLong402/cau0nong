@@ -1,6 +1,8 @@
--- Migration: 001_initial_schema.sql
--- Description: Initialize all tables for CLB Cầu Lông management system
--- Created: 2025-01-15
+-- ============================================================================
+-- FULL DATABASE SCHEMA — CLB Cầu Lông Management System
+-- Chạy toàn bộ script này trong Supabase SQL Editor
+-- https://supabase.com/dashboard/project/[project-id]/sql
+-- ============================================================================
 
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -73,7 +75,6 @@ CREATE TABLE IF NOT EXISTS months (
 CREATE INDEX IF NOT EXISTS idx_months_month_year ON months(month_year);
 CREATE INDEX IF NOT EXISTS idx_months_status ON months(status);
 
--- RLS for months table
 ALTER TABLE months ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "All authenticated users can read months"
@@ -107,7 +108,6 @@ CREATE INDEX IF NOT EXISTS idx_sessions_month_id ON sessions(month_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_session_date ON sessions(session_date);
 CREATE INDEX IF NOT EXISTS idx_sessions_payer_user_id ON sessions(payer_user_id);
 
--- RLS for sessions table
 ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "All authenticated users can read sessions"
@@ -142,7 +142,6 @@ CREATE TABLE IF NOT EXISTS session_attendance (
 CREATE INDEX IF NOT EXISTS idx_attendance_session_id ON session_attendance(session_id);
 CREATE INDEX IF NOT EXISTS idx_attendance_user_id ON session_attendance(user_id);
 
--- RLS for session_attendance table
 ALTER TABLE session_attendance ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can read their own attendance"
@@ -180,7 +179,6 @@ CREATE INDEX IF NOT EXISTS idx_shuttlecock_details_month_id ON shuttlecock_detai
 CREATE INDEX IF NOT EXISTS idx_shuttlecock_details_purchase_date ON shuttlecock_details(purchase_date);
 CREATE INDEX IF NOT EXISTS idx_shuttlecock_details_buyer_user_id ON shuttlecock_details(buyer_user_id);
 
--- RLS for shuttlecock_details table
 ALTER TABLE shuttlecock_details ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "All authenticated users can read shuttlecock details"
@@ -196,7 +194,7 @@ CREATE POLICY "Only admins can update shuttlecock details"
   USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'));
 
 -- ============================================================================
--- TABLE: monthly_settlements (For Phase 2+)
+-- TABLE: monthly_settlements
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS monthly_settlements (
@@ -220,7 +218,6 @@ CREATE INDEX IF NOT EXISTS idx_settlements_month_id ON monthly_settlements(month
 CREATE INDEX IF NOT EXISTS idx_settlements_user_id ON monthly_settlements(user_id);
 CREATE INDEX IF NOT EXISTS idx_settlements_is_paid ON monthly_settlements(is_paid);
 
--- RLS for monthly_settlements table
 ALTER TABLE monthly_settlements ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Admins only for settlements"
@@ -228,7 +225,7 @@ CREATE POLICY "Admins only for settlements"
   USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'));
 
 -- ============================================================================
--- TABLE: vietqr_payments (For Phase 3+)
+-- TABLE: vietqr_payments
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS vietqr_payments (
@@ -244,7 +241,6 @@ CREATE TABLE IF NOT EXISTS vietqr_payments (
 CREATE INDEX IF NOT EXISTS idx_vietqr_payments_settlement_id ON vietqr_payments(settlement_id);
 CREATE INDEX IF NOT EXISTS idx_vietqr_payments_user_id ON vietqr_payments(user_id);
 
--- RLS for vietqr_payments table
 ALTER TABLE vietqr_payments ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Admins only for VietQR payments"
@@ -252,7 +248,7 @@ CREATE POLICY "Admins only for VietQR payments"
   USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'));
 
 -- ============================================================================
--- TABLE: events (For Phase 4+)
+-- TABLE: events
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS events (
@@ -260,14 +256,13 @@ CREATE TABLE IF NOT EXISTS events (
   event_name VARCHAR(255) NOT NULL,
   event_date DATE NOT NULL,
   total_support NUMERIC(10,2) DEFAULT 0,
-  total_expense NUMERIC(10,2) NOT NULL CHECK (total_expense > 0),
+  total_expense NUMERIC(10,2) DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_events_event_date ON events(event_date);
 
--- RLS for events table
 ALTER TABLE events ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "All authenticated users can read events"
@@ -279,10 +274,65 @@ CREATE POLICY "Only admins can manage events"
   USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'));
 
 -- ============================================================================
--- TRIGGERS (Phase 2+)
+-- TABLE: event_participants
 -- ============================================================================
 
--- Trigger to update shuttlecock expense sum when details change
+CREATE TABLE IF NOT EXISTS event_participants (
+  id SERIAL PRIMARY KEY,
+  event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  contribution_per_person NUMERIC(10,2) DEFAULT 0,
+  is_paid BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(event_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_event_participants_event_id ON event_participants(event_id);
+CREATE INDEX IF NOT EXISTS idx_event_participants_user_id ON event_participants(user_id);
+
+ALTER TABLE event_participants ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "All authenticated users can read event participants"
+  ON event_participants FOR SELECT
+  USING (true);
+
+CREATE POLICY "Only admins can manage event participants"
+  ON event_participants FOR ALL
+  USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'));
+
+-- ============================================================================
+-- TABLE: videos (Phase 4 — Thu vien video)
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS videos (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  youtube_url VARCHAR(500) NOT NULL,
+  description TEXT,
+  category VARCHAR(50) DEFAULT 'general',
+  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_videos_category ON videos(category);
+CREATE INDEX IF NOT EXISTS idx_videos_created_at ON videos(created_at);
+
+ALTER TABLE videos ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can read videos"
+  ON videos FOR SELECT
+  USING (true);
+
+CREATE POLICY "Admins can manage videos"
+  ON videos FOR ALL
+  USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'));
+
+-- ============================================================================
+-- TRIGGERS
+-- ============================================================================
+
+-- Trigger: update shuttlecock expense sum when details change
 CREATE OR REPLACE FUNCTION update_total_shuttlecock_expense()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -309,7 +359,7 @@ CREATE TRIGGER trigger_update_total_shuttlecock_expense
   FOR EACH ROW
   EXECUTE FUNCTION update_total_shuttlecock_expense();
 
--- Trigger to update user updated_at timestamp
+-- Trigger: update user updated_at timestamp
 CREATE OR REPLACE FUNCTION update_user_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -324,7 +374,7 @@ CREATE TRIGGER trigger_update_user_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_user_updated_at();
 
--- Trigger to update month updated_at timestamp
+-- Trigger: update month updated_at timestamp
 CREATE OR REPLACE FUNCTION update_month_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -339,7 +389,7 @@ CREATE TRIGGER trigger_update_month_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_month_updated_at();
 
--- Trigger to update session updated_at timestamp
+-- Trigger: update session updated_at timestamp
 CREATE OR REPLACE FUNCTION update_session_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -358,26 +408,24 @@ CREATE TRIGGER trigger_update_session_updated_at
 -- PERMISSIONS
 -- ============================================================================
 
--- Grant usage to authenticated role
 GRANT USAGE ON SCHEMA public TO authenticated;
-GRANT ALL PRIVILEGES ON DATABASE postgres TO authenticated;
 
--- Grant table permissions
 GRANT SELECT, UPDATE ON TABLE users TO authenticated;
-GRANT SELECT ON TABLE months TO authenticated;
-GRANT SELECT ON TABLE sessions TO authenticated;
-GRANT SELECT ON TABLE session_attendance TO authenticated;
-GRANT SELECT ON TABLE shuttlecock_details TO authenticated;
-GRANT SELECT ON TABLE monthly_settlements TO authenticated;
-GRANT SELECT ON TABLE vietqr_payments TO authenticated;
-GRANT SELECT ON TABLE events TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE months TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE sessions TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE session_attendance TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE shuttlecock_details TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE monthly_settlements TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE vietqr_payments TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE events TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE event_participants TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE videos TO authenticated;
+
+-- Grant sequence permissions (needed for INSERT with serial columns)
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 
 -- ============================================================================
--- MIGRATION STATUS
+-- DONE! All 10 tables created:
+-- users, months, sessions, session_attendance, shuttlecock_details,
+-- monthly_settlements, vietqr_payments, events, event_participants, videos
 -- ============================================================================
--- Migration: 001_initial_schema.sql
--- Status: APPLIED
--- Tables created: 7 (users, months, sessions, session_attendance, shuttlecock_details, monthly_settlements, vietqr_payments, events)
--- RLS policies: Enabled on all tables
--- Indexes: Created for all foreign keys and frequently queried columns
--- Triggers: 4 triggers for timestamp and computed field updates

@@ -1,128 +1,106 @@
+/**
+ * Dashboard Overview Page
+ * Analytics dashboard with overview stats, attendance ranking, and expense trend
+ */
+
 'use client';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-
-interface Month {
-  id: number;
-  month_year: string;
-  status: string;
-}
+import { OverviewCards } from '@/modules/analytics/components/OverviewCards';
+import { AttendanceRankingChart } from '@/modules/analytics/components/AttendanceRankingChart';
+import { ExpenseTrendChart } from '@/modules/analytics/components/ExpenseTrendChart';
+import type { OverviewStats, AttendanceRankItem, ExpenseTrendItem } from '@/modules/analytics/types';
 
 export default function DashboardPage() {
-  const [months, setMonths] = useState<Month[]>([]);
-  const [stats, setStats] = useState<{ totalMembers: number; openMonths: number; totalSessions: number } | null>(
-    null,
-  );
+  const [overview, setOverview] = useState<OverviewStats | null>(null);
+  const [attendance, setAttendance] = useState<AttendanceRankItem[] | null>(null);
+  const [expense, setExpense] = useState<ExpenseTrendItem[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchData() {
+    async function fetchAnalytics() {
       try {
-        const response = await fetch('/api/months');
+        const [overviewRes, attendanceRes, expenseRes] = await Promise.all([
+          fetch('/api/analytics?type=overview', { credentials: 'include' }),
+          fetch('/api/analytics?type=attendance', { credentials: 'include' }),
+          fetch('/api/analytics?type=expense', { credentials: 'include' }),
+        ]);
 
-        if (!response.ok) throw new Error('Failed to fetch months');
-
-        const data = await response.json();
-        setMonths(data.data?.months || []);
-
-        // Calculate stats
-        const openMonths = data.data?.months?.filter((m: Month) => m.status === 'open') || [];
-        setStats({
-          totalMembers: 0,
-          openMonths: openMonths.length,
-          totalSessions: 0,
-        });
-      } catch (error) {
-        console.error('Error fetching data:', error);
+        if (overviewRes.ok) {
+          const d = await overviewRes.json();
+          setOverview(d.data?.data || null);
+        }
+        if (attendanceRes.ok) {
+          const d = await attendanceRes.json();
+          setAttendance(d.data?.data || null);
+        }
+        if (expenseRes.ok) {
+          const d = await expenseRes.json();
+          setExpense(d.data?.data || null);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Loi tai du lieu');
       } finally {
         setLoading(false);
       }
     }
 
-    fetchData();
+    fetchAnalytics();
   }, []);
 
-  if (loading) {
-    return <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />;
+  if (error) {
+    return (
+      <div className="py-16 text-center">
+        <p className="text-red-600">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="btn-primary mt-4"
+        >
+          Thu lai
+        </button>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-semibold text-slate-900">Tong quan he thong</h1>
-          <p className="mt-1 text-sm text-slate-600">Theo doi nhanh cac chi so van hanh co ban cua CLB.</p>
+          <h1 className="text-3xl font-semibold text-slate-900">
+            Tong quan he thong
+          </h1>
+          <p className="mt-1 text-sm text-slate-600">
+            Theo doi nhanh cac chi so van hanh co ban cua CLB.
+          </p>
         </div>
         <Link href="/dashboard/months" className="btn-secondary">
           Quan ly ky
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <article className="surface-card-soft p-5">
-          <p className="text-sm text-slate-600">Thanh vien hoat dong</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-900">{stats?.totalMembers || 0}</p>
-          <p className="mt-2 text-xs font-medium text-slate-500">Cap nhat theo du lieu profile</p>
-        </article>
+      {/* Overview Stats */}
+      <OverviewCards stats={overview} loading={loading} />
 
-        <article className="surface-card-soft p-5">
-          <p className="text-sm text-slate-600">Ky quan ly dang mo</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-900">{stats?.openMonths || 0}</p>
-          <p className="mt-2 text-xs font-medium text-slate-500">Co the tao buoi tap moi</p>
-        </article>
+      {/* Charts Row */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Attendance Ranking */}
+        <section className="rounded-xl border border-slate-200 bg-white p-5">
+          <h2 className="mb-4 text-base font-semibold text-slate-900">
+            Xep hang di deu
+          </h2>
+          <AttendanceRankingChart data={attendance} loading={loading} />
+        </section>
 
-        <article className="surface-card-soft p-5">
-          <p className="text-sm text-slate-600">Tong buoi tap</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-900">{stats?.totalSessions || 0}</p>
-          <p className="mt-2 text-xs font-medium text-slate-500">Thong ke theo ky hien hanh</p>
-        </article>
+        {/* Expense Trend */}
+        <section className="rounded-xl border border-slate-200 bg-white p-5">
+          <h2 className="mb-4 text-base font-semibold text-slate-900">
+            Chi phi theo thang
+          </h2>
+          <ExpenseTrendChart data={expense} loading={loading} />
+        </section>
       </div>
-
-      <section className="surface-card overflow-hidden">
-        <div className="border-b border-slate-200 px-5 py-4">
-          <h2 className="text-lg font-semibold text-slate-900">Ky quan ly gan day</h2>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[620px]">
-            <thead className="bg-slate-50 text-left text-sm text-slate-700">
-              <tr>
-                <th className="px-5 py-3 font-medium">Ky</th>
-                <th className="px-5 py-3 font-medium">Trang thai</th>
-                <th className="px-5 py-3 font-medium">Hanh dong</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200 text-sm text-slate-800">
-              {months.slice(0, 6).map((month) => (
-                <tr key={month.id} className="hover:bg-slate-50">
-                  <td className="px-5 py-3">
-                    {new Date(month.month_year).toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' })}
-                  </td>
-                  <td className="px-5 py-3">
-                    <span
-                      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                        month.status === 'open' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'
-                      }`}
-                    >
-                      {month.status === 'open' ? 'Dang mo' : 'Da dong'}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3">
-                    <Link href="/dashboard/months" className="font-medium text-blue-700 hover:text-blue-900">
-                      Xem chi tiet
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {months.length === 0 && (
-          <div className="px-5 py-8 text-sm text-slate-600">Chua co ky quan ly nao. Hay tao ky dau tien.</div>
-        )}
-      </section>
     </div>
   );
 }

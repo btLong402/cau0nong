@@ -21,6 +21,8 @@ const navItems = [
   { href: '/dashboard/months', label: 'Ky quan ly' },
   { href: '/dashboard/sessions', label: 'Buoi tap' },
   { href: '/dashboard/settlements', label: 'Quyet toan' },
+  { href: '/dashboard/events', label: 'Su kien' },
+  { href: '/dashboard/videos', label: 'Thu vien video' },
 ];
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
