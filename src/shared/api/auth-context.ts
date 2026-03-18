@@ -82,7 +82,18 @@ export async function extractAuthContext(
 
   // Extract expected fields from JWT payload
   const userId = payload.sub || payload.user_id || payload.id;
-  const userRole = (payload.role || "member") as UserRole;
+  
+  // Supabase stores roles in app_metadata or user_metadata
+  const appMetadata = (payload.app_metadata as Record<string, unknown>) || {};
+  const userMetadata = (payload.user_metadata as Record<string, unknown>) || {};
+  
+  const userRole = (
+    appMetadata.role || 
+    userMetadata.role || 
+    payload.role || 
+    "member"
+  ) as UserRole;
+  
   const email = payload.email as string | undefined;
 
   if (!userId) {
@@ -190,9 +201,19 @@ export async function tryExtractAuthContext(
       return createAnonymousContext();
     }
 
+    const appMetadata = (payload.app_metadata as Record<string, unknown>) || {};
+    const userMetadata = (payload.user_metadata as Record<string, unknown>) || {};
+    
+    const userRole = (
+      appMetadata.role || 
+      userMetadata.role || 
+      payload.role || 
+      "member"
+    ) as UserRole;
+
     return {
       userId: String(userId),
-      userRole: (payload.role || "member") as UserRole,
+      userRole,
       isAuthenticated: true,
       email: payload.email as string | undefined,
     };

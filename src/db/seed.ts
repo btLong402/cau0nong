@@ -18,12 +18,13 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Helper to create Supabase Auth user
-async function createAuthUser(email: string, password: string) {
+async function createAuthUser(email: string, password: string, role: string = 'member') {
   const { data, error } = await supabase.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
     user_metadata: {
+      role,
       created_via_seed: true,
     },
   });
@@ -179,7 +180,7 @@ async function seedDatabase() {
   const userMap: Record<string, string> = {};
 
   for (const user of testUsers) {
-    const userId = await createAuthUser(user.email, user.password);
+    const userId = await createAuthUser(user.email, user.password, user.role);
     if (userId) {
       const created = await createUserProfile(userId, user.name, user.phone, user.email, user.role);
       if (created) {
