@@ -53,7 +53,7 @@ describe('Calculations Engine', () => {
       expect(calculateTotalCourtFeeInMonth(sessions, attendances, 'non-existent')).toBe(0);
       
       // Test when session has no attendees at all
-      const emptySessions = [{ id: 3, month_id: 1, session_date: '', court_expense_amount: 100, payer_user_id: '', status: 'open', created_at: '', updated_at: '' }];
+      const emptySessions: Session[] = [{ id: 3, month_id: 1, session_date: '', court_expense_amount: 100, payer_user_id: '', status: 'open', created_at: '', updated_at: '' }];
       expect(calculateTotalCourtFeeInMonth(emptySessions, [], 'u1')).toBe(0);
     });
   });

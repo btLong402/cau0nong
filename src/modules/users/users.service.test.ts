@@ -59,7 +59,7 @@ describe('UsersService', () => {
 
   describe('getMember', () => {
     it('should throw NotFoundError if member does not exist', async () => {
-      vi.mocked(mockUsersRepo.findById).mockResolvedValueOnce(null);
+      vi.mocked(mockUsersRepo.findById).mockResolvedValueOnce(null as any);
       await expect(service.getMember('u1')).rejects.toThrow('Member not found');
     });
 

@@ -71,7 +71,7 @@ describe('MonthsService', () => {
 
   describe('getMonth', () => {
     it('should throw NotFoundError if month does not exist', async () => {
-      vi.mocked(mockMonthsRepo.findById).mockResolvedValueOnce(null);
+      vi.mocked(mockMonthsRepo.findById).mockResolvedValueOnce(null as any);
       await expect(service.getMonth(1)).rejects.toThrow('Month not found');
     });
 
@@ -158,7 +158,7 @@ describe('MonthsService', () => {
 
   describe('updateShuttlecockExpense', () => {
     it('should verify month exists before updating expense', async () => {
-      vi.mocked(mockMonthsRepo.findById).mockResolvedValueOnce(null);
+      vi.mocked(mockMonthsRepo.findById).mockResolvedValueOnce(null as any);
       await expect(service.updateShuttlecockExpense(1, 500000)).rejects.toThrow('Month not found');
       expect(mockMonthsRepo.updateShuttlecockExpense).not.toHaveBeenCalled();
     });
