@@ -1,4 +1,4 @@
-import { calculateMonthlySettlement } from "@/lib/calculations";
+import { calculateMonthlySettlement, calculateCarriedBalance } from "@/lib/calculations";
 import {
   EventParticipant,
   MonthlySetting,
@@ -9,6 +9,7 @@ import {
 import { createMonthsService } from "@/modules/months/months.service";
 import { createSessionsService } from "@/modules/sessions/sessions.service";
 import { createShuttlecocksRepository } from "@/modules/shuttlecocks/shuttlecocks.repository";
+import { createUsersService } from "@/modules/users/users.service";
 import { createEventParticipantsRepository } from "@/modules/events/event-participants.repository";
 import { createEventsRepository } from "@/modules/events/events.repository";
 import {
@@ -198,6 +199,17 @@ export class SettlementsService {
     }
 
     const saved = await this.repository.upsertByMonthAndUser(rows);
+    
+    // Sync users' real balances with the carry-forward amount of this month
+    const usersService = await createUsersService();
+    for (const record of saved) {
+      // The "balance" for a user is effectively the credit carried forward from the MOST RECENT month.
+      // After generating this month's settlements (if it's the current month), 
+      // we can update their balance.
+      const carriedToNext = calculateCarriedBalance(record);
+      await usersService.updateBalance(record.user_id, carriedToNext);
+    }
+
     const totalDue = saved.reduce((sum, s) => sum + s.total_due, 0);
 
     return {

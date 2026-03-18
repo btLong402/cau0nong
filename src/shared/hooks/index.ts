@@ -50,6 +50,7 @@ export {
   useMonthPaymentHistory,
   useGenerateMonthSettlements,
   useMarkSettlementPaid,
+  useMonthShuttlecocks,
 } from './useSettlements';
 export type {
   GenerateSummary,

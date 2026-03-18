@@ -267,6 +267,23 @@ export function useGenerateMonthSettlements(monthId: number | null) {
   };
 }
 
+export function useMonthShuttlecocks(monthId: number | null) {
+  const url = monthId
+    ? `/api/months/${monthId}/shuttlecocks`
+    : '/api/months/0/shuttlecocks';
+
+  const { data, loading, error, refetch } = useFetch<{ items: any[] }>(url, {
+    skip: !monthId,
+  });
+
+  return {
+    shuttlecocks: data?.items || [],
+    loading,
+    error,
+    refetch,
+  };
+}
+
 export function useMarkSettlementPaid() {
   const [state, setState] = useState<MutationState<MonthlySetting>>({
     data: null,

@@ -16,6 +16,7 @@ import {
   SettlementsFilters,
   SettlementsOverviewCards,
   SettlementsTable,
+  ShuttlecockManagement,
 } from '@/modules/settlements/components';
 
 function formatCurrency(value: number) {
@@ -46,7 +47,7 @@ export default function SettlementsPage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [pageError, setPageError] = useState<string | null>(null);
   const [selectedSettlement, setSelectedSettlement] = useState<SettlementListItem | null>(null);
-  const [activeTab, setActiveTab] = useState<'settlements' | 'history'>('settlements');
+  const [activeTab, setActiveTab] = useState<'settlements' | 'history' | 'shuttlecocks'>('settlements');
 
   const debouncedSearchUser = useDebouncedValue(searchUser, 350);
 
@@ -256,6 +257,19 @@ export default function SettlementsPage() {
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)]" />
           )}
         </button>
+        <button
+          onClick={() => setActiveTab('shuttlecocks')}
+          className={`px-6 py-3 text-sm font-semibold transition-colors relative ${
+            activeTab === 'shuttlecocks'
+              ? 'text-[var(--primary)]'
+              : 'text-[var(--muted)] hover:text-[var(--foreground)]'
+          }`}
+        >
+          Chi phí mua cầu
+          {activeTab === 'shuttlecocks' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)]" />
+          )}
+        </button>
       </div>
 
       {combinedError && (
@@ -315,9 +329,17 @@ export default function SettlementsPage() {
             />
           )}
         </div>
-      ) : (
+      ) : activeTab === 'shuttlecocks' ? (
+        <div className="space-y-6 animate-fade-in">
+          <ShuttlecockManagement monthId={activeMonthId} formatCurrency={formatCurrency} />
+        </div>
+      ) : activeTab === 'history' ? (
         <div className="animate-fade-in">
           <PaymentHistoryPanel monthId={activeMonthId} formatCurrency={formatCurrency} />
+        </div>
+      ) : (
+        <div className="animate-fade-in">
+          <p className="text-sm text-[var(--muted)]">Tab không hợp lệ</p>
         </div>
       )}
 

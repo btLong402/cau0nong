@@ -106,13 +106,25 @@ export const calculateCarriedBalance = (
   previousSettlement?: MonthlySetting
 ): number => {
   if (!previousSettlement) return 0;
-  if (previousSettlement.is_paid) {
-    // Nếu thanh toán đủ, không có số dư
-    return 0;
-  }
-  // Nếu thanh toán thừa
-  const overpaid = (previousSettlement.paid_amount || 0) - previousSettlement.total_due;
-  return overpaid > 0 ? overpaid : 0;
+  
+  // Total costs the user was responsible for in the previous month
+  const totalCosts = 
+    previousSettlement.court_fee + 
+    previousSettlement.shuttlecock_fee + 
+    previousSettlement.past_debt + 
+    (previousSettlement.event_debt || 0);
+    
+  // Total "funds" provided by the user (previous balance + new offsets + actual payment)
+  const totalFunds = 
+    previousSettlement.balance_carried + 
+    previousSettlement.court_payer_offset + 
+    previousSettlement.shuttlecock_buyer_offset + 
+    (previousSettlement.paid_amount || 0);
+    
+  const netBalance = totalFunds - totalCosts;
+  
+  // If positive, it's credit carried forward to the current month.
+  return netBalance > 0 ? Math.round(netBalance * 100) / 100 : 0;
 };
 
 /**
@@ -247,12 +259,7 @@ export const calculateMonthlySettlement = (input: SettlementInput): Omit<Monthly
     ? previousSettlement.total_due 
     : 0;
   
-  const carriedBalance =
-    previousSettlement &&
-    previousSettlement.paid_amount &&
-    previousSettlement.paid_amount > previousSettlement.total_due
-      ? previousSettlement.paid_amount - previousSettlement.total_due
-      : 0;
+  const carriedBalance = calculateCarriedBalance(previousSettlement);
 
   // Step 4: Tính offset cho người ứng tiền
   const courtPayerOffset = calculatePayerOffset(sessions, userId);

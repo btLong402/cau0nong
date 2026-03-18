@@ -1,53 +1,51 @@
 import { createGetHandler, createPostHandler } from "@/shared/api";
-import { createShuttlecocksService } from "@/modules/shuttlecocks/shuttlecocks.service";
 import { ValidationError } from "@/shared/api/base-errors";
+import { createShuttlecocksService } from "@/modules/shuttlecocks/shuttlecocks.service";
 
 function parseMonthId(url: string): number {
   const pathname = new URL(url).pathname;
-  // /api/months/[id]/shuttlecocks → segments = ["api","months","[id]","shuttlecocks"]
   const segments = pathname.split("/").filter(Boolean);
-  const monthIdx = segments.indexOf("months");
-  const monthId = Number(segments[monthIdx + 1]);
+  // URL: /api/months/[id]/shuttlecocks
+  const monthId = Number(segments[segments.length - 2]);
 
   if (!Number.isInteger(monthId) || monthId <= 0) {
-    throw new ValidationError("Month ID is required");
+    throw new ValidationError("Invalid month ID");
   }
 
   return monthId;
 }
 
 export const GET = createGetHandler({
+  requireAuth: true,
   handler: async (req) => {
     const monthId = parseMonthId(req.url);
     const service = await createShuttlecocksService();
-    const shuttlecocks = await service.listByMonth(monthId);
-
-    return { shuttlecocks };
+    const items = await service.listByMonth(monthId);
+    return { items };
   },
 });
 
 export const POST = createPostHandler({
+  requireAuth: true,
+  requireRole: ["admin"],
   handler: async (req) => {
     const monthId = parseMonthId(req.url);
-    const { purchase_date, quantity, unit_price, buyer_user_id, notes } =
-      await req.json();
+    const payload = await req.json();
 
-    if (!purchase_date || !quantity || !unit_price || !buyer_user_id) {
-      throw new ValidationError(
-        "Missing required fields: purchase_date, quantity, unit_price, buyer_user_id"
-      );
+    if (!payload.purchase_date || !payload.quantity || !payload.unit_price || !payload.buyer_user_id) {
+      throw new ValidationError("Missing required fields");
     }
 
     const service = await createShuttlecocksService();
-    const shuttlecock = await service.createDetail({
+    const item = await service.addPurchase({
       month_id: monthId,
-      purchase_date,
-      quantity,
-      unit_price,
-      buyer_user_id,
-      notes,
+      purchase_date: payload.purchase_date,
+      quantity: Number(payload.quantity),
+      unit_price: Number(payload.unit_price),
+      buyer_user_id: payload.buyer_user_id,
+      notes: payload.notes,
     });
 
-    return { shuttlecock };
+    return { item };
   },
 });
