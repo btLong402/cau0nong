@@ -42,18 +42,18 @@ export function EventForm({
     setError(null);
 
     if (!form.event_name.trim()) {
-      setError('Ten su kien la bat buoc');
+      setError('Tên sự kiện là bắt buộc');
       return;
     }
     if (!form.event_date) {
-      setError('Ngay su kien la bat buoc');
+      setError('Ngày sự kiện là bắt buộc');
       return;
     }
 
     try {
       await onSubmit(form);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Co loi xay ra');
+      setError(err instanceof Error ? err.message : 'Có lỗi xảy ra');
     }
   }
 
@@ -67,14 +67,14 @@ export function EventForm({
 
       <div>
         <label className="mb-2 block text-sm font-medium text-slate-700">
-          Ten su kien
+          Tên sự kiện
         </label>
         <input
           type="text"
           value={form.event_name}
           onChange={(e) => setForm({ ...form, event_name: e.target.value })}
           className="input-field"
-          placeholder="VD: Giai dau mua xuan 2025"
+          placeholder="VD: Giải đấu mùa xuân 2025"
           maxLength={200}
           required
         />
@@ -82,7 +82,7 @@ export function EventForm({
 
       <div>
         <label className="mb-2 block text-sm font-medium text-slate-700">
-          Ngay su kien
+          Ngày sự kiện
         </label>
         <input
           type="date"
@@ -96,7 +96,7 @@ export function EventForm({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="mb-2 block text-sm font-medium text-slate-700">
-            Tong chi phi (d)
+            Tổng chi phí (đ)
           </label>
           <input
             type="number"
@@ -111,7 +111,7 @@ export function EventForm({
         </div>
         <div>
           <label className="mb-2 block text-sm font-medium text-slate-700">
-            Tai tro / Ho tro (d)
+            Tài trợ / Hỗ trợ (đ)
           </label>
           <input
             type="number"
@@ -132,7 +132,7 @@ export function EventForm({
           className="btn-primary flex-1"
           disabled={loading}
         >
-          {loading ? 'Dang xu ly...' : isEditing ? 'Cap nhat' : 'Tao su kien'}
+          {loading ? 'Đang xử lý...' : isEditing ? 'Cập nhật' : 'Tạo sự kiện'}
         </button>
         <button
           type="button"
@@ -140,7 +140,7 @@ export function EventForm({
           className="btn-secondary flex-1"
           disabled={loading}
         >
-          Huy
+          Hủy
         </button>
       </div>
     </form>

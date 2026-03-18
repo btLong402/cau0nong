@@ -74,14 +74,14 @@ export default function LoginPage() {
   return (
     <div className="surface-card p-7 sm:p-8">
       <div className="mb-7">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-700">Dang nhap</p>
-        <h1 className="mt-2 text-3xl font-semibold text-slate-900">Chao mung quay lai</h1>
-        <p className="mt-2 text-sm text-slate-600">Dang nhap de tiep tuc quan ly CLB cau long.</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-700">Đăng nhập</p>
+        <h1 className="mt-2 text-3xl font-semibold text-slate-900">Chào mừng quay lại</h1>
+        <p className="mt-2 text-sm text-slate-600">Đăng nhập để tiếp tục quản lý CLB cầu lông.</p>
       </div>
 
       {registered && (
         <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-          Dang ky thanh cong. Vui long dang nhap de bat dau.
+          Đăng ký thành công. Vui lòng đăng nhập để bắt đầu.
         </div>
       )}
 

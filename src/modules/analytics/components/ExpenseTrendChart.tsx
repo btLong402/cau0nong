@@ -38,7 +38,7 @@ export function ExpenseTrendChart({ data, loading }: ExpenseTrendChartProps) {
   if (!data || data.length === 0) {
     return (
       <div className="py-8 text-center text-sm text-slate-500">
-        Chua co du lieu chi phi theo thang.
+        Chưa có dữ liệu chi phí theo tháng.
       </div>
     );
   }
@@ -52,11 +52,11 @@ export function ExpenseTrendChart({ data, loading }: ExpenseTrendChartProps) {
       <div className="mb-4 flex gap-4 text-xs">
         <div className="flex items-center gap-1.5">
           <div className="h-3 w-3 rounded-sm bg-blue-500" />
-          <span className="text-slate-600">Tien san</span>
+          <span className="text-slate-600">Tiền sân</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="h-3 w-3 rounded-sm bg-amber-500" />
-          <span className="text-slate-600">Tien cau</span>
+          <span className="text-slate-600">Tiền cầu</span>
         </div>
       </div>
 

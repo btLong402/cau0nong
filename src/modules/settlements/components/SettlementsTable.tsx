@@ -54,7 +54,7 @@ export function SettlementsTable({
                     onClick={() => onSortColumn('user_id')}
                     className="font-medium text-slate-700 hover:text-slate-900"
                   >
-                    User ID{renderSortIndicator('user_id')}
+                    ID Thành viên{renderSortIndicator('user_id')}
                   </button>
                 </th>
                 <th className="px-4 py-3 font-medium">Tiền sân</th>

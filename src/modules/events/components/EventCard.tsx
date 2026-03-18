@@ -43,19 +43,19 @@ export function EventCard({ event, onClick }: EventCardProps) {
 
       <div className="mt-4 grid grid-cols-3 gap-3">
         <div className="rounded-lg bg-blue-50 px-3 py-2">
-          <p className="text-xs text-blue-600">Tong chi</p>
+          <p className="text-xs text-blue-600">Tổng chi</p>
           <p className="text-sm font-semibold text-blue-900">
             {event.total_expense.toLocaleString('vi-VN')}đ
           </p>
         </div>
         <div className="rounded-lg bg-green-50 px-3 py-2">
-          <p className="text-xs text-green-600">Tai tro</p>
+          <p className="text-xs text-green-600">Tài trợ</p>
           <p className="text-sm font-semibold text-green-900">
             {event.total_support.toLocaleString('vi-VN')}đ
           </p>
         </div>
         <div className="rounded-lg bg-amber-50 px-3 py-2">
-          <p className="text-xs text-amber-600">Can chia</p>
+          <p className="text-xs text-amber-600">Cần chia</p>
           <p className="text-sm font-semibold text-amber-900">
             {deficit.toLocaleString('vi-VN')}đ
           </p>

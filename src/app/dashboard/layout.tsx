@@ -16,13 +16,13 @@ interface DashboardUser {
 }
 
 const navItems = [
-  { href: '/dashboard', label: 'Tong quan' },
-  { href: '/dashboard/members', label: 'Thanh vien' },
-  { href: '/dashboard/months', label: 'Ky quan ly' },
-  { href: '/dashboard/sessions', label: 'Buoi tap' },
-  { href: '/dashboard/settlements', label: 'Quyet toan' },
-  { href: '/dashboard/events', label: 'Su kien' },
-  { href: '/dashboard/videos', label: 'Thu vien video' },
+  { href: '/dashboard', label: 'Tổng quan' },
+  { href: '/dashboard/members', label: 'Thành viên' },
+  { href: '/dashboard/months', label: 'Kỳ quản lý' },
+  { href: '/dashboard/sessions', label: 'Buổi tập' },
+  { href: '/dashboard/settlements', label: 'Quyết toán' },
+  { href: '/dashboard/events', label: 'Sự kiện' },
+  { href: '/dashboard/videos', label: 'Thư viện video' },
 ];
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
@@ -81,9 +81,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-[1380px] gap-4 md:gap-6">
         <aside className="surface-card hidden w-[260px] flex-col overflow-hidden lg:flex">
           <div className="border-b border-slate-200 px-6 py-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">He thong</p>
-            <h1 className="mt-2 text-2xl font-semibold text-slate-900">CLB Cau Long</h1>
-            <p className="mt-1 text-sm text-slate-600">Quan ly toan bo van hanh</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">Hệ thống</p>
+            <h1 className="mt-2 text-2xl font-semibold text-slate-900">CLB Cầu Lông</h1>
+            <p className="mt-1 text-sm text-slate-600">Quản lý toàn bộ vận hành</p>
           </div>
 
           <nav className="flex-1 space-y-1 p-4">
@@ -109,14 +109,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="rounded-xl bg-slate-50 p-3">
               <p className="text-sm font-semibold text-slate-900">{user.name || user.email}</p>
               <p className="mt-1 text-xs text-slate-600">
-                {user.role === 'admin' ? 'Quan tri vien' : 'Thanh vien'}
+                {user.role === 'admin' ? 'Quản trị viên' : 'Thành viên'}
               </p>
             </div>
             <button
               onClick={handleLogout}
               className="btn-secondary mt-3 w-full border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
             >
-              Dang xuat
+              Đăng xuất
             </button>
           </div>
         </aside>
@@ -125,7 +125,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <header className="surface-card flex flex-wrap items-center justify-between gap-3 px-4 py-3 md:px-6">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Dashboard</p>
-              <h2 className="text-xl font-semibold text-slate-900">Van hanh CLB</h2>
+              <h2 className="text-xl font-semibold text-slate-900">Vận hành CLB</h2>
             </div>
             <div className="flex items-center gap-3">
               <p className="rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-800">
@@ -135,7 +135,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 onClick={handleLogout}
                 className="btn-secondary lg:hidden"
               >
-                Dang xuat
+                Đăng xuất
               </button>
             </div>
           </header>

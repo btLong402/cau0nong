@@ -46,26 +46,26 @@ export function OverviewCards({ stats, loading }: OverviewCardsProps) {
   return (
     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
       <StatCard
-        label="Thanh vien active"
+        label="Thành viên active"
         value={stats?.active_members || 0}
         color="text-blue-700"
         loading={loading}
       />
       <StatCard
-        label="Tong buoi tap"
+        label="Tổng buổi tập"
         value={stats?.total_sessions || 0}
         color="text-green-700"
         loading={loading}
       />
       <StatCard
-        label="Chi phi thang nay"
+        label="Chi phí tháng này"
         value={stats?.total_expense_current_month || 0}
         suffix="đ"
         color="text-amber-700"
         loading={loading}
       />
       <StatCard
-        label="Cong no chua dong"
+        label="Công nợ chưa đóng"
         value={stats?.unpaid_debt || 0}
         suffix="đ"
         color="text-red-700"

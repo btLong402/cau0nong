@@ -36,7 +36,7 @@ export function AttendanceRankingChart({
   if (!data || data.length === 0) {
     return (
       <div className="py-8 text-center text-sm text-slate-500">
-        Chua co du lieu diem danh.
+        Chưa có dữ liệu điểm danh.
       </div>
     );
   }

@@ -40,7 +40,7 @@ export default function EventsPage() {
       setEvents(data.data?.items || []);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Loi tai du lieu');
+      setError(err instanceof Error ? err.message : 'Lỗi tải dữ liệu');
     } finally {
       setLoading(false);
     }
@@ -124,8 +124,8 @@ export default function EventsPage() {
     });
 
     if (!res.ok) {
-      const data = await res.json();
-      alert(data.error?.message || 'Khong the xoa');
+      const data = await res.ok ? await res.json() : { error: { message: 'Không thể xóa' } };
+      alert(data.error?.message || 'Không thể xóa');
       return;
     }
 
@@ -141,7 +141,7 @@ export default function EventsPage() {
     });
     if (!res.ok) {
       const data = await res.json();
-      alert(data.error?.message || 'Loi tinh tien');
+      alert(data.error?.message || 'Lỗi tính tiền');
       return;
     }
     await fetchEventDetail(selectedEvent.id);
@@ -160,7 +160,7 @@ export default function EventsPage() {
     );
     if (!res.ok) {
       const data = await res.json();
-      alert(data.error?.message || 'Loi them nguoi');
+      alert(data.error?.message || 'Lỗi thêm người');
       return;
     }
     await fetchEventDetail(selectedEvent.id);
@@ -174,7 +174,7 @@ export default function EventsPage() {
     );
     if (!res.ok) {
       const data = await res.json();
-      alert(data.error?.message || 'Loi xoa nguoi');
+      alert(data.error?.message || 'Lỗi xóa người');
       return;
     }
     await fetchEventDetail(selectedEvent.id);
@@ -188,7 +188,7 @@ export default function EventsPage() {
     );
     if (!res.ok) {
       const data = await res.json();
-      alert(data.error?.message || 'Loi xac nhan');
+      alert(data.error?.message || 'Lỗi xác nhận');
       return;
     }
     await fetchEventDetail(selectedEvent.id);
@@ -209,7 +209,7 @@ export default function EventsPage() {
       <div className="py-16 text-center">
         <p className="text-red-600">{error}</p>
         <button onClick={fetchEvents} className="btn-primary mt-4">
-          Thu lai
+          Thử lại
         </button>
       </div>
     );
@@ -220,9 +220,9 @@ export default function EventsPage() {
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-semibold text-slate-900">Su kien</h1>
+          <h1 className="text-3xl font-semibold text-slate-900">Sự kiện</h1>
           <p className="mt-1 text-sm text-slate-600">
-            Quan ly su kien, giai dau va lien hoan.
+            Quản lý sự kiện, giải đấu và liên hoan.
           </p>
         </div>
         <button
@@ -232,7 +232,7 @@ export default function EventsPage() {
           }}
           className="btn-primary"
         >
-          Tao su kien
+          Tạo sự kiện
         </button>
       </div>
 
@@ -240,7 +240,7 @@ export default function EventsPage() {
       {showForm && (
         <div className="surface-card-soft p-6">
           <h2 className="mb-4 text-lg font-semibold text-slate-900">
-            {editingEvent ? 'Cap nhat su kien' : 'Tao su kien moi'}
+            {editingEvent ? 'Cập nhật sự kiện' : 'Tạo sự kiện mới'}
           </h2>
           <EventForm
             initialData={editingEvent || undefined}
@@ -260,9 +260,9 @@ export default function EventsPage() {
         <div className="space-y-3">
           {events.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-lg text-slate-500">Chua co su kien nao</p>
+              <p className="text-lg text-slate-500">Chưa có sự kiện nào</p>
               <p className="mt-1 text-sm text-slate-400">
-                Nhan &quot;Tao su kien&quot; de bat dau.
+                Nhấn &quot;Tạo sự kiện&quot; để bắt đầu.
               </p>
             </div>
           ) : (
@@ -310,13 +310,13 @@ export default function EventsPage() {
                       }}
                       className="btn-secondary text-sm"
                     >
-                      Sua
+                      Sửa
                     </button>
                     <button
                       onClick={() => handleDeleteEvent(selectedEvent.id)}
                       className="rounded-lg bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100"
                     >
-                      Xoa
+                      Xóa
                     </button>
                   </div>
                 </div>
@@ -347,7 +347,7 @@ export default function EventsPage() {
                   onClick={() => setSelectedEvent(null)}
                   className="btn-secondary w-full text-sm"
                 >
-                  Dong chi tiet
+                  Đóng chi tiết
                 </button>
               </>
             )}

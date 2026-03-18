@@ -70,35 +70,35 @@ export default function MonthsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-semibold text-slate-900">Ky quan ly</h1>
-          <p className="mt-1 text-sm text-slate-600">Quan ly trang thai thang, dong ky va khoi tao quyet toan.</p>
+          <h1 className="text-3xl font-semibold text-slate-900">Kỳ quản lý</h1>
+          <p className="mt-1 text-sm text-slate-600">Quản lý trạng thái tháng, đóng kỳ và khởi tạo quyết toán.</p>
         </div>
         <button
           onClick={() => setShowNewMonthForm(!showNewMonthForm)}
           className="btn-primary"
         >
-          {showNewMonthForm ? 'An form' : 'Tao ky moi'}
+          {showNewMonthForm ? 'Ẩn form' : 'Tạo kỳ mới'}
         </button>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <article className="surface-card-soft p-5">
-          <p className="text-sm text-slate-600">Tong ky da tao</p>
+          <p className="text-sm text-slate-600">Tổng kỳ đã tạo</p>
           <p className="mt-2 text-3xl font-semibold text-slate-900">{months.length}</p>
         </article>
         <article className="surface-card-soft p-5">
-          <p className="text-sm text-slate-600">Ky dang mo</p>
+          <p className="text-sm text-slate-600">Kỳ đang mở</p>
           <p className="mt-2 text-3xl font-semibold text-slate-900">{openMonths}</p>
         </article>
         <article className="surface-card-soft p-5">
-          <p className="text-sm text-slate-600">Ky da dong</p>
+          <p className="text-sm text-slate-600">Kỳ đã đóng</p>
           <p className="mt-2 text-3xl font-semibold text-slate-900">{months.length - openMonths}</p>
         </article>
       </div>
 
       {showNewMonthForm && (
         <div className="surface-card-soft p-6">
-          <h2 className="text-lg font-semibold text-slate-900">Tao ky quan ly moi</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Tạo kỳ quản lý mới</h2>
           <div className="mt-4 space-y-4">
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">
@@ -121,7 +121,7 @@ export default function MonthsPage() {
                 disabled={creatingMonth || creating}
                 className="btn-primary bg-emerald-600 hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {creatingMonth || creating ? 'Dang tao...' : 'Tao'}
+                {creatingMonth || creating ? 'Đang tạo...' : 'Tạo'}
               </button>
               <button
                 onClick={() => setShowNewMonthForm(false)}

@@ -49,10 +49,10 @@ export default function MembersPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-semibold text-slate-900">Quan ly thanh vien</h1>
-          <p className="mt-1 text-sm text-slate-600">Danh sach thanh vien va trang thai tai khoan theo thoi gian thuc.</p>
+          <h1 className="text-3xl font-semibold text-slate-900">Quản lý thành viên</h1>
+          <p className="mt-1 text-sm text-slate-600">Danh sách thành viên và trạng thái tài khoản theo thời gian thực.</p>
         </div>
-        <button className="btn-primary">Them thanh vien</button>
+        <button className="btn-primary">Thêm thành viên</button>
       </div>
 
       <div className="surface-card overflow-hidden">
@@ -77,7 +77,7 @@ export default function MembersPage() {
                   <td className="px-6 py-4 text-sm text-slate-700">{member.phone}</td>
                   <td className="px-6 py-4">
                     <span className="inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800">
-                      {member.role === 'admin' ? 'Quan tri' : 'Thanh vien'}
+                      {member.role === 'admin' ? 'Quản trị' : 'Thành viên'}
                     </span>
                   </td>
                   <td className="px-6 py-4 font-medium">
@@ -91,12 +91,12 @@ export default function MembersPage() {
                         member.is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'
                       }`}
                     >
-                      {member.is_active ? 'Hoat dong' : 'Khong hoat dong'}
+                      {member.is_active ? 'Hoạt động' : 'Không hoạt động'}
                     </span>
                   </td>
                   <td className="px-6 py-4">
                     <a href={`/dashboard/members/${member.id}`} className="text-sm font-medium text-blue-700 hover:text-blue-900">
-                      Chi tiet
+                      Chi tiết
                     </a>
                   </td>
                 </tr>
@@ -107,7 +107,7 @@ export default function MembersPage() {
 
         {members.length === 0 && (
           <div className="px-6 py-12 text-center">
-            <p className="text-slate-600">Chua co thanh vien nao</p>
+            <p className="text-slate-600">Chưa có thành viên nào</p>
           </div>
         )}
       </div>
@@ -118,7 +118,7 @@ export default function MembersPage() {
           onClick={() => setPage(page - 1)}
           className="btn-secondary disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Truoc
+          Trước
         </button>
         <span className="px-4 py-2 text-sm text-slate-600">Trang {page} / {totalPages}</span>
         <button

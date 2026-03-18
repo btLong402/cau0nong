@@ -32,10 +32,10 @@ function extractYouTubeId(url: string): string | null {
 
 const CATEGORY_LABELS: Record<string, string> = {
   general: 'Chung',
-  'ky-thuat': 'Ky thuat',
-  'the-luc': 'The luc',
-  'chien-thuat': 'Chien thuat',
-  luat: 'Luat',
+  'ky-thuat': 'Kỹ thuật',
+  'the-luc': 'Thể lực',
+  'chien-thuat': 'Chiến thuật',
+  luat: 'Luật',
 };
 
 export function VideoCard({ video, onEdit, onDelete, isAdmin }: VideoCardProps) {
@@ -58,7 +58,7 @@ export function VideoCard({ video, onEdit, onDelete, isAdmin }: VideoCardProps) 
           <button
             onClick={() => setPlaying(true)}
             className="group absolute inset-0 flex cursor-pointer items-center justify-center"
-            aria-label={`Phat video: ${video.title}`}
+            aria-label={`Phát video: ${video.title}`}
           >
             {videoId ? (
               <img
@@ -111,7 +111,7 @@ export function VideoCard({ video, onEdit, onDelete, isAdmin }: VideoCardProps) 
                 onClick={() => onEdit(video)}
                 className="text-xs font-medium text-blue-700 hover:text-blue-900"
               >
-                Sua
+                Sửa
               </button>
             )}
             {onDelete && (
@@ -119,7 +119,7 @@ export function VideoCard({ video, onEdit, onDelete, isAdmin }: VideoCardProps) 
                 onClick={() => onDelete(video.id)}
                 className="text-xs font-medium text-red-600 hover:text-red-800"
               >
-                Xoa
+                Xóa
               </button>
             )}
           </div>

@@ -72,9 +72,9 @@ export default function RegisterPage() {
   return (
     <div className="surface-card p-7 sm:p-8">
       <div className="mb-7">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-700">Tao tai khoan</p>
-        <h1 className="mt-2 text-3xl font-semibold text-slate-900">Dang ky thanh vien moi</h1>
-        <p className="mt-2 text-sm text-slate-600">Hoan tat thong tin de su dung he thong quan ly CLB.</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-700">Tạo tài khoản</p>
+        <h1 className="mt-2 text-3xl font-semibold text-slate-900">Đăng ký thành viên mới</h1>
+        <p className="mt-2 text-sm text-slate-600">Hoàn tất thông tin để sử dụng hệ thống quản lý CLB.</p>
       </div>
 
       {error && (

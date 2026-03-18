@@ -10,10 +10,10 @@ import { VIDEO_CATEGORIES } from '../types';
 
 const CATEGORY_LABELS: Record<string, string> = {
   general: 'Chung',
-  'ky-thuat': 'Ky thuat',
-  'the-luc': 'The luc',
-  'chien-thuat': 'Chien thuat',
-  luat: 'Luat',
+  'ky-thuat': 'Kỹ thuật',
+  'the-luc': 'Thể lực',
+  'chien-thuat': 'Chiến thuật',
+  luat: 'Luật',
 };
 
 interface VideoFormData {
@@ -51,18 +51,18 @@ export function VideoForm({
     setError(null);
 
     if (!form.title.trim()) {
-      setError('Tieu de la bat buoc');
+      setError('Tiêu đề là bắt buộc');
       return;
     }
     if (!form.youtube_url.trim()) {
-      setError('YouTube URL la bat buoc');
+      setError('YouTube URL là bắt buộc');
       return;
     }
 
     try {
       await onSubmit(form);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Co loi xay ra');
+      setError(err instanceof Error ? err.message : 'Có lỗi xảy ra');
     }
   }
 
@@ -76,14 +76,14 @@ export function VideoForm({
 
       <div>
         <label className="mb-2 block text-sm font-medium text-slate-700">
-          Tieu de
+          Tiêu đề
         </label>
         <input
           type="text"
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
           className="input-field"
-          placeholder="VD: Ky thuat cut cau co ban"
+          placeholder="VD: Kỹ thuật cắt cầu cơ bản"
           maxLength={200}
           required
         />
@@ -105,7 +105,7 @@ export function VideoForm({
 
       <div>
         <label className="mb-2 block text-sm font-medium text-slate-700">
-          Danh muc
+          Danh mục
         </label>
         <select
           value={form.category}
@@ -122,14 +122,14 @@ export function VideoForm({
 
       <div>
         <label className="mb-2 block text-sm font-medium text-slate-700">
-          Mo ta (tuy chon)
+          Mô tả (tùy chọn)
         </label>
         <textarea
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
           className="input-field"
           rows={3}
-          placeholder="Mo ta ngan ve video..."
+          placeholder="Mô tả ngắn về video..."
         />
       </div>
 
@@ -139,7 +139,7 @@ export function VideoForm({
           className="btn-primary flex-1"
           disabled={loading}
         >
-          {loading ? 'Dang xu ly...' : isEditing ? 'Cap nhat' : 'Them video'}
+          {loading ? 'Đang xử lý...' : isEditing ? 'Cập nhật' : 'Thêm video'}
         </button>
         <button
           type="button"
@@ -147,7 +147,7 @@ export function VideoForm({
           className="btn-secondary flex-1"
           disabled={loading}
         >
-          Huy
+          Hủy
         </button>
       </div>
     </form>

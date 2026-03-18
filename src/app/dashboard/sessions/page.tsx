@@ -83,21 +83,21 @@ export default function SessionsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-semibold text-slate-900">Buoi tap</h1>
-          <p className="mt-1 text-sm text-slate-600">Quan ly danh sach buoi tap va thong tin diem danh.</p>
+          <h1 className="text-3xl font-semibold text-slate-900">Buổi tập</h1>
+          <p className="mt-1 text-sm text-slate-600">Quản lý danh sách buổi tập và thông tin điểm danh.</p>
         </div>
         {selectedMonth && (
           <button
             onClick={() => setShowNewSessionForm((prev) => !prev)}
             className="btn-primary"
           >
-            Them buoi tap
+            Thêm buổi tập
           </button>
         )}
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-700">Chon ky quan ly</label>
+        <label className="mb-2 block text-sm font-medium text-slate-700">Chọn kỳ quản lý</label>
         <select
           value={selectedMonth || ''}
           onChange={(e) => setSelectedMonth(parseInt(e.target.value, 10))}
@@ -108,7 +108,7 @@ export default function SessionsPage() {
               {new Date(month.month_year).toLocaleDateString('vi-VN', {
                 month: 'long',
                 year: 'numeric',
-              })} ({month.status === 'open' ? 'Dang mo' : 'Da dong'})
+              })} ({month.status === 'open' ? 'Đang mở' : 'Đã đóng'})
             </option>
           ))}
         </select>
@@ -116,23 +116,23 @@ export default function SessionsPage() {
 
       {showNewSessionForm && (
         <div className="surface-card-soft p-6">
-          <h2 className="text-lg font-semibold text-slate-900">Tao buoi tap moi</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Tạo buổi tập mới</h2>
           <div className="mt-4 space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">Ngay</label>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Ngày</label>
               <input type="date" className="input-field" />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">Chi phi san (d)</label>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Chi phí sân (đ)</label>
               <input type="number" placeholder="200000" className="input-field" />
             </div>
             <div className="flex gap-2">
-              <button className="btn-primary flex-1">Tao</button>
+              <button className="btn-primary flex-1">Tạo</button>
               <button
                 onClick={() => setShowNewSessionForm(false)}
                 className="btn-secondary flex-1"
               >
-                Huy
+                Hủy
               </button>
             </div>
           </div>
@@ -143,11 +143,11 @@ export default function SessionsPage() {
         <table className="w-full min-w-[820px]">
           <thead className="border-b border-slate-200 bg-slate-50">
             <tr>
-              <th className="px-6 py-4 text-left font-medium text-gray-700">Ngay</th>
-              <th className="px-6 py-4 text-left font-medium text-gray-700">Chi phi san</th>
-              <th className="px-6 py-4 text-left font-medium text-gray-700">Nguoi tra</th>
-              <th className="px-6 py-4 text-left font-medium text-gray-700">Ghi chu</th>
-              <th className="px-6 py-4 text-left font-medium text-gray-700">Hanh dong</th>
+              <th className="px-6 py-4 text-left font-medium text-gray-700">Ngày</th>
+              <th className="px-6 py-4 text-left font-medium text-gray-700">Chi phí sân</th>
+              <th className="px-6 py-4 text-left font-medium text-gray-700">Người trả</th>
+              <th className="px-6 py-4 text-left font-medium text-gray-700">Ghi chú</th>
+              <th className="px-6 py-4 text-left font-medium text-gray-700">Hành động</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
@@ -157,7 +157,7 @@ export default function SessionsPage() {
                   {new Date(session.session_date).toLocaleDateString('vi-VN')}
                 </td>
                 <td className="px-6 py-4 font-medium text-slate-900">
-                  {session.court_expense_amount.toLocaleString('vi-VN')} d
+                  {session.court_expense_amount.toLocaleString('vi-VN')} đ
                 </td>
                 <td className="px-6 py-4 text-sm text-slate-600">{session.payer_user_id.substring(0, 8)}</td>
                 <td className="px-6 py-4 text-sm text-slate-600">{session.notes || '-'}</td>
@@ -166,7 +166,7 @@ export default function SessionsPage() {
                     href={`/dashboard/sessions/${session.id}`}
                     className="text-sm font-medium text-blue-700 hover:text-blue-900"
                   >
-                    Diem danh
+                    Điểm danh
                   </a>
                 </td>
               </tr>
@@ -176,7 +176,7 @@ export default function SessionsPage() {
 
         {sessions.length === 0 && (
           <div className="py-12 text-center">
-            <p className="text-slate-600">Chua co buoi tap nao trong ky nay</p>
+            <p className="text-slate-600">Chưa có buổi tập nào trong kỳ này</p>
           </div>
         )}
       </div>

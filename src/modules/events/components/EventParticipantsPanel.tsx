@@ -68,7 +68,7 @@ export function EventParticipantsPanel({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-base font-semibold text-slate-900">
-          Nguoi tham gia ({participants.length})
+          Người tham gia ({participants.length})
         </h3>
         <div className="flex gap-2">
           {!showAddForm && (
@@ -77,7 +77,7 @@ export function EventParticipantsPanel({
               className="btn-secondary text-sm"
               disabled={loading || availableMembers.length === 0}
             >
-              Them nguoi
+              Thêm người
             </button>
           )}
           <button
@@ -85,25 +85,25 @@ export function EventParticipantsPanel({
             className="btn-primary text-sm"
             disabled={loading || settleLoading || participants.length === 0}
           >
-            {settleLoading ? 'Dang tinh...' : 'Tinh tien su kien'}
+            {settleLoading ? 'Đang tính...' : 'Tính tiền sự kiện'}
           </button>
         </div>
       </div>
 
       {isSettled && (
         <div className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
-          Da tinh tien · {paidCount}/{participants.length} da thanh toan
+          Đã tính tiền · {paidCount}/{participants.length} đã thanh toán
         </div>
       )}
 
       {showAddForm && (
         <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4">
           <p className="mb-3 text-sm font-medium text-slate-700">
-            Chon thanh vien de them:
+            Chọn thành viên để thêm:
           </p>
           {availableMembers.length === 0 ? (
             <p className="text-sm text-slate-500">
-              Tat ca thanh vien da duoc them.
+              Tất cả thành viên đã được thêm.
             </p>
           ) : (
             <div className="max-h-40 space-y-1 overflow-y-auto">
@@ -130,7 +130,7 @@ export function EventParticipantsPanel({
               className="btn-primary text-sm"
               disabled={selectedUserIds.length === 0}
             >
-              Them ({selectedUserIds.length})
+              Thêm ({selectedUserIds.length})
             </button>
             <button
               onClick={() => {
@@ -139,7 +139,7 @@ export function EventParticipantsPanel({
               }}
               className="btn-secondary text-sm"
             >
-              Huy
+              Hủy
             </button>
           </div>
         </div>
@@ -147,7 +147,7 @@ export function EventParticipantsPanel({
 
       {participants.length === 0 ? (
         <div className="py-8 text-center text-sm text-slate-500">
-          Chua co nguoi tham gia. Nhan &quot;Them nguoi&quot; de bat dau.
+          Chưa có người tham gia. Nhấn &quot;Thêm người&quot; để bắt đầu.
         </div>
       ) : (
         <div className="divide-y divide-slate-100 rounded-xl border border-slate-200">
@@ -162,7 +162,7 @@ export function EventParticipantsPanel({
                 </p>
                 {p.contribution_per_person > 0 && (
                   <p className="text-xs text-slate-500">
-                    {p.contribution_per_person.toLocaleString('vi-VN')}d
+                    {p.contribution_per_person.toLocaleString('vi-VN')}đ
                   </p>
                 )}
               </div>
@@ -170,7 +170,7 @@ export function EventParticipantsPanel({
               <div className="flex items-center gap-2">
                 {p.is_paid ? (
                   <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
-                    Da dong
+                    Đã đóng
                   </span>
                 ) : (
                   <>
@@ -179,14 +179,14 @@ export function EventParticipantsPanel({
                       className="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100"
                       disabled={loading}
                     >
-                      Xac nhan
+                      Xác nhận
                     </button>
                     <button
                       onClick={() => onRemoveParticipant(p.user_id)}
                       className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100"
                       disabled={loading}
                     >
-                      Xoa
+                      Xóa
                     </button>
                   </>
                 )}

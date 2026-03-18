@@ -12,12 +12,12 @@ import { VIDEO_CATEGORIES } from '@/modules/videos/types';
 import type { Video } from '@/modules/videos/types';
 
 const CATEGORY_LABELS: Record<string, string> = {
-  all: 'Tat ca',
+  all: 'Tất cả',
   general: 'Chung',
-  'ky-thuat': 'Ky thuat',
-  'the-luc': 'The luc',
-  'chien-thuat': 'Chien thuat',
-  luat: 'Luat',
+  'ky-thuat': 'Kỹ thuật',
+  'the-luc': 'Thể lực',
+  'chien-thuat': 'Chiến thuật',
+  luat: 'Luật',
 };
 
 export default function VideosPage() {
@@ -39,7 +39,7 @@ export default function VideosPage() {
       setVideos(data.data?.videos || []);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Loi tai du lieu');
+      setError(err instanceof Error ? err.message : 'Lỗi tải dữ liệu');
     } finally {
       setLoading(false);
     }
@@ -83,7 +83,7 @@ export default function VideosPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm('Ban co chac muon xoa video nay?')) return;
+    if (!confirm('Bạn có chắc muốn xóa video này?')) return;
 
     const res = await fetch(`/api/videos/${id}`, {
       method: 'DELETE',
@@ -92,7 +92,7 @@ export default function VideosPage() {
 
     if (!res.ok) {
       const data = await res.json();
-      alert(data.error?.message || 'Khong the xoa');
+      alert(data.error?.message || 'Không thể xóa');
       return;
     }
 
@@ -114,7 +114,7 @@ export default function VideosPage() {
       <div className="py-16 text-center">
         <p className="text-red-600">{error}</p>
         <button onClick={fetchVideos} className="btn-primary mt-4">
-          Thu lai
+          Thử lại
         </button>
       </div>
     );
@@ -126,10 +126,10 @@ export default function VideosPage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-3xl font-semibold text-slate-900">
-            Thu vien video
+            Thư viện video
           </h1>
           <p className="mt-1 text-sm text-slate-600">
-            Video ky nang cau long — ky thuat, the luc, chien thuat.
+            Video kỹ năng cầu lông — kỹ thuật, thể lực, chiến thuật.
           </p>
         </div>
         <button
@@ -139,7 +139,7 @@ export default function VideosPage() {
           }}
           className="btn-primary"
         >
-          Them video
+          Thêm video
         </button>
       </div>
 
@@ -164,7 +164,7 @@ export default function VideosPage() {
       {showForm && (
         <div className="surface-card-soft p-6">
           <h2 className="mb-4 text-lg font-semibold text-slate-900">
-            {editingVideo ? 'Cap nhat video' : 'Them video moi'}
+            {editingVideo ? 'Cập nhật video' : 'Thêm video mới'}
           </h2>
           <VideoForm
             initialData={editingVideo || undefined}
@@ -182,9 +182,9 @@ export default function VideosPage() {
       {/* Video grid */}
       {videos.length === 0 ? (
         <div className="py-12 text-center">
-          <p className="text-lg text-slate-500">Chua co video nao</p>
+          <p className="text-lg text-slate-500">Chưa có video nào</p>
           <p className="mt-1 text-sm text-slate-400">
-            Nhan &quot;Them video&quot; de bat dau.
+            Nhấn &quot;Thêm video&quot; để bắt đầu.
           </p>
         </div>
       ) : (
