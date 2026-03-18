@@ -115,6 +115,7 @@ export {
 // ============================================
 export {
   extractBearerToken,
+  extractAuthToken,
   decodeJWT,
   extractAuthContext,
   createAnonymousContext,

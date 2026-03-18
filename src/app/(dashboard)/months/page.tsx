@@ -1,93 +1,107 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-
-interface Month {
-  id: number;
-  month_year: string;
-  status: string;
-  total_shuttlecock_expense: number;
-}
+import { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { useCloseMonth, useCreateMonth, useMonths } from '@/shared/hooks';
 
 export default function MonthsPage() {
-  const [months, setMonths] = useState<Month[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { months, loading, error, refetch } = useMonths();
+  const { create, loading: creating } = useCreateMonth();
+  const { close, loading: closing } = useCloseMonth();
+
   const [showNewMonthForm, setShowNewMonthForm] = useState(false);
   const [newMonthDate, setNewMonthDate] = useState('');
+  const [closingMonthId, setClosingMonthId] = useState<number | null>(null);
+  const [creatingMonth, setCreatingMonth] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchMonths();
-  }, []);
+  const openMonths = useMemo(
+    () => months.filter((month) => month.status === 'open').length,
+    [months],
+  );
 
-  async function fetchMonths() {
+  async function handleCloseMonth(monthId: number) {
+    setActionError(null);
+    setClosingMonthId(monthId);
+
     try {
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch('/api/months', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch months');
-
-      const data = await response.json();
-      setMonths(data.data?.months || []);
+      await close(monthId);
+      await refetch();
     } catch (error) {
-      console.error('Error fetching months:', error);
+      const message = error instanceof Error ? error.message : 'Không thể đóng kỳ';
+      setActionError(message);
     } finally {
-      setLoading(false);
+      setClosingMonthId(null);
     }
   }
 
   async function handleCreateMonth() {
     if (!newMonthDate) return;
 
+    setActionError(null);
+    setCreatingMonth(true);
+
     try {
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch('/api/months', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          month_year: newMonthDate,
-          status: 'open',
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to create month');
-
+      await create(newMonthDate, 'open');
       setNewMonthDate('');
       setShowNewMonthForm(false);
-      await fetchMonths();
+      await refetch();
     } catch (error) {
-      console.error('Error creating month:', error);
+      const message = error instanceof Error ? error.message : 'Không thể tạo kỳ quản lý';
+      setActionError(message);
+    } finally {
+      setCreatingMonth(false);
     }
   }
 
   if (loading) {
-    return <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>;
+    return <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />;
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800">
+        Không thể tải danh sách kỳ quản lý. Vui lòng thử lại.
+      </div>
+    );
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Kỳ Quản Lý</h1>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-semibold text-slate-900">Ky quan ly</h1>
+          <p className="mt-1 text-sm text-slate-600">Quan ly trang thai thang, dong ky va khoi tao quyet toan.</p>
+        </div>
         <button
           onClick={() => setShowNewMonthForm(!showNewMonthForm)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          className="btn-primary"
         >
-          + Tạo kỳ mới
+          {showNewMonthForm ? 'An form' : 'Tao ky moi'}
         </button>
       </div>
 
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <article className="surface-card-soft p-5">
+          <p className="text-sm text-slate-600">Tong ky da tao</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-900">{months.length}</p>
+        </article>
+        <article className="surface-card-soft p-5">
+          <p className="text-sm text-slate-600">Ky dang mo</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-900">{openMonths}</p>
+        </article>
+        <article className="surface-card-soft p-5">
+          <p className="text-sm text-slate-600">Ky da dong</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-900">{months.length - openMonths}</p>
+        </article>
+      </div>
+
       {showNewMonthForm && (
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Tạo Kỳ Quản Lý Mới</h2>
-          <div className="space-y-4">
+        <div className="surface-card-soft p-6">
+          <h2 className="text-lg font-semibold text-slate-900">Tao ky quan ly moi</h2>
+          <div className="mt-4 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-2 block text-sm font-medium text-slate-700">
                 Tháng (định dạng: YYYY-MM-01)
               </label>
               <input
@@ -98,19 +112,20 @@ export default function MonthsPage() {
                   date.setDate(1);
                   setNewMonthDate(date.toISOString().split('T')[0]);
                 }}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="input-field max-w-sm"
               />
             </div>
             <div className="flex gap-2">
               <button
                 onClick={handleCreateMonth}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                disabled={creatingMonth || creating}
+                className="btn-primary bg-emerald-600 hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Tạo
+                {creatingMonth || creating ? 'Dang tao...' : 'Tao'}
               </button>
               <button
                 onClick={() => setShowNewMonthForm(false)}
-                className="px-4 py-2 bg-gray-300 text-gray-900 rounded-lg hover:bg-gray-400 transition"
+                className="btn-secondary"
               >
                 Hủy
               </button>
@@ -119,61 +134,74 @@ export default function MonthsPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {actionError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {actionError}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {months.map((month) => (
-          <div key={month.id} className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-start justify-between mb-4">
+          <article key={month.id} className="surface-card p-6">
+            <div className="mb-4 flex items-start justify-between">
               <div>
-                <h3 className="text-lg font-bold text-gray-900">
+                <h3 className="text-lg font-semibold text-slate-900">
                   {new Date(month.month_year).toLocaleDateString('vi-VN', {
                     month: 'long',
                     year: 'numeric',
                   })}
                 </h3>
+                <p className="mt-1 text-xs font-medium uppercase tracking-[0.12em] text-slate-500">
+                  ID: {month.id}
+                </p>
               </div>
               <span
-                className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
                   month.status === 'open'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-gray-100 text-gray-800'
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : 'bg-slate-200 text-slate-700'
                 }`}
               >
                 {month.status === 'open' ? 'Đang mở' : 'Đã đóng'}
               </span>
             </div>
 
-            <div className="space-y-2 mb-4">
-              <p className="text-sm text-gray-600">
+            <div className="mb-5 space-y-2">
+              <p className="text-sm text-slate-600">
                 Chi phí cầu:
-                <span className="font-medium text-gray-900 ml-2">
+                <span className="ml-2 font-semibold text-slate-900">
                   {month.total_shuttlecock_expense.toLocaleString('vi-VN')} đ
                 </span>
               </p>
             </div>
 
             <div className="flex gap-2">
-              <a
-                href={`/dashboard/months/${month.id}`}
-                className="flex-1 text-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+              <Link
+                href="/dashboard/settlements"
+                className="btn-secondary flex-1 text-sm"
               >
-                Chi tiết
-              </a>
+                Quyết toán
+              </Link>
               {month.status === 'open' && (
-                <button className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition text-sm">
-                  Đóng kỳ
+                <button
+                  onClick={() => handleCloseMonth(month.id)}
+                  disabled={closing && closingMonthId === month.id}
+                  className="btn-primary flex-1 bg-amber-600 text-sm hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {closing && closingMonthId === month.id ? 'Đang đóng...' : 'Đóng kỳ'}
                 </button>
               )}
             </div>
-          </div>
+          </article>
         ))}
       </div>
 
       {months.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-lg shadow">
-          <p className="text-gray-600 mb-4">Chưa có kỳ quản lý nào</p>
+        <div className="surface-card py-12 text-center">
+          <p className="mb-4 text-slate-600">Chưa có kỳ quản lý nào</p>
           <button
             onClick={() => setShowNewMonthForm(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            className="btn-primary"
           >
             Tạo kỳ đầu tiên
           </button>

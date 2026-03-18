@@ -29,6 +29,13 @@ export interface AuthResponse {
   token: string;
 }
 
+export interface CurrentUserResponse {
+  id: string;
+  email: string;
+  name?: string;
+  role: "admin" | "member";
+}
+
 /**
  * Authentication Service
  * Handles all auth operations via Supabase
@@ -145,6 +152,21 @@ export class AuthService {
     }
 
     return data.session;
+  }
+
+  /**
+   * Get current authenticated user with profile data.
+   */
+  async getCurrentUser(): Promise<CurrentUserResponse> {
+    const session = await this.getSession();
+    const profile = await this.getUserById(session.user.id);
+
+    return {
+      id: session.user.id,
+      email: session.user.email || profile?.email || "",
+      name: profile?.name || (session.user.user_metadata?.name as string | undefined),
+      role: (profile?.role as "admin" | "member") || "member",
+    };
   }
 
   /**

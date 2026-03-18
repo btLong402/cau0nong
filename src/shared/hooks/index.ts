@@ -10,6 +10,8 @@ export type { UseFetchOptions } from './useFetch';
 export { useMutation } from './useMutation';
 export type { UseMutationOptions } from './useMutation';
 
+export { useDebouncedValue } from './useDebouncedValue';
+
 // Auth
 export { useAuth } from './useAuth';
 export type { User as AuthUser } from './useAuth';
@@ -39,3 +41,12 @@ export {
   useRecordAttendance,
 } from './useSessions';
 export type { Session, Attendance } from './useSessions';
+
+// Settlements
+export {
+  useMonthSettlements,
+  useSettlement,
+  useGenerateMonthSettlements,
+  useMarkSettlementPaid,
+} from './useSettlements';
+export type { GenerateSummary } from './useSettlements';

@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-interface UseFetchOptions {
+export interface UseFetchOptions {
   skip?: boolean;
   refetch?: number; // milliseconds to refetch
 }
@@ -29,11 +29,8 @@ export function useFetch<T>(
   const refetch = useCallback(async () => {
     setState((prev) => ({ ...prev, loading: true }));
     try {
-      const token = localStorage.getItem('auth_token');
       const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: 'include',
       });
 
       if (!response.ok) {

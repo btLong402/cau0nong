@@ -1,15 +1,38 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  const from = searchParams.get('from') || '/dashboard';
+  const registered = searchParams.get('registered') === 'true';
+
+  useEffect(() => {
+    async function checkCurrentSession() {
+      try {
+        const response = await fetch('/api/auth/me', { cache: 'no-store' });
+        if (response.ok) {
+          router.replace(from);
+          return;
+        }
+      } catch {
+        // Keep user on login page if session check fails.
+      } finally {
+        setCheckingSession(false);
+      }
+    }
+
+    checkCurrentSession();
+  }, [from, router]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -30,13 +53,7 @@ export default function LoginPage() {
         return;
       }
 
-      // Save token to localStorage
-      if (data.data?.token) {
-        localStorage.setItem('auth_token', data.data.token);
-      }
-
-      // Redirect to dashboard
-      router.push('/dashboard');
+      router.push(from);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -44,22 +61,39 @@ export default function LoginPage() {
     }
   }
 
+  if (checkingSession) {
+    return (
+      <div className="surface-card-soft p-8">
+        <div className="h-5 w-36 animate-pulse rounded bg-slate-200" />
+        <div className="mt-5 h-10 animate-pulse rounded bg-slate-100" />
+        <div className="mt-3 h-10 animate-pulse rounded bg-slate-100" />
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white rounded-lg shadow-2xl p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">CLB Cầu Lông</h1>
-        <p className="text-gray-600">Quản lý câu lạc bộ cầu lông</p>
+    <div className="surface-card p-7 sm:p-8">
+      <div className="mb-7">
+        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-700">Dang nhap</p>
+        <h1 className="mt-2 text-3xl font-semibold text-slate-900">Chao mung quay lai</h1>
+        <p className="mt-2 text-sm text-slate-600">Dang nhap de tiep tuc quan ly CLB cau long.</p>
       </div>
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-          <p className="text-red-800 text-sm">{error}</p>
+      {registered && (
+        <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          Dang ky thanh cong. Vui long dang nhap de bat dau.
         </div>
       )}
 
-      <form onSubmit={handleLogin} className="space-y-4">
+      {error && (
+        <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
+          <p className="text-sm text-rose-800">{error}</p>
+        </div>
+      )}
+
+      <form onSubmit={handleLogin} className="space-y-4" noValidate>
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700">
             Email
           </label>
           <input
@@ -68,13 +102,14 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="your@email.com"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="input-field"
             required
+            autoComplete="email"
           />
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="password" className="mb-2 block text-sm font-medium text-slate-700">
             Mật khẩu
           </label>
           <input
@@ -83,23 +118,24 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="input-field"
             required
+            autoComplete="current-password"
           />
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition disabled:opacity-50"
+          className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-65"
         >
           {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
         </button>
       </form>
 
-      <div className="mt-6 text-center text-sm text-gray-600">
+      <div className="mt-6 text-center text-sm text-slate-600">
         Chưa có tài khoản?{' '}
-        <Link href="/register" className="text-blue-600 hover:text-blue-700 font-medium">
+        <Link href="/register" className="font-medium text-blue-700 hover:text-blue-800">
           Đăng ký
         </Link>
       </div>

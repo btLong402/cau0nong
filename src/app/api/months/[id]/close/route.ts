@@ -1,21 +1,38 @@
 import { createPutHandler } from '@/shared/api';
 import { createMonthsService } from '@/modules/months/months.service';
+import { createSettlementsService } from '@/modules/settlements/settlements.service';
 import { NotFoundError, ValidationError, InvalidStateError } from '@/shared/api/base-errors';
 
-interface Params {
-  id: string;
+function parseMonthId(url: string): number {
+  const pathname = new URL(url).pathname;
+  const segments = pathname.split('/').filter(Boolean);
+  const id = Number(segments[segments.length - 2]);
+
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new ValidationError('Month ID is required');
+  }
+
+  return id;
 }
 
 export const PUT = createPutHandler({
-  handler: async (req, { params }: { params: Params }) => {
-    const { id } = params;
+  requireAuth: true,
+  requireRole: ['admin'],
+  handler: async (req) => {
+    const monthId = parseMonthId(req.url);
+    const url = new URL(req.url);
+    const autoGenerate = url.searchParams.get('autoGenerate') !== 'false';
+    let force = false;
 
-    if (!id) {
-      throw new ValidationError('Month ID is required');
+    try {
+      const payload = await req.json();
+      force = Boolean(payload?.force);
+    } catch {
+      force = false;
     }
 
     const monthsService = await createMonthsService();
-    const month = await monthsService.getMonth(parseInt(id));
+    const month = await monthsService.getMonth(monthId);
 
     if (!month) {
       throw new NotFoundError('Month not found');
@@ -25,8 +42,18 @@ export const PUT = createPutHandler({
       throw new InvalidStateError('Month is already closed');
     }
 
-    const closedMonth = await monthsService.closeMonth(parseInt(id));
+    const closedMonth = await monthsService.closeMonth(monthId);
+    let settlementSummary = null;
 
-    return { month: closedMonth };
+    if (autoGenerate) {
+      const settlementsService = await createSettlementsService();
+      settlementSummary = await settlementsService.generateForMonth(monthId, { force });
+    }
+
+    return {
+      month: closedMonth,
+      settlementSummary,
+      autoGenerate,
+    };
   },
 });

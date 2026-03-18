@@ -23,7 +23,10 @@ export const POST = createPostHandler({
     }
 
     const monthsService = await createMonthsService();
-    const month = await monthsService.createMonth(month_year, status || 'open');
+    const month = await monthsService.createMonth({
+      month_year,
+      status: status || 'open',
+    });
 
     return { month };
   },

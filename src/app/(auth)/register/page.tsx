@@ -70,21 +70,22 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-2xl p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Đăng Ký Tài Khoản</h1>
-        <p className="text-gray-600">Tạo tài khoản để quản lý CLB cầu lông</p>
+    <div className="surface-card p-7 sm:p-8">
+      <div className="mb-7">
+        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-700">Tao tai khoan</p>
+        <h1 className="mt-2 text-3xl font-semibold text-slate-900">Dang ky thanh vien moi</h1>
+        <p className="mt-2 text-sm text-slate-600">Hoan tat thong tin de su dung he thong quan ly CLB.</p>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-          <p className="text-red-800 text-sm">{error}</p>
+        <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
+          <p className="text-sm text-rose-800">{error}</p>
         </div>
       )}
 
-      <form onSubmit={handleRegister} className="space-y-4">
+      <form onSubmit={handleRegister} className="space-y-4" noValidate>
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="name" className="mb-2 block text-sm font-medium text-slate-700">
             Họ tên
           </label>
           <input
@@ -94,13 +95,14 @@ export default function RegisterPage() {
             value={formData.name}
             onChange={handleChange}
             placeholder="Nguyễn Văn A"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="input-field"
             required
+            autoComplete="name"
           />
         </div>
 
         <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="phone" className="mb-2 block text-sm font-medium text-slate-700">
             Số điện thoại
           </label>
           <input
@@ -110,13 +112,14 @@ export default function RegisterPage() {
             value={formData.phone}
             onChange={handleChange}
             placeholder="0901234567"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="input-field"
             required
+            autoComplete="tel"
           />
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700">
             Email
           </label>
           <input
@@ -126,13 +129,14 @@ export default function RegisterPage() {
             value={formData.email}
             onChange={handleChange}
             placeholder="your@email.com"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="input-field"
             required
+            autoComplete="email"
           />
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="password" className="mb-2 block text-sm font-medium text-slate-700">
             Mật khẩu
           </label>
           <input
@@ -142,13 +146,14 @@ export default function RegisterPage() {
             value={formData.password}
             onChange={handleChange}
             placeholder="••••••••"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="input-field"
             required
+            autoComplete="new-password"
           />
         </div>
 
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="confirmPassword" className="mb-2 block text-sm font-medium text-slate-700">
             Xác nhận mật khẩu
           </label>
           <input
@@ -158,23 +163,24 @@ export default function RegisterPage() {
             value={formData.confirmPassword}
             onChange={handleChange}
             placeholder="••••••••"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="input-field"
             required
+            autoComplete="new-password"
           />
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition disabled:opacity-50"
+          className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-65"
         >
           {loading ? 'Đang đăng ký...' : 'Đăng Ký'}
         </button>
       </form>
 
-      <div className="mt-6 text-center text-sm text-gray-600">
+      <div className="mt-6 text-center text-sm text-slate-600">
         Đã có tài khoản?{' '}
-        <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
+        <Link href="/login" className="font-medium text-blue-700 hover:text-blue-800">
           Đăng nhập
         </Link>
       </div>

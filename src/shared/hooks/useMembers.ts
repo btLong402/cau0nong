@@ -65,12 +65,11 @@ export function useUpdateMember() {
       setState({ loading: true, error: null });
 
       try {
-        const token = localStorage.getItem('auth_token');
         const response = await fetch(`/api/users/${memberId}`, {
+          credentials: 'include',
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(updates),
         });
@@ -110,12 +109,11 @@ export function useUpdateMemberBalance() {
       setState({ loading: true, error: null });
 
       try {
-        const token = localStorage.getItem('auth_token');
         const response = await fetch(`/api/users/${memberId}/balance`, {
+          credentials: 'include',
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ amount }),
         });

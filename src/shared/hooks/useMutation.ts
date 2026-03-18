@@ -5,7 +5,7 @@
 
 import { useState, useCallback } from 'react';
 
-interface UseMutationOptions<T> {
+export interface UseMutationOptions<T> {
   onSuccess?: (data: T) => void;
   onError?: (error: Error) => void;
 }
@@ -16,7 +16,7 @@ interface MutationState<T> {
   error: Error | null;
 }
 
-export function useMutation<T, V = any>(
+export function useMutation<T, V = unknown>(
   url: string,
   method: 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'POST',
   options?: UseMutationOptions<T>,
@@ -36,12 +36,11 @@ export function useMutation<T, V = any>(
       });
 
       try {
-        const token = localStorage.getItem('auth_token');
         const response = await fetch(url, {
           method,
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
           },
           body: payload ? JSON.stringify(payload) : undefined,
         });

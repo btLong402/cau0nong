@@ -89,12 +89,11 @@ export function useCreateSession() {
       setState({ loading: true, error: null });
 
       try {
-        const token = localStorage.getItem('auth_token');
         const response = await fetch(`/api/months/${monthId}/sessions`, {
+          credentials: 'include',
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             session_date: sessionDate,
@@ -141,14 +140,13 @@ export function useUpdateSession() {
       setState({ loading: true, error: null });
 
       try {
-        const token = localStorage.getItem('auth_token');
         const response = await fetch(
           `/api/months/${monthId}/sessions/${sessionId}`,
           {
+            credentials: 'include',
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify(updates),
           },
@@ -191,14 +189,11 @@ export function useDeleteSession() {
       setState({ loading: true, error: null });
 
       try {
-        const token = localStorage.getItem('auth_token');
         const response = await fetch(
           `/api/months/${monthId}/sessions/${sessionId}`,
           {
+            credentials: 'include',
             method: 'DELETE',
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
           },
         );
 
@@ -242,14 +237,13 @@ export function useRecordAttendance() {
       setState({ loading: true, error: null });
 
       try {
-        const token = localStorage.getItem('auth_token');
         const response = await fetch(
           `/api/months/${monthId}/sessions/${sessionId}/attendance`,
           {
+            credentials: 'include',
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({ records }),
           },

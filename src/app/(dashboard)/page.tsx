@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 interface Month {
   id: number;
@@ -10,19 +11,15 @@ interface Month {
 
 export default function DashboardPage() {
   const [months, setMonths] = useState<Month[]>([]);
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<{ totalMembers: number; openMonths: number; totalSessions: number } | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const token = localStorage.getItem('auth_token');
-
-        const response = await fetch('/api/months', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await fetch('/api/months');
 
         if (!response.ok) throw new Error('Failed to fetch months');
 
@@ -30,7 +27,7 @@ export default function DashboardPage() {
         setMonths(data.data?.months || []);
 
         // Calculate stats
-        const openMonths = data.data?.months?.filter((m: any) => m.status === 'open') || [];
+        const openMonths = data.data?.months?.filter((m: Month) => m.status === 'open') || [];
         setStats({
           totalMembers: 0,
           openMonths: openMonths.length,
@@ -47,84 +44,85 @@ export default function DashboardPage() {
   }, []);
 
   if (loading) {
-    return <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>;
+    return <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />;
   }
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Dashboard</h1>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Thành viên hoạt động</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{stats?.totalMembers || 0}</p>
-            </div>
-            <div className="text-4xl">👥</div>
-          </div>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-semibold text-slate-900">Tong quan he thong</h1>
+          <p className="mt-1 text-sm text-slate-600">Theo doi nhanh cac chi so van hanh co ban cua CLB.</p>
         </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Kỳ quản lý mở</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{stats?.openMonths || 0}</p>
-            </div>
-            <div className="text-4xl">📅</div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Buổi tập</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{stats?.totalSessions || 0}</p>
-            </div>
-            <div className="text-4xl">🎾</div>
-          </div>
-        </div>
+        <Link href="/dashboard/months" className="btn-secondary">
+          Quan ly ky
+        </Link>
       </div>
 
-      {/* Recent Months */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Kỳ quản lý gần đây</h2>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <article className="surface-card-soft p-5">
+          <p className="text-sm text-slate-600">Thanh vien hoat dong</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-900">{stats?.totalMembers || 0}</p>
+          <p className="mt-2 text-xs font-medium text-slate-500">Cap nhat theo du lieu profile</p>
+        </article>
+
+        <article className="surface-card-soft p-5">
+          <p className="text-sm text-slate-600">Ky quan ly dang mo</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-900">{stats?.openMonths || 0}</p>
+          <p className="mt-2 text-xs font-medium text-slate-500">Co the tao buoi tap moi</p>
+        </article>
+
+        <article className="surface-card-soft p-5">
+          <p className="text-sm text-slate-600">Tong buoi tap</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-900">{stats?.totalSessions || 0}</p>
+          <p className="mt-2 text-xs font-medium text-slate-500">Thong ke theo ky hien hanh</p>
+        </article>
+      </div>
+
+      <section className="surface-card overflow-hidden">
+        <div className="border-b border-slate-200 px-5 py-4">
+          <h2 className="text-lg font-semibold text-slate-900">Ky quan ly gan day</h2>
+        </div>
+
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="border-b">
+          <table className="w-full min-w-[620px]">
+            <thead className="bg-slate-50 text-left text-sm text-slate-700">
               <tr>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Kỳ</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Trạng thái</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Hành động</th>
+                <th className="px-5 py-3 font-medium">Ky</th>
+                <th className="px-5 py-3 font-medium">Trang thai</th>
+                <th className="px-5 py-3 font-medium">Hanh dong</th>
               </tr>
             </thead>
-            <tbody>
-              {months.slice(0, 5).map((month) => (
-                <tr key={month.id} className="border-b hover:bg-gray-50">
-                  <td className="py-3 px-4">{new Date(month.month_year).toLocaleDateString('vi-VN')}</td>
-                  <td className="py-3 px-4">
+            <tbody className="divide-y divide-slate-200 text-sm text-slate-800">
+              {months.slice(0, 6).map((month) => (
+                <tr key={month.id} className="hover:bg-slate-50">
+                  <td className="px-5 py-3">
+                    {new Date(month.month_year).toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' })}
+                  </td>
+                  <td className="px-5 py-3">
                     <span
-                      className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                        month.status === 'open'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
+                      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                        month.status === 'open' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'
                       }`}
                     >
-                      {month.status === 'open' ? 'Đang mở' : 'Đã đóng'}
+                      {month.status === 'open' ? 'Dang mo' : 'Da dong'}
                     </span>
                   </td>
-                  <td className="py-3 px-4">
-                    <a href={`/dashboard/months/${month.id}`} className="text-blue-600 hover:text-blue-700">
-                      Chi tiết →
-                    </a>
+                  <td className="px-5 py-3">
+                    <Link href="/dashboard/months" className="font-medium text-blue-700 hover:text-blue-900">
+                      Xem chi tiet
+                    </Link>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </div>
+
+        {months.length === 0 && (
+          <div className="px-5 py-8 text-sm text-slate-600">Chua co ky quan ly nao. Hay tao ky dau tien.</div>
+        )}
+      </section>
     </div>
   );
 }

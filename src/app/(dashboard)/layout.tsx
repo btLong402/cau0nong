@@ -2,36 +2,40 @@
 
 import { ReactNode, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
+interface DashboardUser {
+  id: string;
+  email: string;
+  name?: string;
+  role: 'admin' | 'member';
+}
+
+const navItems = [
+  { href: '/dashboard', label: 'Tong quan' },
+  { href: '/dashboard/members', label: 'Thanh vien' },
+  { href: '/dashboard/months', label: 'Ky quan ly' },
+  { href: '/dashboard/sessions', label: 'Buoi tap' },
+  { href: '/dashboard/settlements', label: 'Quyet toan' },
+];
+
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const pathname = usePathname();
+  const [user, setUser] = useState<DashboardUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch current user
     async function fetchUser() {
       try {
-        const token = localStorage.getItem('auth_token');
-        if (!token) {
-          router.push('/login');
-          return;
-        }
-
-        const response = await fetch('/api/auth/me', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await fetch('/api/auth/me', { cache: 'no-store' });
 
         if (!response.ok) {
-          localStorage.removeItem('auth_token');
-          router.push('/login');
+          router.replace(`/login?from=${encodeURIComponent(pathname)}`);
           return;
         }
 
@@ -39,31 +43,22 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         setUser(data.data?.user);
       } catch (error) {
         console.error('Failed to fetch user:', error);
-        router.push('/login');
+        router.replace(`/login?from=${encodeURIComponent(pathname)}`);
       } finally {
         setLoading(false);
       }
     }
 
     fetchUser();
-  }, [router]);
+  }, [pathname, router]);
 
   async function handleLogout() {
     try {
-      const token = localStorage.getItem('auth_token');
-      if (token) {
-        await fetch('/api/auth/logout', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-      }
+      await fetch('/api/auth/logout', { method: 'POST' });
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      localStorage.removeItem('auth_token');
-      router.push('/login');
+      router.replace('/login');
     }
   }
 
@@ -80,68 +75,74 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <html lang="vi">
-      <body className="bg-gray-50">
-        <div className="flex h-screen">
-          {/* Sidebar */}
-          <aside className="w-64 bg-slate-800 text-white shadow-lg">
-            <div className="p-6">
-              <h1 className="text-2xl font-bold">CLB Cầu Lông</h1>
-              <p className="text-slate-400 text-sm mt-1">Quản lý câu lạc bộ</p>
+    <div className="app-shell min-h-screen p-4 md:p-6">
+      <div className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-[1380px] gap-4 md:gap-6">
+        <aside className="surface-card hidden w-[260px] flex-col overflow-hidden lg:flex">
+          <div className="border-b border-slate-200 px-6 py-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">He thong</p>
+            <h1 className="mt-2 text-2xl font-semibold text-slate-900">CLB Cau Long</h1>
+            <p className="mt-1 text-sm text-slate-600">Quan ly toan bo van hanh</p>
+          </div>
+
+          <nav className="flex-1 space-y-1 p-4">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`block rounded-xl px-4 py-3 text-sm font-medium ${
+                    isActive
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-slate-700 hover:bg-blue-50 hover:text-blue-900'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="border-t border-slate-200 p-4">
+            <div className="rounded-xl bg-slate-50 p-3">
+              <p className="text-sm font-semibold text-slate-900">{user.name || user.email}</p>
+              <p className="mt-1 text-xs text-slate-600">
+                {user.role === 'admin' ? 'Quan tri vien' : 'Thanh vien'}
+              </p>
             </div>
+            <button
+              onClick={handleLogout}
+              className="btn-secondary mt-3 w-full border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+            >
+              Dang xuat
+            </button>
+          </div>
+        </aside>
 
-            <nav className="mt-8 space-y-2 px-4">
-              <Link
-                href="/dashboard"
-                className="block px-4 py-3 rounded-lg hover:bg-slate-700 transition"
-              >
-                📊 Dashboard
-              </Link>
-              <Link
-                href="/dashboard/members"
-                className="block px-4 py-3 rounded-lg hover:bg-slate-700 transition"
-              >
-                👥 Thành viên
-              </Link>
-              <Link
-                href="/dashboard/months"
-                className="block px-4 py-3 rounded-lg hover:bg-slate-700 transition"
-              >
-                📅 Kỳ quản lý
-              </Link>
-              <Link
-                href="/dashboard/sessions"
-                className="block px-4 py-3 rounded-lg hover:bg-slate-700 transition"
-              >
-                🎾 Buổi tập
-              </Link>
-            </nav>
-
-            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700">
-              <div className="mb-4">
-                <p className="text-sm text-slate-400">Đăng nhập với tư cách</p>
-                <p className="font-medium text-white">{user?.name}</p>
-                <p className="text-xs text-slate-400 mt-1">
-                  {user?.role === 'admin' ? '👨‍💼 Quản trị viên' : '👤 Thành viên'}
-                </p>
-              </div>
+        <section className="flex min-w-0 flex-1 flex-col gap-4 md:gap-5">
+          <header className="surface-card flex flex-wrap items-center justify-between gap-3 px-4 py-3 md:px-6">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Dashboard</p>
+              <h2 className="text-xl font-semibold text-slate-900">Van hanh CLB</h2>
+            </div>
+            <div className="flex items-center gap-3">
+              <p className="rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-800">
+                {user.role === 'admin' ? 'Admin' : 'Member'}
+              </p>
               <button
                 onClick={handleLogout}
-                className="w-full px-4 py-2 bg-slate-700 hover:bg-red-600 rounded-lg text-white text-sm font-medium transition"
+                className="btn-secondary lg:hidden"
               >
-                Đăng xuất
+                Dang xuat
               </button>
             </div>
-          </aside>
+          </header>
 
-          {/* Main Content */}
-          <main className="flex-1 overflow-auto">
-            <div className="p-8">
-              {children}
-            </div>
+          <main className="surface-card min-h-[calc(100vh-180px)] overflow-auto px-4 py-5 md:px-6 md:py-6">
+            {children}
           </main>
-        </div>
-      </body>
-    </html>
+        </section>
+      </div>
+    </div>
   );
 }

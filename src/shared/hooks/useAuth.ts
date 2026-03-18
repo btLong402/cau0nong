@@ -29,36 +29,19 @@ export function useAuth() {
     error: null,
   });
 
-  // Initialize auth from localStorage
+  // Initialize auth from server session cookie.
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      setState((prev) => ({
-        ...prev,
-        token,
-        loading: true,
-      }));
-      // Try to fetch current user
-      fetchCurrentUser(token);
-    } else {
-      setState((prev) => ({
-        ...prev,
-        loading: false,
-      }));
-    }
+    fetchCurrentUser();
   }, []);
 
-  async function fetchCurrentUser(token: string) {
+  async function fetchCurrentUser() {
     try {
-      const response = await fetch('/api/auth/me', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+        const response = await fetch('/api/auth/me', {
+          cache: 'no-store',
+          credentials: 'include',
+        });
 
       if (!response.ok) {
-        // Token invalid, clear it
-        localStorage.removeItem('auth_token');
         setState({
           user: null,
           token: null,
@@ -71,7 +54,7 @@ export function useAuth() {
       const data = await response.json();
       setState({
         user: data.data?.user || null,
-        token,
+        token: null,
         loading: false,
         error: null,
       });
@@ -108,17 +91,14 @@ export function useAuth() {
           throw new Error(data.error?.message || 'Login failed');
         }
 
-        const token = data.data?.token;
-        localStorage.setItem('auth_token', token);
-
         setState({
           user: data.data?.user,
-          token,
+          token: data.data?.token || null,
           loading: false,
           error: null,
         });
 
-        return { user: data.data?.user, token };
+        return { user: data.data?.user, token: data.data?.token || null };
       } catch (error) {
         const err =
           error instanceof Error ? error : new Error('Login failed');
@@ -190,21 +170,11 @@ export function useAuth() {
   );
 
   const logout = useCallback(async () => {
-    const token = state.token;
-
     try {
-      if (token) {
-        await fetch('/api/auth/logout', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-      }
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      localStorage.removeItem('auth_token');
       setState({
         user: null,
         token: null,
@@ -212,18 +182,13 @@ export function useAuth() {
         error: null,
       });
     }
-  }, [state.token]);
+  }, []);
 
   const refreshToken = useCallback(async () => {
-    const token = state.token;
-    if (!token) return;
-
     try {
       const response = await fetch('/api/auth/refresh', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: 'include',
       });
 
       const data = await response.json();
@@ -233,11 +198,10 @@ export function useAuth() {
       }
 
       const newToken = data.data?.token;
-      localStorage.setItem('auth_token', newToken);
 
       setState({
         user: data.data?.user,
-        token: newToken,
+        token: newToken || null,
         loading: false,
         error: null,
       });

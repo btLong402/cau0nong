@@ -25,6 +25,18 @@ export function extractBearerToken(req: NextRequest): string | null {
 }
 
 /**
+ * Extract auth token from header first, then fallback to auth cookie.
+ */
+export function extractAuthToken(req: NextRequest): string | null {
+  const bearerToken = extractBearerToken(req);
+  if (bearerToken) {
+    return bearerToken;
+  }
+
+  return req.cookies.get("auth_token")?.value || null;
+}
+
+/**
  * Decode JWT token (basic parsing, no verification)
  * WARNING: This is for development/testing. Production should verify signature.
  */
@@ -51,11 +63,11 @@ export async function extractAuthContext(
   req: NextRequest,
   traceId: string
 ): Promise<AuthContext> {
-  const token = extractBearerToken(req);
+  const token = extractAuthToken(req);
 
   if (!token) {
     throw new AuthenticationError(
-      "Missing or invalid Authorization header",
+      "Missing authentication token",
       traceId
     );
   }
@@ -163,7 +175,7 @@ export async function tryExtractAuthContext(
   _traceId: string
 ): Promise<AuthContext> {
   try {
-    const token = extractBearerToken(req);
+    const token = extractAuthToken(req);
     if (!token) {
       return createAnonymousContext();
     }

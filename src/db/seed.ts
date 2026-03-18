@@ -4,7 +4,6 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { randomUUID } from 'crypto';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -218,14 +217,14 @@ async function seedDatabase() {
   console.log('🎾 Creating sessions for January 2025...');
 
   const januaryMonthId = monthMap['2025-01-01'];
-  if (januaryMonthId) {
-    const adminUserId = userMap['admin@caulongclb.local'];
-    const longUserId = userMap['long@caulongclb.local'];
-    const hungUserId = userMap['hung@caulongclb.local'];
-    const ducUserId = userMap['duc@caulongclb.local'];
-    const minhUserId = userMap['minh@caulongclb.local'];
-    const tuanUserId = userMap['tuan@caulongclb.local'];
+  const adminUserId = userMap['admin@caulongclb.local'];
+  const longUserId = userMap['long@caulongclb.local'];
+  const hungUserId = userMap['hung@caulongclb.local'];
+  const ducUserId = userMap['duc@caulongclb.local'];
+  const minhUserId = userMap['minh@caulongclb.local'];
+  const tuanUserId = userMap['tuan@caulongclb.local'];
 
+  if (januaryMonthId) {
     // Session 1: Jan 4, 2025
     const session1 = await createSession(januaryMonthId, '2025-01-04', 200000, adminUserId, 'Buổi sân 1');
 

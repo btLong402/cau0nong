@@ -2,9 +2,10 @@ import { createGetHandler } from '@/shared/api';
 import { createAuthService } from '@/modules/auth/auth.service';
 
 export const GET = createGetHandler({
-  handler: async (req, context) => {
+  requireAuth: true,
+  handler: async () => {
     const authService = await createAuthService();
-    const user = await authService.getSession();
+    const user = await authService.getCurrentUser();
 
     return { user };
   },

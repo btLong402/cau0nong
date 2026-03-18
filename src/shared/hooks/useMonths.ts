@@ -63,12 +63,11 @@ export function useCreateMonth() {
       setState({ loading: true, error: null });
 
       try {
-        const token = localStorage.getItem('auth_token');
         const response = await fetch('/api/months', {
+          credentials: 'include',
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ month_year: monthYear, status }),
         });
@@ -108,12 +107,11 @@ export function useUpdateMonth() {
       setState({ loading: true, error: null });
 
       try {
-        const token = localStorage.getItem('auth_token');
         const response = await fetch(`/api/months/${monthId}`, {
+          credentials: 'include',
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(updates),
         });
@@ -152,12 +150,9 @@ export function useCloseMonth() {
     setState({ loading: true, error: null });
 
     try {
-      const token = localStorage.getItem('auth_token');
       const response = await fetch(`/api/months/${monthId}/close`, {
+        credentials: 'include',
         method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
       });
 
       const data = await response.json();

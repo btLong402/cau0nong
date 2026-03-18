@@ -1,52 +1,43 @@
 import { createGetHandler, createPutHandler } from '@/shared/api';
 import { createMonthsService } from '@/modules/months/months.service';
-import { NotFoundError, ValidationError } from '@/shared/api/base-errors';
+import { ValidationError } from '@/shared/api/base-errors';
 
-interface Params {
-  id: string;
+function parseMonthId(url: string): number {
+  const pathname = new URL(url).pathname;
+  const segments = pathname.split('/').filter(Boolean);
+  const monthId = Number(segments[segments.length - 1]);
+
+  if (!Number.isInteger(monthId) || monthId <= 0) {
+    throw new ValidationError('Month ID is required');
+  }
+
+  return monthId;
 }
 
 export const GET = createGetHandler({
-  handler: async (req, { params }: { params: Params }) => {
-    const { id } = params;
-
-    if (!id) {
-      throw new ValidationError('Month ID is required');
-    }
-
+  handler: async (req) => {
+    const monthId = parseMonthId(req.url);
     const monthsService = await createMonthsService();
-    const month = await monthsService.getMonth(parseInt(id));
-
-    if (!month) {
-      throw new NotFoundError('Month not found');
-    }
+    const month = await monthsService.getMonth(monthId);
 
     return { month };
   },
 });
 
 export const PUT = createPutHandler({
-  handler: async (req, { params }: { params: Params }) => {
-    const { id } = params;
+  handler: async (req) => {
+    const monthId = parseMonthId(req.url);
     const data = await req.json();
 
-    if (!id) {
-      throw new ValidationError('Month ID is required');
-    }
-
     const monthsService = await createMonthsService();
-    const month = await monthsService.getMonth(parseInt(id));
-
-    if (!month) {
-      throw new NotFoundError('Month not found');
-    }
+    await monthsService.getMonth(monthId);
 
     // Update shuttlecock expense if provided
     if (data.total_shuttlecock_expense !== undefined) {
-      await monthsService.updateShuttlecockExpense(parseInt(id), data.total_shuttlecock_expense);
+      await monthsService.updateShuttlecockExpense(monthId, data.total_shuttlecock_expense);
     }
 
-    const updatedMonth = await monthsService.getMonth(parseInt(id));
+    const updatedMonth = await monthsService.getMonth(monthId);
     return { month: updatedMonth };
   },
 });
