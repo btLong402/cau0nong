@@ -274,6 +274,8 @@ export const calculateMonthlySettlement = (input: SettlementInput): Omit<Monthly
     eventDebt,
   );
 
+  const isPaid = totalDue === 0;
+
   return {
     month_id: input.monthId,
     user_id: userId,
@@ -285,8 +287,8 @@ export const calculateMonthlySettlement = (input: SettlementInput): Omit<Monthly
     shuttlecock_buyer_offset: shuttlecockBuyerOffset,
     event_debt: eventDebt,
     total_due: totalDue,
-    is_paid: false,
-    paid_amount: null,
-    paid_at: null,
+    is_paid: isPaid,
+    paid_amount: isPaid ? 0 : null,
+    paid_at: isPaid ? new Date().toISOString() : null,
   } as Omit<MonthlySetting, 'id' | 'created_at'>;
 };
