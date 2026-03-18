@@ -139,37 +139,41 @@ export default function MyAccountPage() {
 
       {/* Current Month Summary */}
       {current_month && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="stat-card text-center">
-            <p className="stat-label">Tháng hiện tại</p>
-            <p className="mt-1 text-lg font-bold text-[var(--foreground)]">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="stat-card p-3 sm:p-5 text-center">
+            <p className="stat-label text-[10px] sm:text-xs">Tháng hiện tại</p>
+            <p className="mt-0.5 text-base sm:text-lg font-bold text-[var(--foreground)]">
               {formatMonth(current_month.month_year)}
             </p>
-            <span className={`mt-1 badge ${current_month.status === 'open' ? 'badge-success' : 'badge-neutral'}`}>
-              {current_month.status === 'open' ? 'Đang mở' : 'Đã đóng'}
-            </span>
+            <div className="mt-1 flex justify-center">
+              <span className={`badge text-[10px] sm:text-xs ${current_month.status === 'open' ? 'badge-success' : 'badge-neutral'}`}>
+                {current_month.status === 'open' ? 'Đang mở' : 'Đã đóng'}
+              </span>
+            </div>
           </div>
-          <div className="stat-card text-center">
-            <p className="stat-label">Buổi tham gia</p>
-            <p className="mt-1 text-lg font-bold text-[var(--primary)]">
+          <div className="stat-card p-3 sm:p-5 text-center">
+            <p className="stat-label text-[10px] sm:text-xs">Buổi tham gia</p>
+            <p className="mt-0.5 text-base sm:text-lg font-bold text-[var(--primary)]">
               {current_month.sessions_attended} / {current_month.total_sessions}
             </p>
-            <p className="text-xs text-[var(--muted)] mt-1">buổi</p>
+            <p className="text-[10px] text-[var(--muted)]">buổi</p>
           </div>
-          <div className="stat-card text-center">
-            <p className="stat-label">Tiền cần đóng</p>
-            <p className={`mt-1 text-lg font-bold ${
+          <div className="stat-card p-3 sm:p-5 text-center col-span-2 sm:col-span-1 border-t-2 border-t-[var(--surface-border)] sm:border-t-0">
+            <p className="stat-label text-[10px] sm:text-xs">Tiền cần đóng</p>
+            <p className={`mt-0.5 text-base sm:text-lg font-bold ${
               current_settlement?.is_paid ? 'text-[var(--accent)]' : 'text-[var(--danger)]'
             }`}>
               {current_settlement
                 ? formatCurrency(current_settlement.total_due)
                 : '—'}
             </p>
-            {current_settlement && (
-              <span className={`mt-1 badge ${current_settlement.is_paid ? 'badge-success' : 'badge-warning'}`}>
-                {current_settlement.is_paid ? 'Đã thanh toán' : 'Chưa thanh toán'}
-              </span>
-            )}
+            <div className="mt-1 flex justify-center">
+              {current_settlement && (
+                <span className={`badge text-[10px] sm:text-xs ${current_settlement.is_paid ? 'badge-success' : 'badge-warning'}`}>
+                  {current_settlement.is_paid ? 'Đã thanh toán' : 'Chưa thanh toán'}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       )}

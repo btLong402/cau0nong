@@ -661,6 +661,21 @@ a, button, input, select, textarea {
     to { transform: rotate(360deg); }
   }
 
+  .collapsible-container {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 250ms ease-out;
+    overflow: hidden;
+  }
+
+  .collapsible-container.is-expanded {
+    grid-template-rows: 1fr;
+  }
+
+  .collapsible-content {
+    min-height: 0;
+  }
+
   /* ===================================================================
      Responsive Utilities
      =================================================================== */

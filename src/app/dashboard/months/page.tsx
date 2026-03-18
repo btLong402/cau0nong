@@ -90,18 +90,18 @@ export default function MonthsPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="stat-card">
-          <p className="stat-label">Tổng kỳ đã tạo</p>
-          <p className="stat-value">{months.length}</p>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="stat-card p-3 sm:p-5">
+          <p className="stat-label text-[10px] sm:text-xs">Tổng kỳ</p>
+          <p className="stat-value text-xl sm:text-2xl">{months.length}</p>
         </div>
-        <div className="stat-card">
-          <p className="stat-label">Kỳ đang mở</p>
-          <p className="stat-value text-[var(--primary)]">{openMonths}</p>
+        <div className="stat-card p-3 sm:p-5 border-l-4 border-l-[var(--primary)]">
+          <p className="stat-label text-[10px] sm:text-xs">Đang mở</p>
+          <p className="stat-value text-xl sm:text-2xl text-[var(--primary)]">{openMonths}</p>
         </div>
-        <div className="stat-card">
-          <p className="stat-label">Kỳ đã đóng</p>
-          <p className="stat-value">{months.length - openMonths}</p>
+        <div className="stat-card p-3 sm:p-5 col-span-2 sm:col-span-1">
+          <p className="stat-label text-[10px] sm:text-xs">Kỳ đã đóng</p>
+          <p className="stat-value text-xl sm:text-2xl">{months.length - openMonths}</p>
         </div>
       </div>
 

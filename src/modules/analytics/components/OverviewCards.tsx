@@ -21,14 +21,14 @@ function StatCard({
   loading: boolean;
 }) {
   return (
-    <div className="stat-card">
-      <p className="stat-label">{label}</p>
+    <div className="stat-card p-3 sm:p-5">
+      <p className="stat-label text-[10px] sm:text-xs">{label}</p>
       {loading ? (
         <div className="mt-2 skeleton h-8 w-24" />
       ) : (
-        <p className={`stat-value ${color}`}>
+        <p className={`stat-value truncate text-lg sm:text-2xl ${color}`}>
           {value.toLocaleString('vi-VN')}
-          {suffix && <span className="text-sm font-medium">{suffix}</span>}
+          {suffix && <span className="text-xs sm:text-sm font-medium">{suffix}</span>}
         </p>
       )}
     </div>
