@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 /**
  * Browser/Client side Supabase client
@@ -47,6 +48,20 @@ export const createServerSupabaseClient = async () => {
   }
 
   return client;
+};
+
+/**
+ * Admin Supabase client
+ * Bypasses RLS. ONLY use for internal administrative tasks.
+ */
+export const createAdminClient = () => {
+  const { createClient } = require("@supabase/supabase-js");
+  return createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 };
 
 // Alias for backward compatibility

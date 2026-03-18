@@ -3,7 +3,7 @@
  * Handles user registration, login, session management with Supabase Auth
  */
 
-import { createServerSupabaseClient } from "@/lib/supabase";
+import { createServerSupabaseClient, createAdminClient } from "@/lib/supabase";
 import { AuthenticationError, ConflictError, ServerError } from "@/shared/api";
 import { NextRequest } from "next/server";
 
@@ -78,7 +78,8 @@ export class AuthService {
       }
 
       // Create user profile in public.users table
-      await this.createUserProfile({
+      const adminClient = createAdminClient();
+      await this.createUserProfile(adminClient, {
         id: authData.user.id,
         email: data.email,
         name: data.name,
@@ -222,14 +223,14 @@ export class AuthService {
    * Create user profile in public.users table
    * This mirrors the auth user for easier querying
    */
-  private async createUserProfile(profile: {
+  private async createUserProfile(adminClient: any, profile: {
     id: string;
     email: string;
     name: string;
     phone: string;
     role: "admin" | "member";
   }) {
-    const { error } = await this.supabase.from("users").insert([
+    const { error } = await adminClient.from("users").insert([
       {
         id: profile.id,
         email: profile.email,
