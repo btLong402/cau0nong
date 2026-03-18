@@ -142,6 +142,27 @@ export class AuthService {
   }
 
   /**
+   * Sign in with phone number + password
+   * Looks up email by phone, then delegates to signIn
+   */
+  async signInWithPhone(phone: string, password: string): Promise<AuthResponse> {
+    // Lookup user by phone to get email
+    const { data: userData, error: lookupError } = await this.supabase
+      .from("users")
+      .select("email")
+      .eq("phone", phone)
+      .eq("is_active", true)
+      .single();
+
+    if (lookupError || !userData?.email) {
+      throw new AuthenticationError("Phone number not found or inactive");
+    }
+
+    // Delegate to email-based sign in
+    return this.signIn({ email: userData.email, password });
+  }
+
+  /**
    * Get current authenticated user session
    */
   async getSession() {

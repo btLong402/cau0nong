@@ -1,25 +1,43 @@
 import { createPostHandler } from '@/shared/api';
-import { emailSchema } from '@/shared/api/base-validators';
 import { createAuthService } from '@/modules/auth/auth.service';
 import { ValidationError } from '@/shared/api/base-errors';
 import { successResponse } from '@/shared/api/base-response';
 import { NextResponse } from 'next/server';
 
+/**
+ * Detect if input is a phone number (starts with 0, +84, etc.)
+ */
+function isPhoneNumber(input: string): boolean {
+  const trimmed = input.trim();
+  return /^(\+?\d{9,15}|0\d{8,11})$/.test(trimmed);
+}
+
 export const POST = createPostHandler({
   handler: async (req, context) => {
-    const { email, password } = await req.json();
-    
-    if (!email || !password) {
-      throw new ValidationError('Missing required fields: email, password');
-    }
+    const { email, phone, password, identifier } = await req.json();
 
-    const emailValidation = emailSchema.safeParse(email);
-    if (!emailValidation.success) {
-      throw new ValidationError(`Invalid email: ${emailValidation.error.message}`);
+    if (!password) {
+      throw new ValidationError('Missing required field: password');
     }
 
     const authService = await createAuthService();
-    const result = await authService.signIn({ email, password });
+    let result;
+
+    // Support 3 modes:
+    // 1. { email, password } — classic email login
+    // 2. { phone, password } — explicit phone login
+    // 3. { identifier, password } — auto-detect email vs phone
+    if (phone) {
+      result = await authService.signInWithPhone(phone, password);
+    } else if (identifier && isPhoneNumber(identifier)) {
+      result = await authService.signInWithPhone(identifier, password);
+    } else {
+      const emailValue = email || identifier;
+      if (!emailValue) {
+        throw new ValidationError('Missing required field: email, phone, or identifier');
+      }
+      result = await authService.signIn({ email: emailValue, password });
+    }
 
     const response = NextResponse.json(
       successResponse(
@@ -43,3 +61,4 @@ export const POST = createPostHandler({
     return response;
   },
 });
+

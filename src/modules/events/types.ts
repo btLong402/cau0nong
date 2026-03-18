@@ -14,6 +14,7 @@ export interface CreateEventData {
   event_date: string; // YYYY-MM-DD
   total_support: number;
   total_expense: number;
+  month_id?: number | null;
 }
 
 export interface UpdateEventData {
@@ -21,6 +22,7 @@ export interface UpdateEventData {
   event_date?: string;
   total_support?: number;
   total_expense?: number;
+  month_id?: number | null;
 }
 
 // Composite types

@@ -75,6 +75,7 @@ export class EventsRepository extends Repository<Event> {
     event_date: string;
     total_support: number;
     total_expense: number;
+    month_id?: number | null;
   }): Promise<Event> {
     return this.create(data as any);
   }
@@ -89,6 +90,7 @@ export class EventsRepository extends Repository<Event> {
       event_date: string;
       total_support: number;
       total_expense: number;
+      month_id: number | null;
     }>
   ): Promise<Event> {
     return this.update(id, {

@@ -8,6 +8,7 @@ import type {
   SessionAttendance,
   ShuttlecockDetail,
   MonthlySetting,
+  EventParticipant,
   User,
 } from "./types";
 
@@ -119,15 +120,22 @@ export const calculateCarriedBalance = (
  * tong_can_dong = tong_tien_san_ca_nhan_trong_thang
  *               + tien_cau_ca_nhan
  *               + no_ton_dong
+ *               + event_debt
  *               - so_du
+ *               - court_payer_offset
+ *               - shuttlecock_buyer_offset
  */
 export const calculateTotalDue = (
   courtFee: number,
   shuttlecockFee: number,
   pastDebt: number,
-  carriedBalance: number
+  carriedBalance: number,
+  courtPayerOffset: number = 0,
+  shuttlecockBuyerOffset: number = 0,
+  eventDebt: number = 0,
 ): number => {
-  const total = courtFee + shuttlecockFee + pastDebt - carriedBalance;
+  const total = courtFee + shuttlecockFee + pastDebt + eventDebt
+    - carriedBalance - courtPayerOffset - shuttlecockBuyerOffset;
   return Math.max(0, Math.round(total * 100) / 100); // never negative
 };
 
@@ -146,6 +154,57 @@ export const calculateEventContributionPerPerson = (
 };
 
 /**
+ * Calculate court payer offset for a user in a month
+ * If user paid for court rental, that amount is deducted from their dues
+ */
+export const calculatePayerOffset = (
+  sessions: Session[],
+  userId: string
+): number => {
+  let total = 0;
+  for (const session of sessions) {
+    if (session.payer_user_id === userId) {
+      total += session.court_expense_amount;
+    }
+  }
+  return Math.round(total * 100) / 100;
+};
+
+/**
+ * Calculate shuttlecock buyer offset for a user in a month
+ * If user bought shuttlecocks, that amount is deducted from their dues
+ */
+export const calculateBuyerOffset = (
+  shuttlecockDetails: ShuttlecockDetail[],
+  userId: string
+): number => {
+  let total = 0;
+  for (const detail of shuttlecockDetails) {
+    if (detail.buyer_user_id === userId) {
+      total += detail.quantity * detail.unit_price;
+    }
+  }
+  return Math.round(total * 100) / 100;
+};
+
+/**
+ * Calculate event debt for a user
+ * Sum of unpaid event contributions linked to this month
+ */
+export const calculateEventDebtForUser = (
+  eventParticipants: EventParticipant[],
+  userId: string
+): number => {
+  let total = 0;
+  for (const ep of eventParticipants) {
+    if (ep.user_id === userId && !ep.is_paid && ep.contribution_per_person > 0) {
+      total += ep.contribution_per_person;
+    }
+  }
+  return Math.round(total * 100) / 100;
+};
+
+/**
  * Main settlement calculation engine
  * Tính toàn bộ số tiền cần đóng cho 1 user trong 1 tháng
  */
@@ -156,6 +215,7 @@ export interface SettlementInput {
   attendances: SessionAttendance[];
   shuttlecockExpense: ShuttlecockDetail[];
   previousSettlement?: MonthlySetting;
+  eventParticipants?: EventParticipant[];
 }
 
 export const calculateMonthlySettlement = (input: SettlementInput): Omit<MonthlySetting, 'id' | 'created_at'> => {
@@ -165,6 +225,7 @@ export const calculateMonthlySettlement = (input: SettlementInput): Omit<Monthly
     attendances,
     shuttlecockExpense,
     previousSettlement,
+    eventParticipants,
   } = input;
 
   // Step 1: Tính tiền sân cá nhân các buổi trong tháng
@@ -193,12 +254,24 @@ export const calculateMonthlySettlement = (input: SettlementInput): Omit<Monthly
       ? previousSettlement.paid_amount - previousSettlement.total_due
       : 0;
 
-  // Step 4: Tính tổng tiền cần đóng
+  // Step 4: Tính offset cho người ứng tiền
+  const courtPayerOffset = calculatePayerOffset(sessions, userId);
+  const shuttlecockBuyerOffset = calculateBuyerOffset(shuttlecockExpense, userId);
+
+  // Step 5: Tính event debt
+  const eventDebt = eventParticipants
+    ? calculateEventDebtForUser(eventParticipants, userId)
+    : 0;
+
+  // Step 6: Tính tổng tiền cần đóng
   const totalDue = calculateTotalDue(
     courtFee,
     shuttlecockFee,
     pastDebt,
-    carriedBalance
+    carriedBalance,
+    courtPayerOffset,
+    shuttlecockBuyerOffset,
+    eventDebt,
   );
 
   return {
@@ -208,6 +281,9 @@ export const calculateMonthlySettlement = (input: SettlementInput): Omit<Monthly
     shuttlecock_fee: shuttlecockFee,
     past_debt: pastDebt,
     balance_carried: carriedBalance,
+    court_payer_offset: courtPayerOffset,
+    shuttlecock_buyer_offset: shuttlecockBuyerOffset,
+    event_debt: eventDebt,
     total_due: totalDue,
     is_paid: false,
     paid_amount: null,

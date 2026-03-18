@@ -1,10 +1,6 @@
-/**
- * Settlements Service
- * Orchestrates monthly settlement generation and payment confirmation.
- */
-
 import { calculateMonthlySettlement } from "@/lib/calculations";
 import {
+  EventParticipant,
   MonthlySetting,
   Session,
   SessionAttendance,
@@ -12,6 +8,9 @@ import {
 } from "@/lib/types";
 import { createMonthsService } from "@/modules/months/months.service";
 import { createSessionsService } from "@/modules/sessions/sessions.service";
+import { createShuttlecocksRepository } from "@/modules/shuttlecocks/shuttlecocks.repository";
+import { createEventParticipantsRepository } from "@/modules/events/event-participants.repository";
+import { createEventsRepository } from "@/modules/events/events.repository";
 import {
   ConflictError,
   InvalidStateError,
@@ -175,10 +174,8 @@ export class SettlementsService {
       );
     }
 
-    const shuttlecockExpense = this.toShuttlecockDetails(
-      monthId,
-      month.total_shuttlecock_expense
-    );
+    const shuttlecockDetails = await this.getShuttlecockDetails(monthId);
+    const eventParticipants = await this.getEventParticipantsForMonth(monthId);
 
     const rows: Array<Omit<MonthlySetting, "id" | "created_at">> = [];
     for (const userId of participants) {
@@ -193,8 +190,9 @@ export class SettlementsService {
           monthId,
           sessions,
           attendances,
-          shuttlecockExpense,
+          shuttlecockExpense: shuttlecockDetails,
           previousSettlement: previousSettlement || undefined,
+          eventParticipants,
         })
       );
     }
@@ -256,23 +254,46 @@ export class SettlementsService {
     return Array.from(ids);
   }
 
-  private toShuttlecockDetails(monthId: number, totalExpense: number): ShuttlecockDetail[] {
-    const amount = Math.max(0, Number(totalExpense || 0));
-    if (amount === 0) {
+  /**
+   * Fetch actual shuttlecock detail records for a month
+   */
+  private async getShuttlecockDetails(monthId: number): Promise<ShuttlecockDetail[]> {
+    try {
+      const repo = await createShuttlecocksRepository();
+      return await repo.findByMonth(monthId);
+    } catch {
       return [];
     }
+  }
 
-    return [
-      {
-        id: 0,
-        month_id: monthId,
-        purchase_date: new Date().toISOString().split("T")[0],
-        quantity: 1,
-        unit_price: amount,
-        buyer_user_id: "",
-        created_at: new Date().toISOString(),
-      },
-    ];
+  /**
+   * Fetch event participants for events linked to this month
+   */
+  private async getEventParticipantsForMonth(monthId: number): Promise<EventParticipant[]> {
+    try {
+      const eventsRepo = await createEventsRepository();
+      const participantsRepo = await createEventParticipantsRepository();
+
+      // Find events linked to this month
+      const { data: events } = await (eventsRepo as any).supabase
+        .from("events")
+        .select("id")
+        .eq("month_id", monthId);
+
+      if (!events || events.length === 0) {
+        return [];
+      }
+
+      const allParticipants: EventParticipant[] = [];
+      for (const event of events) {
+        const participants = await participantsRepo.findByEvent(event.id);
+        allParticipants.push(...participants);
+      }
+
+      return allParticipants;
+    } catch {
+      return [];
+    }
   }
 }
 

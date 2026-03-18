@@ -72,6 +72,9 @@ export interface MonthlySetting {
   shuttlecock_fee: number;
   past_debt: number;
   balance_carried: number;
+  court_payer_offset: number;
+  shuttlecock_buyer_offset: number;
+  event_debt: number;
   total_due: number;
   is_paid: boolean;
   paid_amount: number | null;
@@ -97,6 +100,7 @@ export interface Event {
   event_date: string; // YYYY-MM-DD
   total_support: number;
   total_expense: number;
+  month_id?: number | null;
   created_at: string;
   updated_at: string;
 }

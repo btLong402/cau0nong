@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -43,7 +43,7 @@ export default function LoginPage() {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ identifier, password }),
       });
 
       const data = await response.json();
@@ -93,18 +93,18 @@ export default function LoginPage() {
 
       <form onSubmit={handleLogin} className="space-y-4" noValidate>
         <div>
-          <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700">
-            Email
+          <label htmlFor="identifier" className="mb-2 block text-sm font-medium text-slate-700">
+            Email hoặc Số điện thoại
           </label>
           <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="your@email.com"
+            id="identifier"
+            type="text"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            placeholder="your@email.com hoặc 0909xxxxxx"
             className="input-field"
             required
-            autoComplete="email"
+            autoComplete="username"
           />
         </div>
 

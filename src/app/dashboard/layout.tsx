@@ -15,12 +15,19 @@ interface DashboardUser {
   role: 'admin' | 'member';
 }
 
-const navItems = [
+const adminNavItems = [
   { href: '/dashboard', label: 'Tổng quan' },
+  { href: '/dashboard/my-account', label: 'Trang cá nhân' },
   { href: '/dashboard/members', label: 'Thành viên' },
   { href: '/dashboard/months', label: 'Kỳ quản lý' },
   { href: '/dashboard/sessions', label: 'Buổi tập' },
   { href: '/dashboard/settlements', label: 'Quyết toán' },
+  { href: '/dashboard/events', label: 'Sự kiện' },
+  { href: '/dashboard/videos', label: 'Thư viện video' },
+];
+
+const memberNavItems = [
+  { href: '/dashboard/my-account', label: 'Trang cá nhân' },
   { href: '/dashboard/events', label: 'Sự kiện' },
   { href: '/dashboard/videos', label: 'Thư viện video' },
 ];
@@ -87,7 +94,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
 
           <nav className="flex-1 space-y-1 p-4">
-            {navItems.map((item) => {
+            {(user.role === 'admin' ? adminNavItems : memberNavItems).map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
                 <Link
