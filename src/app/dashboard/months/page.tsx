@@ -177,7 +177,7 @@ export default function MonthsPage() {
 
             <div className="flex gap-2">
               <Link
-                href="/dashboard/settlements"
+                href={`/dashboard/settlements?monthId=${month.id}`}
                 className="btn-secondary flex-1 text-sm"
               >
                 Quyết toán

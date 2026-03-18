@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   SettlementListItem,
   useDebouncedValue,
@@ -31,7 +32,12 @@ function formatMonthLabel(value: string) {
 export default function SettlementsPage() {
   const { months, loading: monthsLoading, error: monthsError } = useMonths();
 
-  const [selectedMonthId, setSelectedMonthId] = useState<number | null>(null);
+  const searchParams = useSearchParams();
+  const monthIdParam = searchParams.get('monthId');
+
+  const [selectedMonthId, setSelectedMonthId] = useState<number | null>(
+    monthIdParam ? parseInt(monthIdParam, 10) : null
+  );
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'paid' | 'unpaid'>('all');
   const [searchUser, setSearchUser] = useState('');
   const [page, setPage] = useState(1);
@@ -142,6 +148,16 @@ export default function SettlementsPage() {
     await refetch();
   }
 
+  // Handle URL change when user navigates with a different monthId
+  useEffect(() => {
+    if (monthIdParam) {
+      const id = parseInt(monthIdParam, 10);
+      if (!isNaN(id) && id !== selectedMonthId) {
+        setSelectedMonthId(id);
+      }
+    }
+  }, [monthIdParam]);
+
   if (monthsLoading) {
     return <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />;
   }
@@ -213,7 +229,7 @@ export default function SettlementsPage() {
 
       {generateSummary && (
         <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
-          Hoàn tất tạo quyết toán cho tháng {generateSummary.monthId}: {generateSummary.generatedCount} dòng,
+          Hoàn tất tạo quyết toán cho {selectedMonth ? formatMonthLabel(selectedMonth.month_year) : `tháng ${generateSummary.monthId}`}: {generateSummary.generatedCount} dòng,
           tổng cần thu {formatCurrency(generateSummary.totalDue)}.
         </div>
       )}
@@ -225,18 +241,42 @@ export default function SettlementsPage() {
         formatCurrency={formatCurrency}
       />
 
-      <SettlementsTable
-        settlements={settlements}
-        loading={settlementsLoading}
-        pagination={pagination}
-        monthLabel={selectedMonth ? `- ${formatMonthLabel(selectedMonth.month_year)}` : ''}
-        onOpenPayment={setSelectedSettlement}
-        onSortColumn={handleSortColumn}
-        renderSortIndicator={renderSortIndicator}
-        onPrevPage={() => setPage((prev) => Math.max(1, prev - 1))}
-        onNextPage={() => setPage((prev) => prev + 1)}
-        formatCurrency={formatCurrency}
-      />
+      {settlements.length === 0 && !settlementsLoading && (
+        <div className="surface-card flex flex-col items-center justify-center p-12 text-center">
+          <div className="mb-4 rounded-full bg-slate-100 p-4">
+            <svg className="h-8 w-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-slate-900">Chưa có dữ liệu quyết toán</h3>
+          <p className="mb-6 mt-1 max-w-xs text-sm text-slate-600">
+            Dữ liệu quyết toán cho tháng này chưa được khởi tạo. Nhấn nút bên dưới để hệ thống tự động tính toán.
+          </p>
+          <button
+            type="button"
+            onClick={() => handleGenerate(false)}
+            disabled={generating}
+            className="btn-primary"
+          >
+            {generating ? 'Đang tạo...' : 'Tạo quyết toán ngay'}
+          </button>
+        </div>
+      )}
+
+      {settlements.length > 0 && (
+        <SettlementsTable
+          settlements={settlements}
+          loading={settlementsLoading}
+          pagination={pagination}
+          monthLabel={selectedMonth ? `- ${formatMonthLabel(selectedMonth.month_year)}` : ''}
+          onOpenPayment={setSelectedSettlement}
+          onSortColumn={handleSortColumn}
+          renderSortIndicator={renderSortIndicator}
+          onPrevPage={() => setPage((prev) => Math.max(1, prev - 1))}
+          onNextPage={() => setPage((prev) => prev + 1)}
+          formatCurrency={formatCurrency}
+        />
+      )}
 
       <PaymentHistoryPanel monthId={activeMonthId} formatCurrency={formatCurrency} />
 

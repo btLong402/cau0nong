@@ -131,6 +131,27 @@ export class UsersRepository extends Repository<User> {
       throw mapSupabaseError(error);
     }
   }
+
+  /**
+   * Search users by name, email or ID
+   */
+  async searchUsers(query: string): Promise<User[]> {
+    try {
+      const escaped = query.trim().replace(/,/g, "\\,");
+      if (!escaped) return [];
+
+      const { data, error } = await this.supabase
+        .from("users")
+        .select("*")
+        .or(`name.ilike.%${escaped}%,email.ilike.%${escaped}%,id.eq.${escaped}`)
+        .limit(100);
+
+      if (error) throw error;
+      return (data || []) as User[];
+    } catch (error) {
+      throw mapSupabaseError(error);
+    }
+  }
 }
 
 /**

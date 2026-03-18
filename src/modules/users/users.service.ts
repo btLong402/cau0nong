@@ -146,6 +146,13 @@ export class UsersService {
       admins,
     };
   }
+
+  /**
+   * Search users by keyword
+   */
+  async searchUsers(query: string): Promise<User[]> {
+    return await this.repository.searchUsers(query);
+  }
 }
 
 /**

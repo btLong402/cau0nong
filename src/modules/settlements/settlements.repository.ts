@@ -85,10 +85,23 @@ export class SettlementsRepository extends Repository<MonthlySetting> {
 
       const normalizedSearch = query.search?.trim();
       if (normalizedSearch) {
-        const escaped = normalizedSearch.replace(/,/g, "\\,");
-        builder = builder.or(
-          `user_id.ilike.%${escaped}%,users.name.ilike.%${escaped}%,users.email.ilike.%${escaped}%`
-        );
+        // Step 1: Find users matching the search criteria
+        const { data: matchedUsers } = await this.supabase
+          .from("users")
+          .select("id")
+          .or(`name.ilike.%${normalizedSearch}%,email.ilike.%${normalizedSearch}%`);
+
+        const matchedIds = matchedUsers?.map(u => u.id) || [];
+
+        // Step 2: Filter by these IDs or specific settlement fields
+        // We use .in() for the user IDs match
+        if (matchedIds.length > 0) {
+          builder = builder.in("user_id", matchedIds);
+        } else {
+          // If no users match, but there's a search, we might want to return nothing 
+          // unless the search string itself IS a valid UUID (unlikely for users)
+          builder = builder.eq("user_id", "00000000-0000-0000-0000-000000000000"); // Empty result
+        }
       }
 
       const { data, error, count } = await builder

@@ -60,7 +60,8 @@ export function SettlementsTable({
                 <th className="px-4 py-3 font-medium">Tiền sân</th>
                 <th className="px-4 py-3 font-medium">Tiền cầu</th>
                 <th className="px-4 py-3 font-medium">Nợ cũ</th>
-                <th className="px-4 py-3 font-medium">Số dư trừ</th>
+                <th className="px-4 py-3 font-medium text-blue-700">Cấn trừ (ứng)</th>
+                <th className="px-4 py-3 font-medium text-rose-700">Nợ sự kiện</th>
                 <th className="px-4 py-3 font-medium">
                   <button
                     type="button"
@@ -103,7 +104,8 @@ export function SettlementsTable({
                   <td className="px-4 py-3">{formatCurrency(item.court_fee)}</td>
                   <td className="px-4 py-3">{formatCurrency(item.shuttlecock_fee)}</td>
                   <td className="px-4 py-3">{formatCurrency(item.past_debt)}</td>
-                  <td className="px-4 py-3">{formatCurrency(item.balance_carried)}</td>
+                  <td className="px-4 py-3 text-blue-700">-{formatCurrency(item.court_payer_offset + item.shuttlecock_buyer_offset)}</td>
+                  <td className="px-4 py-3 text-rose-700">+{formatCurrency(item.event_debt)}</td>
                   <td className="px-4 py-3 font-semibold text-slate-900">{formatCurrency(item.total_due)}</td>
                   <td className="px-4 py-3 text-xs text-slate-600">
                     {new Date(item.created_at).toLocaleDateString('vi-VN')}
