@@ -159,7 +159,7 @@ async function addShuttlecockPurchase(
   return true;
 }
 
-async function seedDatabase() {
+export async function seedDatabase() {
   console.log('🌱 Starting database seeding...\n');
 
   // ============================================================================
@@ -329,13 +329,15 @@ async function seedDatabase() {
   console.log('  3. Check dashboard: http://localhost:3000/dashboard');
 }
 
-// Main execution
-seedDatabase()
-  .then(() => {
-    console.log('🎉 Database seeding finished successfully!');
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error('❌ Seeding failed:', error);
-    process.exit(1);
-  });
+// Main execution - only if run directly
+if (process.argv[1].endsWith('seed.ts') || process.argv[1].endsWith('seed.js')) {
+  seedDatabase()
+    .then(() => {
+      console.log('🎉 Database seeding finished successfully!');
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error('❌ Seeding failed:', error);
+      process.exit(1);
+    });
+}
