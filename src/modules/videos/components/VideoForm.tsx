@@ -1,8 +1,3 @@
-/**
- * VideoForm Component
- * Create / Edit video form
- */
-
 'use client';
 
 import { useState } from 'react';
@@ -69,13 +64,13 @@ export function VideoForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]">
           {error}
         </div>
       )}
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-700">
+        <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
           Tiêu đề
         </label>
         <input
@@ -90,7 +85,7 @@ export function VideoForm({
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-700">
+        <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
           YouTube URL
         </label>
         <input
@@ -104,7 +99,7 @@ export function VideoForm({
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-700">
+        <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
           Danh mục
         </label>
         <select
@@ -121,7 +116,7 @@ export function VideoForm({
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-700">
+        <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
           Mô tả (tùy chọn)
         </label>
         <textarea

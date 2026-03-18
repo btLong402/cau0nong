@@ -1,22 +1,22 @@
 import type { Metadata } from "next";
-import { Be_Vietnam_Pro, Space_Grotesk } from "next/font/google";
+import { Inter, Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
 
-const bodyFont = Be_Vietnam_Pro({
+const bodyFont = Inter({
   variable: "--font-body",
   subsets: ["latin", "vietnamese"],
   weight: ["400", "500", "600", "700"],
 });
 
-const headingFont = Space_Grotesk({
+const headingFont = Be_Vietnam_Pro({
   variable: "--font-heading",
-  subsets: ["latin"],
+  subsets: ["latin", "vietnamese"],
   weight: ["500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "CLB Cau Long | Quan Ly Van Hanh",
-  description: "He thong quan ly CLB cau long: thanh vien, buoi tap, ky va quyet toan.",
+  title: "CLB Cầu Lông | Quản Lý Vận Hành",
+  description: "Hệ thống quản lý CLB cầu lông: thành viên, buổi tập, kỳ và quyết toán.",
 };
 
 export default function RootLayout({

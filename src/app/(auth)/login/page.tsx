@@ -1,10 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function LoginPage() {
+function LoginSkeleton() {
+  return (
+    <div className="surface-card p-8">
+      <div className="skeleton h-5 w-36" />
+      <div className="skeleton mt-5 h-11" />
+      <div className="skeleton mt-3 h-11" />
+      <div className="skeleton mt-4 h-11" />
+    </div>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [identifier, setIdentifier] = useState('');
@@ -62,38 +73,36 @@ export default function LoginPage() {
   }
 
   if (checkingSession) {
-    return (
-      <div className="surface-card-soft p-8">
-        <div className="h-5 w-36 animate-pulse rounded bg-slate-200" />
-        <div className="mt-5 h-10 animate-pulse rounded bg-slate-100" />
-        <div className="mt-3 h-10 animate-pulse rounded bg-slate-100" />
-      </div>
-    );
+    return <LoginSkeleton />;
   }
 
   return (
     <div className="surface-card p-7 sm:p-8">
       <div className="mb-7">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-700">Đăng nhập</p>
-        <h1 className="mt-2 text-3xl font-semibold text-slate-900">Chào mừng quay lại</h1>
-        <p className="mt-2 text-sm text-slate-600">Đăng nhập để tiếp tục quản lý CLB cầu lông.</p>
+        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--primary-soft)]">
+          <svg className="h-5 w-5 text-[var(--primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+          </svg>
+        </div>
+        <h1 className="text-2xl font-bold text-[var(--foreground)]">Chào mừng quay lại</h1>
+        <p className="mt-1.5 text-sm text-[var(--muted)]">Đăng nhập để tiếp tục quản lý CLB cầu lông.</p>
       </div>
 
       {registered && (
-        <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+        <div className="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
           Đăng ký thành công. Vui lòng đăng nhập để bắt đầu.
         </div>
       )}
 
       {error && (
-        <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
-          <p className="text-sm text-rose-800">{error}</p>
+        <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+          <p className="text-sm text-red-700">{error}</p>
         </div>
       )}
 
       <form onSubmit={handleLogin} className="space-y-4" noValidate>
         <div>
-          <label htmlFor="identifier" className="mb-2 block text-sm font-medium text-slate-700">
+          <label htmlFor="identifier" className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
             Email hoặc Số điện thoại
           </label>
           <input
@@ -109,7 +118,7 @@ export default function LoginPage() {
         </div>
 
         <div>
-          <label htmlFor="password" className="mb-2 block text-sm font-medium text-slate-700">
+          <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
             Mật khẩu
           </label>
           <input
@@ -127,18 +136,26 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-65"
+          className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
         </button>
       </form>
 
-      <div className="mt-6 text-center text-sm text-slate-600">
+      <div className="mt-6 text-center text-sm text-[var(--muted)]">
         Chưa có tài khoản?{' '}
-        <Link href="/register" className="font-medium text-blue-700 hover:text-blue-800">
+        <Link href="/register" className="font-semibold text-[var(--primary)] hover:text-[var(--primary-hover)]">
           Đăng ký
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginSkeleton />}>
+      <LoginForm />
+    </Suspense>
   );
 }

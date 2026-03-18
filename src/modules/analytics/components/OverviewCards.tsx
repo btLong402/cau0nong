@@ -1,8 +1,3 @@
-/**
- * OverviewCards Component
- * 4 stat cards for the analytics dashboard
- */
-
 'use client';
 
 import type { OverviewStats } from '../types';
@@ -26,14 +21,12 @@ function StatCard({
   loading: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5">
-      <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
-        {label}
-      </p>
+    <div className="stat-card">
+      <p className="stat-label">{label}</p>
       {loading ? (
-        <div className="mt-2 h-8 w-24 animate-pulse rounded-lg bg-slate-200" />
+        <div className="mt-2 skeleton h-8 w-24" />
       ) : (
-        <p className={`mt-2 text-2xl font-bold ${color}`}>
+        <p className={`stat-value ${color}`}>
           {value.toLocaleString('vi-VN')}
           {suffix && <span className="text-sm font-medium">{suffix}</span>}
         </p>
@@ -48,27 +41,27 @@ export function OverviewCards({ stats, loading }: OverviewCardsProps) {
       <StatCard
         label="Thành viên active"
         value={stats?.active_members || 0}
-        color="text-blue-700"
+        color="text-[var(--primary)]"
         loading={loading}
       />
       <StatCard
         label="Tổng buổi tập"
         value={stats?.total_sessions || 0}
-        color="text-green-700"
+        color="text-[var(--accent)]"
         loading={loading}
       />
       <StatCard
         label="Chi phí tháng này"
         value={stats?.total_expense_current_month || 0}
         suffix="đ"
-        color="text-amber-700"
+        color="text-[var(--warning)]"
         loading={loading}
       />
       <StatCard
         label="Công nợ chưa đóng"
         value={stats?.unpaid_debt || 0}
         suffix="đ"
-        color="text-red-700"
+        color="text-[var(--danger)]"
         loading={loading}
       />
     </div>

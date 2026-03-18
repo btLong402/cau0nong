@@ -34,123 +34,150 @@ export function SettlementsTable({
 }: SettlementsTableProps) {
   return (
     <div className="surface-card overflow-hidden">
-      <div className="border-b border-slate-200 px-6 py-4">
-        <h2 className="text-lg font-semibold text-slate-900">Danh sách quyết toán {monthLabel}</h2>
+      <div className="border-b border-[var(--surface-border)] px-5 py-4">
+        <h2 className="text-base font-semibold text-[var(--foreground)]">Danh sách quyết toán {monthLabel}</h2>
       </div>
 
       {loading ? (
-        <div className="p-6 text-sm text-slate-600">Đang tải dữ liệu quyết toán...</div>
+        <div className="space-y-3 p-5">
+          {[...Array(3)].map((_, i) => <div key={i} className="skeleton h-12" />)}
+        </div>
       ) : settlements.length === 0 ? (
-        <div className="p-6 text-sm text-slate-600">Không có kết quả phù hợp với bộ lọc hiện tại.</div>
+        <div className="p-6 text-center text-sm text-[var(--muted)]">Không có kết quả phù hợp với bộ lọc hiện tại.</div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px]">
-            <thead className="border-b border-slate-200 bg-slate-50 text-left text-sm text-slate-700">
-              <tr>
-                <th className="px-4 py-3 font-medium">Thành viên</th>
-
-                <th className="px-4 py-3 font-medium">Tiền sân</th>
-                <th className="px-4 py-3 font-medium">Tiền cầu</th>
-                <th className="px-4 py-3 font-medium">Nợ cũ</th>
-                <th className="px-4 py-3 font-medium text-blue-700">Cấn trừ (ứng)</th>
-                <th className="px-4 py-3 font-medium text-rose-700">Nợ sự kiện</th>
-                <th className="px-4 py-3 font-medium">
-                  <button
-                    type="button"
-                    onClick={() => onSortColumn('total_due')}
-                    className="font-medium text-slate-700 hover:text-slate-900"
-                  >
-                    Tổng cần thu{renderSortIndicator('total_due')}
-                  </button>
-                </th>
-                <th className="px-4 py-3 font-medium">
-                  <button
-                    type="button"
-                    onClick={() => onSortColumn('created_at')}
-                    className="font-medium text-slate-700 hover:text-slate-900"
-                  >
-                    Ngày tạo{renderSortIndicator('created_at')}
-                  </button>
-                </th>
-                <th className="px-4 py-3 font-medium">
-                  <button
-                    type="button"
-                    onClick={() => onSortColumn('paid_at')}
-                    className="font-medium text-slate-700 hover:text-slate-900"
-                  >
-                    Ngày thanh toán{renderSortIndicator('paid_at')}
-                  </button>
-                </th>
-                <th className="px-4 py-3 font-medium">Trạng thái</th>
-                <th className="px-4 py-3 font-medium">Hành động</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200 text-sm text-slate-800">
-              {settlements.map((item) => (
-                <tr key={item.id}>
-                  <td className="px-4 py-3">
-                    <div className="font-medium text-slate-900">{item.user_name || 'N/A'}</div>
-                    <div className="text-xs text-slate-500">{item.user_email || 'N/A'}</div>
-                  </td>
-
-                  <td className="px-4 py-3">{formatCurrency(item.court_fee)}</td>
-                  <td className="px-4 py-3">{formatCurrency(item.shuttlecock_fee)}</td>
-                  <td className="px-4 py-3">{formatCurrency(item.past_debt)}</td>
-                  <td className="px-4 py-3 text-blue-700">-{formatCurrency(item.court_payer_offset + item.shuttlecock_buyer_offset)}</td>
-                  <td className="px-4 py-3 text-rose-700">+{formatCurrency(item.event_debt)}</td>
-                  <td className="px-4 py-3 font-semibold text-slate-900">{formatCurrency(item.total_due)}</td>
-                  <td className="px-4 py-3 text-xs text-slate-600">
-                    {new Date(item.created_at).toLocaleDateString('vi-VN')}
-                  </td>
-                  <td className="px-4 py-3 text-xs text-slate-600">
-                    {item.paid_at ? new Date(item.paid_at).toLocaleDateString('vi-VN') : '-'}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-                        item.is_paid ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
-                      }`}
-                    >
-                      {item.is_paid ? 'Đã thanh toán' : 'Chưa thanh toán'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
+        <>
+          {/* Desktop Table */}
+          <div className="overflow-x-auto hidden lg:block">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Thành viên</th>
+                  <th>Tiền sân</th>
+                  <th>Tiền cầu</th>
+                  <th>Nợ cũ</th>
+                  <th className="text-[var(--primary)]">Cấn trừ (ứng)</th>
+                  <th className="text-[var(--danger)]">Nợ sự kiện</th>
+                  <th>
                     <button
                       type="button"
-                      disabled={item.is_paid}
-                      onClick={() => onOpenPayment(item)}
-                      className="btn-primary h-auto min-h-0 rounded-md bg-emerald-600 px-3 py-2 text-xs hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      onClick={() => onSortColumn('total_due')}
+                      className="font-semibold text-[var(--muted)] hover:text-[var(--foreground)] cursor-pointer"
                     >
-                      {item.is_paid ? 'Đã xác nhận' : 'Thanh toán / VietQR'}
+                      Tổng cần thu{renderSortIndicator('total_due')}
                     </button>
-                  </td>
+                  </th>
+                  <th>
+                    <button
+                      type="button"
+                      onClick={() => onSortColumn('created_at')}
+                      className="font-semibold text-[var(--muted)] hover:text-[var(--foreground)] cursor-pointer"
+                    >
+                      Ngày tạo{renderSortIndicator('created_at')}
+                    </button>
+                  </th>
+                  <th>
+                    <button
+                      type="button"
+                      onClick={() => onSortColumn('paid_at')}
+                      className="font-semibold text-[var(--muted)] hover:text-[var(--foreground)] cursor-pointer"
+                    >
+                      Ngày TT{renderSortIndicator('paid_at')}
+                    </button>
+                  </th>
+                  <th>Trạng thái</th>
+                  <th>Hành động</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {settlements.map((item) => (
+                  <tr key={item.id}>
+                    <td>
+                      <div className="font-medium text-[var(--foreground)]">{item.user_name || 'N/A'}</div>
+                      <div className="text-xs text-[var(--muted)]">{item.user_email || 'N/A'}</div>
+                    </td>
+                    <td>{formatCurrency(item.court_fee)}</td>
+                    <td>{formatCurrency(item.shuttlecock_fee)}</td>
+                    <td>{formatCurrency(item.past_debt)}</td>
+                    <td className="text-[var(--primary)]">-{formatCurrency(item.court_payer_offset + item.shuttlecock_buyer_offset)}</td>
+                    <td className="text-[var(--danger)]">+{formatCurrency(item.event_debt)}</td>
+                    <td className="font-semibold text-[var(--foreground)]">{formatCurrency(item.total_due)}</td>
+                    <td className="text-xs text-[var(--muted)]">
+                      {new Date(item.created_at).toLocaleDateString('vi-VN')}
+                    </td>
+                    <td className="text-xs text-[var(--muted)]">
+                      {item.paid_at ? new Date(item.paid_at).toLocaleDateString('vi-VN') : '—'}
+                    </td>
+                    <td>
+                      <span className={`badge ${item.is_paid ? 'badge-success' : 'badge-warning'}`}>
+                        {item.is_paid ? 'Đã TT' : 'Chưa TT'}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        disabled={item.is_paid}
+                        onClick={() => onOpenPayment(item)}
+                        className="btn-primary h-auto min-h-0 rounded-md px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {item.is_paid ? 'Đã xác nhận' : 'TT / VietQR'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card List */}
+          <div className="card-list p-4 lg:hidden">
+            {settlements.map((item) => (
+              <div key={item.id} className="card-list-item">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--foreground)]">{item.user_name || 'N/A'}</p>
+                    <p className="text-xs text-[var(--muted)]">{item.user_email || 'N/A'}</p>
+                  </div>
+                  <span className={`badge ${item.is_paid ? 'badge-success' : 'badge-warning'}`}>
+                    {item.is_paid ? 'Đã TT' : 'Chưa TT'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-base font-bold text-[var(--foreground)]">{formatCurrency(item.total_due)}</p>
+                  <button
+                    type="button"
+                    disabled={item.is_paid}
+                    onClick={() => onOpenPayment(item)}
+                    className="btn-primary h-auto min-h-0 rounded-md px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {item.is_paid ? 'Đã xác nhận' : 'VietQR'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
-      <div className="flex flex-col gap-3 border-t border-slate-200 px-6 py-4 text-sm text-slate-600 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 border-t border-[var(--surface-border)] px-5 py-4 text-sm text-[var(--muted)] md:flex-row md:items-center md:justify-between">
         <p>
-          Trang {pagination.page} / {pagination.totalPages} • Tổng bản ghi: {pagination.total}
+          Trang {pagination.page} / {pagination.totalPages} • Tổng: {pagination.total}
         </p>
         <div className="flex items-center gap-2">
           <button
             type="button"
             disabled={pagination.page <= 1 || loading}
             onClick={onPrevPage}
-            className="btn-secondary rounded-md px-3 py-2 text-sm disabled:opacity-50"
+            className="btn-secondary text-sm disabled:opacity-50"
           >
-            Trang trước
+            Trước
           </button>
           <button
             type="button"
             disabled={!pagination.hasMore || loading}
             onClick={onNextPage}
-            className="btn-secondary rounded-md px-3 py-2 text-sm disabled:opacity-50"
+            className="btn-secondary text-sm disabled:opacity-50"
           >
-            Trang sau
+            Sau
           </button>
         </div>
       </div>

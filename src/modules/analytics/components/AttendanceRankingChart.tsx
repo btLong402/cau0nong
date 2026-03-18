@@ -1,9 +1,3 @@
-/**
- * AttendanceRankingChart Component
- * Horizontal bar chart showing attendance ranking
- * Uses pure CSS bars (no external chart library needed initially)
- */
-
 'use client';
 
 import type { AttendanceRankItem } from '../types';
@@ -22,9 +16,9 @@ export function AttendanceRankingChart({
       <div className="space-y-3">
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="flex items-center gap-3">
-            <div className="h-4 w-20 animate-pulse rounded bg-slate-200" />
+            <div className="skeleton h-4 w-20" />
             <div
-              className="h-6 animate-pulse rounded bg-slate-200"
+              className="skeleton h-6"
               style={{ width: `${60 - i * 8}%` }}
             />
           </div>
@@ -35,7 +29,7 @@ export function AttendanceRankingChart({
 
   if (!data || data.length === 0) {
     return (
-      <div className="py-8 text-center text-sm text-slate-500">
+      <div className="py-8 text-center text-sm text-[var(--muted)]">
         Chưa có dữ liệu điểm danh.
       </div>
     );
@@ -47,22 +41,22 @@ export function AttendanceRankingChart({
     <div className="space-y-2">
       {data.slice(0, 10).map((item, index) => (
         <div key={item.user_id} className="flex items-center gap-3">
-          <span className="w-5 text-right text-xs font-medium text-slate-400">
+          <span className="w-5 text-right text-xs font-medium text-[var(--muted)]">
             {index + 1}
           </span>
-          <span className="w-24 truncate text-sm font-medium text-slate-800">
+          <span className="w-24 truncate text-sm font-medium text-[var(--foreground)]">
             {item.user_name}
           </span>
           <div className="flex-1">
             <div
-              className="h-6 rounded-md bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-500"
+              className="h-6 rounded-md bg-gradient-to-r from-[var(--primary)] to-[var(--accent)] transition-all duration-500"
               style={{
                 width: `${maxCount > 0 ? (item.sessions_attended / maxCount) * 100 : 0}%`,
                 minWidth: '20px',
               }}
             />
           </div>
-          <span className="w-8 text-right text-sm font-semibold text-slate-700">
+          <span className="w-8 text-right text-sm font-semibold text-[var(--foreground)]">
             {item.sessions_attended}
           </span>
         </div>

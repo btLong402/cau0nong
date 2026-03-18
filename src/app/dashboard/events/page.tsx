@@ -197,8 +197,12 @@ export default function EventsPage() {
   // Loading state
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />
+      <div className="space-y-4">
+        <div className="skeleton h-8 w-32" />
+        <div className="skeleton h-4 w-56" />
+        <div className="grid gap-4 lg:grid-cols-2 mt-6">
+          {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-28" />)}
+        </div>
       </div>
     );
   }
@@ -206,8 +210,11 @@ export default function EventsPage() {
   // Error state
   if (error) {
     return (
-      <div className="py-16 text-center">
-        <p className="text-red-600">{error}</p>
+      <div className="empty-state">
+        <svg className="empty-state-icon text-[var(--danger)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+        </svg>
+        <p className="empty-state-title text-[var(--danger)]">{error}</p>
         <button onClick={fetchEvents} className="btn-primary mt-4">
           Thử lại
         </button>
@@ -218,10 +225,10 @@ export default function EventsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="page-header">
         <div>
-          <h1 className="text-3xl font-semibold text-slate-900">Sự kiện</h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <h1 className="page-title">Sự kiện</h1>
+          <p className="page-subtitle">
             Quản lý sự kiện, giải đấu và liên hoan.
           </p>
         </div>
@@ -238,8 +245,8 @@ export default function EventsPage() {
 
       {/* Create / Edit form */}
       {showForm && (
-        <div className="surface-card-soft p-6">
-          <h2 className="mb-4 text-lg font-semibold text-slate-900">
+        <div className="surface-card-soft p-5">
+          <h2 className="mb-4 text-base font-semibold text-[var(--foreground)]">
             {editingEvent ? 'Cập nhật sự kiện' : 'Tạo sự kiện mới'}
           </h2>
           <EventForm
@@ -259,11 +266,12 @@ export default function EventsPage() {
         {/* Events List */}
         <div className="space-y-3">
           {events.length === 0 ? (
-            <div className="py-12 text-center">
-              <p className="text-lg text-slate-500">Chưa có sự kiện nào</p>
-              <p className="mt-1 text-sm text-slate-400">
-                Nhấn &quot;Tạo sự kiện&quot; để bắt đầu.
-              </p>
+            <div className="empty-state py-12">
+              <svg className="empty-state-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+              </svg>
+              <p className="empty-state-title">Chưa có sự kiện nào</p>
+              <p className="empty-state-text">Nhấn &quot;Tạo sự kiện&quot; để bắt đầu.</p>
             </div>
           ) : (
             events.map((event) => (
@@ -281,16 +289,16 @@ export default function EventsPage() {
           <div className="space-y-4">
             {detailLoading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600" />
+                <div className="spinner" />
               </div>
             ) : (
               <>
                 <div className="flex items-start justify-between">
                   <div>
-                    <h2 className="text-xl font-semibold text-slate-900">
+                    <h2 className="text-lg font-bold text-[var(--foreground)]">
                       {selectedEvent.event_name}
                     </h2>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-[var(--muted)]">
                       {new Date(selectedEvent.event_date).toLocaleDateString(
                         'vi-VN',
                         {
@@ -314,7 +322,7 @@ export default function EventsPage() {
                     </button>
                     <button
                       onClick={() => handleDeleteEvent(selectedEvent.id)}
-                      className="rounded-lg bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100"
+                      className="btn-danger text-sm"
                     >
                       Xóa
                     </button>
@@ -345,7 +353,7 @@ export default function EventsPage() {
 
                 <button
                   onClick={() => setSelectedEvent(null)}
-                  className="btn-secondary w-full text-sm"
+                  className="btn-ghost w-full text-sm"
                 >
                   Đóng chi tiết
                 </button>

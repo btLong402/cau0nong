@@ -46,6 +46,7 @@ export default function SettlementsPage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [pageError, setPageError] = useState<string | null>(null);
   const [selectedSettlement, setSelectedSettlement] = useState<SettlementListItem | null>(null);
+  const [activeTab, setActiveTab] = useState<'settlements' | 'history'>('settlements');
 
   const debouncedSearchUser = useDebouncedValue(searchUser, 350);
 
@@ -148,7 +149,6 @@ export default function SettlementsPage() {
     await refetch();
   }
 
-  // Handle URL change when user navigates with a different monthId
   useEffect(() => {
     if (monthIdParam) {
       const id = parseInt(monthIdParam, 10);
@@ -159,13 +159,21 @@ export default function SettlementsPage() {
   }, [monthIdParam]);
 
   if (monthsLoading) {
-    return <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />;
+    return (
+      <div className="space-y-4">
+        <div className="skeleton h-8 w-48" />
+        <div className="skeleton h-4 w-72" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+          {[...Array(3)].map((_, i) => <div key={i} className="skeleton h-24" />)}
+        </div>
+      </div>
+    );
   }
 
   if (monthsError) {
     return (
-      <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
-        Không thể tải danh sách kỳ quản lý.
+      <div className="surface-card p-4 border-l-4 border-l-[var(--danger)]">
+        <p className="text-sm text-[var(--danger)]">Không thể tải danh sách kỳ quản lý.</p>
       </div>
     );
   }
@@ -177,8 +185,8 @@ export default function SettlementsPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-semibold text-slate-900">Quyết toán tháng</h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <h1 className="page-title">Quyết toán tháng</h1>
+          <p className="page-subtitle">
             Quản lý tổng công nợ, tạo VietQR, xác nhận thanh toán và theo dõi lịch sử giao dịch.
           </p>
         </div>
@@ -196,7 +204,7 @@ export default function SettlementsPage() {
             type="button"
             onClick={() => handleGenerate(true)}
             disabled={!activeMonthId || generating}
-            className="btn-primary bg-amber-600 hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="btn-primary bg-[var(--warning)] hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {generating ? 'Đang xử lý...' : 'Tạo lại (force)'}
           </button>
@@ -221,64 +229,97 @@ export default function SettlementsPage() {
         formatMonthLabel={formatMonthLabel}
       />
 
+      <div className="flex border-b border-[var(--surface-border)]">
+        <button
+          onClick={() => setActiveTab('settlements')}
+          className={`px-6 py-3 text-sm font-semibold transition-colors relative ${
+            activeTab === 'settlements'
+              ? 'text-[var(--primary)]'
+              : 'text-[var(--muted)] hover:text-[var(--foreground)]'
+          }`}
+        >
+          Quyết toán tháng
+          {activeTab === 'settlements' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)]" />
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('history')}
+          className={`px-6 py-3 text-sm font-semibold transition-colors relative ${
+            activeTab === 'history'
+              ? 'text-[var(--primary)]'
+              : 'text-[var(--muted)] hover:text-[var(--foreground)]'
+          }`}
+        >
+          Lịch sử giao dịch
+          {activeTab === 'history' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)]" />
+          )}
+        </button>
+      </div>
+
       {combinedError && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {combinedError}
+        <div className="surface-card p-4 border-l-4 border-l-[var(--danger)]">
+          <p className="text-sm text-[var(--danger)]">{combinedError}</p>
         </div>
       )}
 
-      {generateSummary && (
-        <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
-          Hoàn tất tạo quyết toán cho {selectedMonth ? formatMonthLabel(selectedMonth.month_year) : `tháng ${generateSummary.monthId}`}: {generateSummary.generatedCount} dòng,
-          tổng cần thu {formatCurrency(generateSummary.totalDue)}.
+      {activeTab === 'settlements' ? (
+        <div className="space-y-6 animate-fade-in">
+          {generateSummary && (
+            <div className="surface-card p-4 border-l-4 border-l-[var(--primary)]">
+              <p className="text-sm text-[var(--primary)]">
+                Hoàn tất tạo quyết toán cho {selectedMonth ? formatMonthLabel(selectedMonth.month_year) : `tháng ${generateSummary.monthId}`}: {generateSummary.generatedCount} dòng,
+                tổng cần thu {formatCurrency(generateSummary.totalDue)}.
+              </p>
+            </div>
+          )}
+
+          <SettlementsOverviewCards
+            totalDue={totals.totalDue}
+            paidCount={totals.paidCount}
+            unpaidCount={totals.unpaidCount}
+            formatCurrency={formatCurrency}
+          />
+
+          {settlements.length === 0 && !settlementsLoading ? (
+            <div className="surface-card empty-state">
+              <svg className="empty-state-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <p className="empty-state-title">Chưa có dữ liệu quyết toán</p>
+              <p className="empty-state-text">
+                Dữ liệu quyết toán cho tháng này chưa được khởi tạo. Nhấn nút bên dưới để hệ thống tự động tính toán.
+              </p>
+              <button
+                type="button"
+                onClick={() => handleGenerate(false)}
+                disabled={generating}
+                className="btn-primary mt-4"
+              >
+                {generating ? 'Đang tạo...' : 'Tạo quyết toán ngay'}
+              </button>
+            </div>
+          ) : (
+            <SettlementsTable
+              settlements={settlements}
+              loading={settlementsLoading}
+              pagination={pagination}
+              monthLabel={selectedMonth ? `- ${formatMonthLabel(selectedMonth.month_year)}` : ''}
+              onOpenPayment={setSelectedSettlement}
+              onSortColumn={handleSortColumn}
+              renderSortIndicator={renderSortIndicator}
+              onPrevPage={() => setPage((prev) => Math.max(1, prev - 1))}
+              onNextPage={() => setPage((prev) => prev + 1)}
+              formatCurrency={formatCurrency}
+            />
+          )}
+        </div>
+      ) : (
+        <div className="animate-fade-in">
+          <PaymentHistoryPanel monthId={activeMonthId} formatCurrency={formatCurrency} />
         </div>
       )}
-
-      <SettlementsOverviewCards
-        totalDue={totals.totalDue}
-        paidCount={totals.paidCount}
-        unpaidCount={totals.unpaidCount}
-        formatCurrency={formatCurrency}
-      />
-
-      {settlements.length === 0 && !settlementsLoading && (
-        <div className="surface-card flex flex-col items-center justify-center p-12 text-center">
-          <div className="mb-4 rounded-full bg-slate-100 p-4">
-            <svg className="h-8 w-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-medium text-slate-900">Chưa có dữ liệu quyết toán</h3>
-          <p className="mb-6 mt-1 max-w-xs text-sm text-slate-600">
-            Dữ liệu quyết toán cho tháng này chưa được khởi tạo. Nhấn nút bên dưới để hệ thống tự động tính toán.
-          </p>
-          <button
-            type="button"
-            onClick={() => handleGenerate(false)}
-            disabled={generating}
-            className="btn-primary"
-          >
-            {generating ? 'Đang tạo...' : 'Tạo quyết toán ngay'}
-          </button>
-        </div>
-      )}
-
-      {settlements.length > 0 && (
-        <SettlementsTable
-          settlements={settlements}
-          loading={settlementsLoading}
-          pagination={pagination}
-          monthLabel={selectedMonth ? `- ${formatMonthLabel(selectedMonth.month_year)}` : ''}
-          onOpenPayment={setSelectedSettlement}
-          onSortColumn={handleSortColumn}
-          renderSortIndicator={renderSortIndicator}
-          onPrevPage={() => setPage((prev) => Math.max(1, prev - 1))}
-          onNextPage={() => setPage((prev) => prev + 1)}
-          formatCurrency={formatCurrency}
-        />
-      )}
-
-      <PaymentHistoryPanel monthId={activeMonthId} formatCurrency={formatCurrency} />
 
       <PaymentModal
         isOpen={Boolean(selectedSettlement)}

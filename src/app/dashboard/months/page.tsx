@@ -55,23 +55,31 @@ export default function MonthsPage() {
   }
 
   if (loading) {
-    return <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />;
+    return (
+      <div className="space-y-4">
+        <div className="skeleton h-8 w-40" />
+        <div className="skeleton h-4 w-64" />
+        <div className="grid grid-cols-1 gap-4 mt-6 md:grid-cols-3">
+          {[...Array(3)].map((_, i) => <div key={i} className="skeleton h-24" />)}
+        </div>
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800">
-        Không thể tải danh sách kỳ quản lý. Vui lòng thử lại.
+      <div className="surface-card p-5 border-l-4 border-l-[var(--danger)]">
+        <p className="text-sm text-[var(--danger)]">Không thể tải danh sách kỳ quản lý. Vui lòng thử lại.</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="page-header">
         <div>
-          <h1 className="text-3xl font-semibold text-slate-900">Kỳ quản lý</h1>
-          <p className="mt-1 text-sm text-slate-600">Quản lý trạng thái tháng, đóng kỳ và khởi tạo quyết toán.</p>
+          <h1 className="page-title">Kỳ quản lý</h1>
+          <p className="page-subtitle">Quản lý trạng thái tháng, đóng kỳ và khởi tạo quyết toán.</p>
         </div>
         <button
           onClick={() => setShowNewMonthForm(!showNewMonthForm)}
@@ -81,27 +89,29 @@ export default function MonthsPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <article className="surface-card-soft p-5">
-          <p className="text-sm text-slate-600">Tổng kỳ đã tạo</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-900">{months.length}</p>
-        </article>
-        <article className="surface-card-soft p-5">
-          <p className="text-sm text-slate-600">Kỳ đang mở</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-900">{openMonths}</p>
-        </article>
-        <article className="surface-card-soft p-5">
-          <p className="text-sm text-slate-600">Kỳ đã đóng</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-900">{months.length - openMonths}</p>
-        </article>
+      {/* Stats */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="stat-card">
+          <p className="stat-label">Tổng kỳ đã tạo</p>
+          <p className="stat-value">{months.length}</p>
+        </div>
+        <div className="stat-card">
+          <p className="stat-label">Kỳ đang mở</p>
+          <p className="stat-value text-[var(--primary)]">{openMonths}</p>
+        </div>
+        <div className="stat-card">
+          <p className="stat-label">Kỳ đã đóng</p>
+          <p className="stat-value">{months.length - openMonths}</p>
+        </div>
       </div>
 
+      {/* New Month Form */}
       {showNewMonthForm && (
-        <div className="surface-card-soft p-6">
-          <h2 className="text-lg font-semibold text-slate-900">Tạo kỳ quản lý mới</h2>
+        <div className="surface-card-soft p-5">
+          <h2 className="text-base font-semibold text-[var(--foreground)]">Tạo kỳ quản lý mới</h2>
           <div className="mt-4 space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
+              <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
                 Tháng (định dạng: YYYY-MM-01)
               </label>
               <input
@@ -119,7 +129,7 @@ export default function MonthsPage() {
               <button
                 onClick={handleCreateMonth}
                 disabled={creatingMonth || creating}
-                className="btn-primary bg-emerald-600 hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="btn-primary disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {creatingMonth || creating ? 'Đang tạo...' : 'Tạo'}
               </button>
@@ -135,41 +145,36 @@ export default function MonthsPage() {
       )}
 
       {actionError && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {actionError}
+        <div className="surface-card p-4 border-l-4 border-l-[var(--danger)]">
+          <p className="text-sm text-[var(--danger)]">{actionError}</p>
         </div>
       )}
 
+      {/* Month Cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {months.map((month) => (
-          <article key={month.id} className="surface-card p-6">
+          <article key={month.id} className="surface-card p-5">
             <div className="mb-4 flex items-start justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-slate-900">
+                <h3 className="text-base font-semibold text-[var(--foreground)]">
                   {new Date(month.month_year).toLocaleDateString('vi-VN', {
                     month: 'long',
                     year: 'numeric',
                   })}
                 </h3>
-                <p className="mt-1 text-xs font-medium uppercase tracking-[0.12em] text-slate-500">
+                <p className="mt-0.5 text-xs text-[var(--muted)]">
                   ID: {month.id}
                 </p>
               </div>
-              <span
-                className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                  month.status === 'open'
-                    ? 'bg-emerald-100 text-emerald-800'
-                    : 'bg-slate-200 text-slate-700'
-                }`}
-              >
+              <span className={`badge ${month.status === 'open' ? 'badge-success' : 'badge-neutral'}`}>
                 {month.status === 'open' ? 'Đang mở' : 'Đã đóng'}
               </span>
             </div>
 
-            <div className="mb-5 space-y-2">
-              <p className="text-sm text-slate-600">
+            <div className="mb-4">
+              <p className="text-sm text-[var(--muted)]">
                 Chi phí cầu:
-                <span className="ml-2 font-semibold text-slate-900">
+                <span className="ml-2 font-semibold text-[var(--foreground)]">
                   {month.total_shuttlecock_expense.toLocaleString('vi-VN')} đ
                 </span>
               </p>
@@ -186,7 +191,7 @@ export default function MonthsPage() {
                 <button
                   onClick={() => handleCloseMonth(month.id)}
                   disabled={closing && closingMonthId === month.id}
-                  className="btn-primary flex-1 bg-amber-600 text-sm hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="btn-primary flex-1 bg-[var(--warning)] text-sm hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {closing && closingMonthId === month.id ? 'Đang đóng...' : 'Đóng kỳ'}
                 </button>
@@ -197,12 +202,12 @@ export default function MonthsPage() {
       </div>
 
       {months.length === 0 && (
-        <div className="surface-card py-12 text-center">
-          <p className="mb-4 text-slate-600">Chưa có kỳ quản lý nào</p>
-          <button
-            onClick={() => setShowNewMonthForm(true)}
-            className="btn-primary"
-          >
+        <div className="surface-card empty-state">
+          <svg className="empty-state-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+          </svg>
+          <p className="empty-state-title">Chưa có kỳ quản lý nào</p>
+          <button onClick={() => setShowNewMonthForm(true)} className="btn-primary mt-4">
             Tạo kỳ đầu tiên
           </button>
         </div>

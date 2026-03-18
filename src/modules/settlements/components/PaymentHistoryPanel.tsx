@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useDebouncedValue, useMonthPaymentHistory } from '@/shared/hooks';
+import { CustomSelect } from '@/shared/components/CustomSelect';
 
 interface PaymentHistoryPanelProps {
   monthId: number | null;
@@ -24,33 +25,28 @@ export function PaymentHistoryPanel({ monthId, formatCurrency }: PaymentHistoryP
 
   return (
     <section className="surface-card overflow-hidden">
-      <div className="border-b border-slate-200 px-6 py-4">
-        <h2 className="text-lg font-semibold text-slate-900">Lịch sử giao dịch</h2>
-        <p className="mt-1 text-sm text-slate-600">Theo dõi QR đã tạo và trạng thái đã thu theo từng thành viên.</p>
+      <div className="border-b border-[var(--surface-border)] px-5 py-4">
+        <h2 className="text-base font-semibold text-[var(--foreground)]">Lịch sử giao dịch</h2>
+        <p className="mt-0.5 text-sm text-[var(--muted)]">Theo dõi QR đã tạo và trạng thái đã thu theo từng thành viên.</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 border-b border-slate-200 px-6 py-4 md:grid-cols-4">
-        <div>
-          <label htmlFor="historyStatus" className="mb-1 block text-xs font-medium text-slate-600">
-            Trạng thái
-          </label>
-          <select
-            id="historyStatus"
-            value={status}
-            onChange={(event) => {
-              setStatus(event.target.value as 'all' | 'paid' | 'unpaid');
-              setPage(1);
-            }}
-            className="input-field"
-          >
-            <option value="all">Tất cả</option>
-            <option value="paid">Đã thanh toán</option>
-            <option value="unpaid">Chưa thanh toán</option>
-          </select>
-        </div>
+      <div className="grid grid-cols-1 gap-4 border-b border-[var(--surface-border)] px-5 py-4 md:grid-cols-4">
+        <CustomSelect
+          label="Trạng thái"
+          value={status}
+          onChange={(val) => {
+            setStatus(val);
+            setPage(1);
+          }}
+          options={[
+            { value: 'all', label: 'Tất cả' },
+            { value: 'paid', label: 'Đã thanh toán' },
+            { value: 'unpaid', label: 'Chưa thanh toán' },
+          ]}
+        />
 
         <div className="md:col-span-2">
-          <label htmlFor="historySearch" className="mb-1 block text-xs font-medium text-slate-600">
+          <label htmlFor="historySearch" className="mb-1 block text-sm font-medium text-[var(--muted)]">
             Tìm thành viên
           </label>
           <input
@@ -65,98 +61,112 @@ export function PaymentHistoryPanel({ monthId, formatCurrency }: PaymentHistoryP
           />
         </div>
 
-        <div>
-          <label htmlFor="historyPageSize" className="mb-1 block text-xs font-medium text-slate-600">
-            Số dòng
-          </label>
-          <select
-            id="historyPageSize"
-            value={String(limit)}
-            onChange={(event) => {
-              setLimit(Number(event.target.value));
-              setPage(1);
-            }}
-            className="input-field"
-          >
-            <option value="10">10</option>
-            <option value="20">20</option>
-            <option value="50">50</option>
-          </select>
-        </div>
+        <CustomSelect
+          label="Số dòng"
+          value={limit}
+          onChange={(val) => {
+            setLimit(val);
+            setPage(1);
+          }}
+          options={[
+            { value: 10, label: '10' },
+            { value: 20, label: '20' },
+            { value: 50, label: '50' },
+          ]}
+        />
       </div>
 
       {error && (
-        <div className="border-b border-red-200 bg-red-50 px-6 py-3 text-sm text-red-700">
+        <div className="border-b border-red-200 bg-[var(--danger-soft)] px-5 py-3 text-sm text-[var(--danger)]">
           {error.message}
         </div>
       )}
 
       {loading ? (
-        <div className="px-6 py-6 text-sm text-slate-600">Đang tải lịch sử giao dịch...</div>
-      ) : payments.length === 0 ? (
-        <div className="px-6 py-6 text-sm text-slate-600">Không có bản ghi giao dịch phù hợp.</div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[780px] text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-left text-slate-700">
-              <tr>
-                <th className="px-4 py-3 font-medium">Thành viên</th>
-                <th className="px-4 py-3 font-medium">Tổng cần đóng</th>
-                <th className="px-4 py-3 font-medium">Đã thu</th>
-                <th className="px-4 py-3 font-medium">QR tạo lúc</th>
-                <th className="px-4 py-3 font-medium">Trạng thái</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200 text-slate-800">
-              {payments.map((payment) => (
-                <tr key={payment.settlement_id}>
-                  <td className="px-4 py-3">
-                    <div className="font-medium text-slate-900">{payment.user_name || 'N/A'}</div>
-                    <div className="text-xs text-slate-500">{payment.user_email || payment.user_id}</div>
-                  </td>
-                  <td className="px-4 py-3">{formatCurrency(payment.total_due)}</td>
-                  <td className="px-4 py-3">{payment.paid_amount ? formatCurrency(payment.paid_amount) : '-'}</td>
-                  <td className="px-4 py-3 text-xs text-slate-600">
-                    {payment.qr_created_at
-                      ? new Date(payment.qr_created_at).toLocaleString('vi-VN')
-                      : 'Chưa tạo'}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-                        payment.is_paid ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
-                      }`}
-                    >
-                      {payment.is_paid ? 'Đã thanh toán' : 'Chưa thanh toán'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="space-y-3 p-5">
+          {[...Array(3)].map((_, i) => <div key={i} className="skeleton h-10" />)}
         </div>
+      ) : payments.length === 0 ? (
+        <div className="px-5 py-6 text-center text-sm text-[var(--muted)]">Không có bản ghi giao dịch phù hợp.</div>
+      ) : (
+        <>
+          {/* Desktop table */}
+          <div className="overflow-x-auto hidden lg:block">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Thành viên</th>
+                  <th>Tổng cần đóng</th>
+                  <th>Đã thu</th>
+                  <th>QR tạo lúc</th>
+                  <th>Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody>
+                {payments.map((payment) => (
+                  <tr key={payment.settlement_id}>
+                    <td>
+                      <div className="font-medium text-[var(--foreground)]">{payment.user_name || 'N/A'}</div>
+                      <div className="text-xs text-[var(--muted)]">{payment.user_email || payment.user_id}</div>
+                    </td>
+                    <td>{formatCurrency(payment.total_due)}</td>
+                    <td>{payment.paid_amount ? formatCurrency(payment.paid_amount) : '—'}</td>
+                    <td className="text-xs text-[var(--muted)]">
+                      {payment.qr_created_at
+                        ? new Date(payment.qr_created_at).toLocaleString('vi-VN')
+                        : 'Chưa tạo'}
+                    </td>
+                    <td>
+                      <span className={`badge ${payment.is_paid ? 'badge-success' : 'badge-warning'}`}>
+                        {payment.is_paid ? 'Đã TT' : 'Chưa TT'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="card-list p-4 lg:hidden">
+            {payments.map((payment) => (
+              <div key={payment.settlement_id} className="card-list-item">
+                <div className="flex items-start justify-between mb-1">
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--foreground)]">{payment.user_name || 'N/A'}</p>
+                    <p className="text-xs text-[var(--muted)]">{payment.user_email || payment.user_id}</p>
+                  </div>
+                  <span className={`badge ${payment.is_paid ? 'badge-success' : 'badge-warning'}`}>
+                    {payment.is_paid ? 'Đã TT' : 'Chưa TT'}
+                  </span>
+                </div>
+                <p className="text-base font-bold text-[var(--foreground)]">{formatCurrency(payment.total_due)}</p>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
-      <div className="flex flex-col gap-2 border-t border-slate-200 px-6 py-4 text-sm text-slate-600 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-2 border-t border-[var(--surface-border)] px-5 py-4 text-sm text-[var(--muted)] md:flex-row md:items-center md:justify-between">
         <p>
-          Trang {pagination.page} / {pagination.totalPages} • Tổng bản ghi: {pagination.total}
+          Trang {pagination.page} / {pagination.totalPages} • Tổng: {pagination.total}
         </p>
         <div className="flex items-center gap-2">
           <button
             type="button"
             disabled={pagination.page <= 1 || loading}
             onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-            className="btn-secondary rounded-md px-3 py-2 text-sm disabled:opacity-50"
+            className="btn-secondary text-sm disabled:opacity-50"
           >
-            Trang trước
+            Trước
           </button>
           <button
             type="button"
             disabled={!pagination.hasMore || loading}
             onClick={() => setPage((prev) => prev + 1)}
-            className="btn-secondary rounded-md px-3 py-2 text-sm disabled:opacity-50"
+            className="btn-secondary text-sm disabled:opacity-50"
           >
-            Trang sau
+            Sau
           </button>
         </div>
       </div>

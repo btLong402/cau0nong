@@ -1,8 +1,3 @@
-/**
- * VideoCard Component
- * Displays YouTube video thumbnail with play-on-click
- */
-
 'use client';
 
 import { useState } from 'react';
@@ -43,9 +38,9 @@ export function VideoCard({ video, onEdit, onDelete, isAdmin }: VideoCardProps) 
   const videoId = extractYouTubeId(video.youtube_url);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white transition-shadow hover:shadow-md">
+    <div className="surface-card overflow-hidden transition-shadow hover:shadow-md">
       {/* Thumbnail or Embed */}
-      <div className="relative aspect-video bg-slate-900">
+      <div className="relative aspect-video bg-[var(--surface-bg)]">
         {playing && videoId ? (
           <iframe
             src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
@@ -67,13 +62,13 @@ export function VideoCard({ video, onEdit, onDelete, isAdmin }: VideoCardProps) 
                 className="h-full w-full object-cover"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center bg-slate-800">
-                <span className="text-sm text-slate-400">Video</span>
+              <div className="flex h-full w-full items-center justify-center bg-[var(--surface-hover)]">
+                <span className="text-sm text-[var(--muted)]">Video</span>
               </div>
             )}
             {/* Play button overlay */}
             <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors group-hover:bg-black/30">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-600 shadow-lg transition-transform group-hover:scale-110">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--primary)] shadow-lg transition-transform group-hover:scale-110">
                 <svg
                   className="ml-1 h-6 w-6 text-white"
                   fill="currentColor"
@@ -90,26 +85,26 @@ export function VideoCard({ video, onEdit, onDelete, isAdmin }: VideoCardProps) 
       {/* Info */}
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="line-clamp-2 text-sm font-semibold text-slate-900">
+          <h3 className="line-clamp-2 text-sm font-semibold text-[var(--foreground)]">
             {video.title}
           </h3>
-          <span className="shrink-0 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+          <span className="badge badge-info shrink-0">
             {CATEGORY_LABELS[video.category] || video.category}
           </span>
         </div>
 
         {video.description && (
-          <p className="mt-1.5 line-clamp-2 text-xs text-slate-500">
+          <p className="mt-1.5 line-clamp-2 text-xs text-[var(--muted)]">
             {video.description}
           </p>
         )}
 
         {isAdmin && (
-          <div className="mt-3 flex gap-2">
+          <div className="mt-3 flex gap-3">
             {onEdit && (
               <button
                 onClick={() => onEdit(video)}
-                className="text-xs font-medium text-blue-700 hover:text-blue-900"
+                className="text-xs font-medium text-[var(--primary)] hover:text-[var(--primary-hover)] cursor-pointer"
               >
                 Sửa
               </button>
@@ -117,7 +112,7 @@ export function VideoCard({ video, onEdit, onDelete, isAdmin }: VideoCardProps) 
             {onDelete && (
               <button
                 onClick={() => onDelete(video.id)}
-                className="text-xs font-medium text-red-600 hover:text-red-800"
+                className="text-xs font-medium text-[var(--danger)] hover:opacity-80 cursor-pointer"
               >
                 Xóa
               </button>

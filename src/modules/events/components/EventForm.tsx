@@ -1,8 +1,3 @@
-/**
- * EventForm Component
- * Create / Edit event form
- */
-
 'use client';
 
 import { useState } from 'react';
@@ -60,13 +55,13 @@ export function EventForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]">
           {error}
         </div>
       )}
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-700">
+        <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
           Tên sự kiện
         </label>
         <input
@@ -81,7 +76,7 @@ export function EventForm({
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-700">
+        <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
           Ngày sự kiện
         </label>
         <input
@@ -95,7 +90,7 @@ export function EventForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="mb-2 block text-sm font-medium text-slate-700">
+          <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
             Tổng chi phí (đ)
           </label>
           <input
@@ -110,7 +105,7 @@ export function EventForm({
           />
         </div>
         <div>
-          <label className="mb-2 block text-sm font-medium text-slate-700">
+          <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
             Tài trợ / Hỗ trợ (đ)
           </label>
           <input

@@ -52,12 +52,12 @@ export default function DashboardPage() {
 
   if (error) {
     return (
-      <div className="py-16 text-center">
-        <p className="text-red-600">{error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="btn-primary mt-4"
-        >
+      <div className="empty-state">
+        <svg className="empty-state-icon text-[var(--danger)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+        </svg>
+        <p className="empty-state-title text-[var(--danger)]">{error}</p>
+        <button onClick={() => window.location.reload()} className="btn-primary mt-4">
           Thử lại
         </button>
       </div>
@@ -66,12 +66,10 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="page-header">
         <div>
-          <h1 className="text-3xl font-semibold text-slate-900">
-            Tổng quan hệ thống
-          </h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <h1 className="page-title">Tổng quan hệ thống</h1>
+          <p className="page-subtitle">
             Theo dõi nhanh các chỉ số vận hành cơ bản của CLB.
           </p>
         </div>
@@ -86,16 +84,16 @@ export default function DashboardPage() {
       {/* Charts Row */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Attendance Ranking */}
-        <section className="rounded-xl border border-slate-200 bg-white p-5">
-          <h2 className="mb-4 text-base font-semibold text-slate-900">
+        <section className="surface-card p-5">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-[var(--muted)]">
             Xếp hạng đi đều
           </h2>
           <AttendanceRankingChart data={attendance} loading={loading} />
         </section>
 
         {/* Expense Trend */}
-        <section className="rounded-xl border border-slate-200 bg-white p-5">
-          <h2 className="mb-4 text-base font-semibold text-slate-900">
+        <section className="surface-card p-5">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-[var(--muted)]">
             Chi phí theo tháng
           </h2>
           <ExpenseTrendChart data={expense} loading={loading} />

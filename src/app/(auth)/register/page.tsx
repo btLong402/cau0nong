@@ -28,7 +28,6 @@ export default function RegisterPage() {
     e.preventDefault();
     setError('');
 
-    // Validation
     if (formData.password !== formData.confirmPassword) {
       setError('Mật khẩu không khớp');
       return;
@@ -60,7 +59,6 @@ export default function RegisterPage() {
         return;
       }
 
-      // Redirect to login
       router.push('/login?registered=true');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -72,20 +70,24 @@ export default function RegisterPage() {
   return (
     <div className="surface-card p-7 sm:p-8">
       <div className="mb-7">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-700">Tạo tài khoản</p>
-        <h1 className="mt-2 text-3xl font-semibold text-slate-900">Đăng ký thành viên mới</h1>
-        <p className="mt-2 text-sm text-slate-600">Hoàn tất thông tin để sử dụng hệ thống quản lý CLB.</p>
+        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--primary-soft)]">
+          <svg className="h-5 w-5 text-[var(--primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+          </svg>
+        </div>
+        <h1 className="text-2xl font-bold text-[var(--foreground)]">Đăng ký thành viên mới</h1>
+        <p className="mt-1.5 text-sm text-[var(--muted)]">Hoàn tất thông tin để sử dụng hệ thống quản lý CLB.</p>
       </div>
 
       {error && (
-        <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
-          <p className="text-sm text-rose-800">{error}</p>
+        <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+          <p className="text-sm text-red-700">{error}</p>
         </div>
       )}
 
       <form onSubmit={handleRegister} className="space-y-4" noValidate>
         <div>
-          <label htmlFor="name" className="mb-2 block text-sm font-medium text-slate-700">
+          <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
             Họ tên
           </label>
           <input
@@ -102,7 +104,7 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label htmlFor="phone" className="mb-2 block text-sm font-medium text-slate-700">
+          <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
             Số điện thoại
           </label>
           <input
@@ -119,7 +121,7 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700">
+          <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
             Email
           </label>
           <input
@@ -136,7 +138,7 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label htmlFor="password" className="mb-2 block text-sm font-medium text-slate-700">
+          <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
             Mật khẩu
           </label>
           <input
@@ -153,7 +155,7 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label htmlFor="confirmPassword" className="mb-2 block text-sm font-medium text-slate-700">
+          <label htmlFor="confirmPassword" className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
             Xác nhận mật khẩu
           </label>
           <input
@@ -172,15 +174,15 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={loading}
-          className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-65"
+          className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? 'Đang đăng ký...' : 'Đăng Ký'}
         </button>
       </form>
 
-      <div className="mt-6 text-center text-sm text-slate-600">
+      <div className="mt-6 text-center text-sm text-[var(--muted)]">
         Đã có tài khoản?{' '}
-        <Link href="/login" className="font-medium text-blue-700 hover:text-blue-800">
+        <Link href="/login" className="font-semibold text-[var(--primary)] hover:text-[var(--primary-hover)]">
           Đăng nhập
         </Link>
       </div>

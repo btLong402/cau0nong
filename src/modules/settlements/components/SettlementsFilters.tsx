@@ -1,6 +1,7 @@
 'use client';
 
 import { Month } from '@/shared/hooks';
+import { CustomSelect } from '@/shared/components/CustomSelect';
 
 interface SettlementsFiltersProps {
   months: Month[];
@@ -40,46 +41,36 @@ export function SettlementsFilters({
   return (
     <div className="surface-card p-4 md:p-5">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div>
-          <label htmlFor="monthSelect" className="mb-2 block text-sm font-medium text-slate-700">
-            Chọn kỳ quản lý
-          </label>
-          <select
-            id="monthSelect"
-            value={activeMonthId || ''}
-            onChange={(event) => onMonthChange(Number(event.target.value))}
-            onBlur={onResetPage}
-            className="input-field"
-          >
-            {months.map((month) => (
-              <option key={month.id} value={month.id}>
-                {formatMonthLabel(month.month_year)} ({month.status === 'open' ? 'Đang mở' : 'Đã đóng'})
-              </option>
-            ))}
-          </select>
-        </div>
+        <CustomSelect
+          label="Chọn kỳ quản lý"
+          value={activeMonthId}
+          onChange={(val) => {
+            onMonthChange(val);
+            onResetPage();
+          }}
+          options={months.map((m) => ({
+            value: m.id,
+            label: formatMonthLabel(m.month_year),
+            sublabel: m.status === 'open' ? 'Đang mở' : 'Đã đóng',
+          }))}
+        />
+
+        <CustomSelect
+          label="Lọc thanh toán"
+          value={paymentFilter}
+          onChange={(val) => {
+            onPaymentFilterChange(val);
+            onResetPage();
+          }}
+          options={[
+            { value: 'all', label: 'Tất cả' },
+            { value: 'paid', label: 'Đã thanh toán' },
+            { value: 'unpaid', label: 'Chưa thanh toán' },
+          ]}
+        />
 
         <div>
-          <label htmlFor="statusFilter" className="mb-2 block text-sm font-medium text-slate-700">
-            Lọc thanh toán
-          </label>
-          <select
-            id="statusFilter"
-            value={paymentFilter}
-            onChange={(event) => {
-              onPaymentFilterChange(event.target.value as 'all' | 'paid' | 'unpaid');
-              onResetPage();
-            }}
-            className="input-field"
-          >
-            <option value="all">Tất cả</option>
-            <option value="paid">Đã thanh toán</option>
-            <option value="unpaid">Chưa thanh toán</option>
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor="searchUser" className="mb-2 block text-sm font-medium text-slate-700">
+          <label htmlFor="searchUser" className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
             Tìm theo tên, email hoặc User ID
           </label>
           <input
@@ -96,63 +87,48 @@ export function SettlementsFilters({
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div>
-          <label htmlFor="sortBy" className="mb-2 block text-sm font-medium text-slate-700">
-            Sắp xếp theo
-          </label>
-          <select
-            id="sortBy"
-            value={sortBy}
-            onChange={(event) => {
-              onSortByChange(event.target.value as 'total_due' | 'created_at' | 'paid_at' | 'user_id');
-              onResetPage();
-            }}
-            className="input-field"
-          >
-            <option value="total_due">Tổng cần thu</option>
-            <option value="created_at">Ngày tạo quyết toán</option>
-            <option value="paid_at">Ngày thanh toán</option>
-            <option value="user_id">User ID</option>
-          </select>
-        </div>
+        <CustomSelect
+          label="Sắp xếp theo"
+          value={sortBy}
+          onChange={(val) => {
+            onSortByChange(val);
+            onResetPage();
+          }}
+          options={[
+            { value: 'total_due', label: 'Tổng cần thu' },
+            { value: 'created_at', label: 'Ngày tạo quyết toán' },
+            { value: 'paid_at', label: 'Ngày thanh toán' },
+            { value: 'user_id', label: 'User ID' },
+          ]}
+        />
 
-        <div>
-          <label htmlFor="sortOrder" className="mb-2 block text-sm font-medium text-slate-700">
-            Thứ tự
-          </label>
-          <select
-            id="sortOrder"
-            value={sortOrder}
-            onChange={(event) => {
-              onSortOrderChange(event.target.value as 'asc' | 'desc');
-              onResetPage();
-            }}
-            className="input-field"
-          >
-            <option value="desc">Giảm dần</option>
-            <option value="asc">Tăng dần</option>
-          </select>
-        </div>
+        <CustomSelect
+          label="Thứ tự"
+          value={sortOrder}
+          onChange={(val) => {
+            onSortOrderChange(val);
+            onResetPage();
+          }}
+          options={[
+            { value: 'desc', label: 'Giảm dần' },
+            { value: 'asc', label: 'Tăng dần' },
+          ]}
+        />
 
-        <div>
-          <label htmlFor="pageSize" className="mb-2 block text-sm font-medium text-slate-700">
-            Số dòng mỗi trang
-          </label>
-          <select
-            id="pageSize"
-            value={String(limit)}
-            onChange={(event) => {
-              onLimitChange(Number(event.target.value));
-              onResetPage();
-            }}
-            className="input-field"
-          >
-            <option value="10">10</option>
-            <option value="20">20</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
-          </select>
-        </div>
+        <CustomSelect
+          label="Số dòng mỗi trang"
+          value={limit}
+          onChange={(val) => {
+            onLimitChange(val);
+            onResetPage();
+          }}
+          options={[
+            { value: 10, label: '10' },
+            { value: 20, label: '20' },
+            { value: 50, label: '50' },
+            { value: 100, label: '100' },
+          ]}
+        />
       </div>
     </div>
   );

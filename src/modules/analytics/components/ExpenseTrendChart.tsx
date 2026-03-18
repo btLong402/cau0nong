@@ -1,9 +1,3 @@
-/**
- * ExpenseTrendChart Component
- * Shows court + shuttlecock expense trends over months
- * Uses pure CSS/HTML chart (no external library)
- */
-
 'use client';
 
 import type { ExpenseTrendItem } from '../types';
@@ -25,10 +19,10 @@ export function ExpenseTrendChart({ data, loading }: ExpenseTrendChartProps) {
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="flex flex-1 flex-col items-center gap-1">
             <div
-              className="w-full animate-pulse rounded-t bg-slate-200"
+              className="w-full skeleton rounded-t"
               style={{ height: `${40 + Math.random() * 80}px` }}
             />
-            <div className="h-3 w-8 animate-pulse rounded bg-slate-200" />
+            <div className="skeleton h-3 w-8" />
           </div>
         ))}
       </div>
@@ -37,7 +31,7 @@ export function ExpenseTrendChart({ data, loading }: ExpenseTrendChartProps) {
 
   if (!data || data.length === 0) {
     return (
-      <div className="py-8 text-center text-sm text-slate-500">
+      <div className="py-8 text-center text-sm text-[var(--muted)]">
         Chưa có dữ liệu chi phí theo tháng.
       </div>
     );
@@ -51,12 +45,12 @@ export function ExpenseTrendChart({ data, loading }: ExpenseTrendChartProps) {
       {/* Legend */}
       <div className="mb-4 flex gap-4 text-xs">
         <div className="flex items-center gap-1.5">
-          <div className="h-3 w-3 rounded-sm bg-blue-500" />
-          <span className="text-slate-600">Tiền sân</span>
+          <div className="h-3 w-3 rounded-sm bg-[var(--primary)]" />
+          <span className="text-[var(--muted)]">Tiền sân</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="h-3 w-3 rounded-sm bg-amber-500" />
-          <span className="text-slate-600">Tiền cầu</span>
+          <div className="h-3 w-3 rounded-sm bg-[var(--warning)]" />
+          <span className="text-[var(--muted)]">Tiền cầu</span>
         </div>
       </div>
 
@@ -78,18 +72,18 @@ export function ExpenseTrendChart({ data, loading }: ExpenseTrendChartProps) {
               className="group flex flex-1 flex-col items-center"
             >
               {/* Tooltip on hover */}
-              <div className="pointer-events-none mb-1 hidden rounded bg-slate-800 px-2 py-1 text-xs text-white shadow-lg group-hover:block">
+              <div className="pointer-events-none mb-1 hidden rounded-lg bg-[var(--foreground)] px-2 py-1 text-xs text-white shadow-lg group-hover:block">
                 <p>{item.total.toLocaleString('vi-VN')}đ</p>
               </div>
 
               {/* Stacked bars */}
               <div className="flex w-full flex-col items-center">
                 <div
-                  className="w-full max-w-[32px] rounded-t bg-amber-400 transition-all duration-300"
+                  className="w-full max-w-[32px] rounded-t bg-[var(--warning)] transition-all duration-300"
                   style={{ height: `${shuttleH}px` }}
                 />
                 <div
-                  className="w-full max-w-[32px] bg-blue-500 transition-all duration-300"
+                  className="w-full max-w-[32px] bg-[var(--primary)] transition-all duration-300"
                   style={{ height: `${courtH}px` }}
                 />
               </div>
@@ -103,7 +97,7 @@ export function ExpenseTrendChart({ data, loading }: ExpenseTrendChartProps) {
         {data.map((item) => (
           <div
             key={item.month_year}
-            className="flex-1 text-center text-[10px] text-slate-500"
+            className="flex-1 text-center text-[10px] text-[var(--muted)]"
           >
             {formatMonthLabel(item.month_year)}
           </div>

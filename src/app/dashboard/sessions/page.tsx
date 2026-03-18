@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { CustomSelect } from '@/shared/components/CustomSelect';
 
 interface Month {
   id: number;
@@ -101,7 +102,6 @@ export default function SessionsPage() {
 
     fetchSessions();
 
-    // Default session date to current date or first day of month
     const today = new Date().toISOString().split('T')[0];
     setSessionDate(today);
   }, [selectedMonth]);
@@ -138,7 +138,6 @@ export default function SessionsPage() {
       setSessions((prev) => [data.data.session, ...prev]);
       setShowNewSessionForm(false);
       
-      // Reset form
       setCourtExpense('');
       setNotes('');
     } catch (error: any) {
@@ -149,15 +148,23 @@ export default function SessionsPage() {
   }
 
   if (loading) {
-    return <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />;
+    return (
+      <div className="space-y-4">
+        <div className="skeleton h-8 w-32" />
+        <div className="skeleton h-4 w-64" />
+        <div className="space-y-3 mt-6">
+          {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-16" />)}
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="page-header">
         <div>
-          <h1 className="text-3xl font-semibold text-slate-900">Buổi tập</h1>
-          <p className="mt-1 text-sm text-slate-600">Quản lý danh sách buổi tập và thông tin điểm danh.</p>
+          <h1 className="page-title">Buổi tập</h1>
+          <p className="page-subtitle">Quản lý danh sách buổi tập và thông tin điểm danh.</p>
         </div>
         {selectedMonth && months.find(m => m.id === selectedMonth)?.status === 'open' && (
           <button
@@ -169,36 +176,35 @@ export default function SessionsPage() {
         )}
       </div>
 
-      <div>
-        <label className="mb-2 block text-sm font-medium text-slate-700">Chọn kỳ quản lý</label>
-        <select
-          value={selectedMonth || ''}
-          onChange={(e) => setSelectedMonth(parseInt(e.target.value, 10))}
-          className="input-field max-w-md"
-        >
-          {months.map((month) => (
-            <option key={month.id} value={month.id}>
-              {new Date(month.month_year).toLocaleDateString('vi-VN', {
-                month: 'long',
-                year: 'numeric',
-              })} ({month.status === 'open' ? 'Đang mở' : 'Đã đóng'})
-            </option>
-          ))}
-        </select>
-      </div>
+      {/* Month selector */}
+      <CustomSelect
+        label="Chọn kỳ quản lý"
+        value={selectedMonth}
+        onChange={(val) => setSelectedMonth(val)}
+        options={months.map((m) => ({
+          value: m.id,
+          label: new Date(m.month_year).toLocaleDateString('vi-VN', {
+            month: 'long',
+            year: 'numeric',
+          }),
+          sublabel: m.status === 'open' ? 'Đang mở' : 'Đã đóng',
+        }))}
+        className="max-w-md"
+      />
 
+      {/* New session form */}
       {showNewSessionForm && (
-        <div className="surface-card-soft p-6">
-          <h2 className="text-lg font-semibold text-slate-900">Tạo buổi tập mới</h2>
+        <div className="surface-card-soft p-5">
+          <h2 className="text-base font-semibold text-[var(--foreground)]">Tạo buổi tập mới</h2>
           {formError && (
-            <div className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-              {formError}
+            <div className="mt-3 surface-card p-3 border-l-4 border-l-[var(--danger)]">
+              <p className="text-sm text-[var(--danger)]">{formError}</p>
             </div>
           )}
           <div className="mt-4 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">Ngày *</label>
+                <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">Ngày *</label>
                 <input 
                   type="date" 
                   value={sessionDate}
@@ -207,7 +213,7 @@ export default function SessionsPage() {
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">Chi phí sân (đ) *</label>
+                <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">Chi phí sân (đ) *</label>
                 <input 
                   type="number" 
                   placeholder="200000" 
@@ -218,21 +224,18 @@ export default function SessionsPage() {
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CustomSelect
+                label="Người ứng tiền *"
+                value={payerUserId}
+                onChange={(val) => setPayerUserId(val)}
+                options={users.map(user => ({
+                  value: user.id,
+                  label: user.name
+                }))}
+                placeholder="Chọn thành viên"
+              />
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">Người ứng tiền *</label>
-                <select 
-                  value={payerUserId}
-                  onChange={(e) => setPayerUserId(e.target.value)}
-                  className="input-field"
-                >
-                  <option value="">Chọn thành viên</option>
-                  {users.map(user => (
-                    <option key={user.id} value={user.id}>{user.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">Ghi chú</label>
+                <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">Ghi chú</label>
                 <input 
                   type="text" 
                   placeholder="Ứng tiền sân..." 
@@ -242,7 +245,7 @@ export default function SessionsPage() {
                 />
               </div>
             </div>
-            <div className="flex gap-2 pt-2">
+            <div className="flex gap-2 pt-1">
               <button 
                 onClick={handleCreateSession}
                 disabled={creating}
@@ -261,43 +264,42 @@ export default function SessionsPage() {
         </div>
       )}
 
-      <div className="surface-card overflow-hidden">
-        <table className="w-full min-w-[820px]">
-          <thead className="border-b border-slate-200 bg-slate-50">
+      {/* Desktop Table */}
+      <div className="surface-card overflow-hidden hidden lg:block">
+        <table className="data-table">
+          <thead>
             <tr>
-              <th className="px-6 py-4 text-left font-medium text-gray-700">Ngày</th>
-              <th className="px-6 py-4 text-left font-medium text-gray-700">Chi phí sân</th>
-              <th className="px-6 py-4 text-left font-medium text-gray-700">Người trả</th>
-              <th className="px-6 py-4 text-left font-medium text-gray-700">Ghi chú</th>
-              <th className="px-6 py-4 text-left font-medium text-gray-700">Trạng thái</th>
-              <th className="px-6 py-4 text-left font-medium text-gray-700">Hành động</th>
+              <th>Ngày</th>
+              <th>Chi phí sân</th>
+              <th>Người trả</th>
+              <th>Ghi chú</th>
+              <th>Trạng thái</th>
+              <th>Hành động</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200">
+          <tbody>
             {sessions.map((session) => (
-              <tr key={session.id} className="hover:bg-slate-50">
-                <td className="px-6 py-4">
+              <tr key={session.id}>
+                <td className="font-medium">
                   {new Date(session.session_date).toLocaleDateString('vi-VN')}
                 </td>
-                <td className="px-6 py-4 font-medium text-slate-900">
+                <td className="font-semibold text-[var(--foreground)]">
                   {session.court_expense_amount.toLocaleString('vi-VN')} đ
                 </td>
-                <td className="px-6 py-4 text-sm text-slate-600">
+                <td className="text-[var(--muted)]">
                   {users.find(u => u.id === session.payer_user_id)?.name || session.payer_user_id.substring(0, 8)}
                 </td>
-                <td className="px-6 py-4 text-sm text-slate-600">{session.notes || '-'}</td>
-                <td className="px-6 py-4">
-                  <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
-                    session.status === 'open' ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-800'
-                  }`}>
+                <td className="text-[var(--muted)]">{session.notes || '—'}</td>
+                <td>
+                  <span className={`badge ${session.status === 'open' ? 'badge-success' : 'badge-neutral'}`}>
                     {session.status === 'open' ? 'Đang mở' : 'Đã đóng'}
                   </span>
                 </td>
-                <td className="px-6 py-4">
+                <td>
                   <div className="flex items-center gap-3">
                     <Link
                       href={`/dashboard/sessions/${session.id}`}
-                      className="text-sm font-medium text-blue-700 hover:text-blue-900"
+                      className="text-sm font-medium text-[var(--primary)] hover:text-[var(--primary-hover)] cursor-pointer"
                     >
                       {session.status === 'closed' || months.find(m => m.id === selectedMonth)?.status === 'closed' 
                         ? 'Xem điểm danh' 
@@ -321,7 +323,7 @@ export default function SessionsPage() {
                             console.error('Error closing session:', err);
                           }
                         }}
-                        className="text-sm font-medium text-amber-600 hover:text-amber-800"
+                        className="text-sm font-medium text-[var(--warning)] hover:text-amber-800 cursor-pointer"
                       >
                         Đóng buổi
                       </button>
@@ -334,8 +336,46 @@ export default function SessionsPage() {
         </table>
 
         {sessions.length === 0 && (
-          <div className="py-12 text-center">
-            <p className="text-slate-600">Chưa có buổi tập nào trong kỳ này</p>
+          <div className="empty-state">
+            <p className="empty-state-title">Chưa có buổi tập nào trong kỳ này</p>
+          </div>
+        )}
+      </div>
+
+      {/* Mobile Card List */}
+      <div className="card-list lg:hidden">
+        {sessions.map((session) => (
+          <div key={session.id} className="card-list-item">
+            <div className="flex items-start justify-between mb-2">
+              <div>
+                <p className="text-sm font-semibold text-[var(--foreground)]">
+                  {new Date(session.session_date).toLocaleDateString('vi-VN', { weekday: 'short', day: 'numeric', month: 'numeric' })}
+                </p>
+                <p className="text-xs text-[var(--muted)]">
+                  {users.find(u => u.id === session.payer_user_id)?.name || '—'}
+                  {session.notes ? ` • ${session.notes}` : ''}
+                </p>
+              </div>
+              <span className={`badge ${session.status === 'open' ? 'badge-success' : 'badge-neutral'}`}>
+                {session.status === 'open' ? 'Mở' : 'Đóng'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-base font-bold text-[var(--foreground)]">
+                {session.court_expense_amount.toLocaleString('vi-VN')} đ
+              </p>
+              <Link
+                href={`/dashboard/sessions/${session.id}`}
+                className="text-sm font-medium text-[var(--primary)] hover:text-[var(--primary-hover)] cursor-pointer"
+              >
+                {session.status === 'closed' ? 'Xem' : 'Điểm danh →'}
+              </Link>
+            </div>
+          </div>
+        ))}
+        {sessions.length === 0 && (
+          <div className="empty-state py-8">
+            <p className="empty-state-title">Chưa có buổi tập nào</p>
           </div>
         )}
       </div>

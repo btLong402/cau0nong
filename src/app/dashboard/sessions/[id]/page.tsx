@@ -40,29 +40,17 @@ export default function AttendancePage({ params }: { params: Promise<{ id: strin
   useEffect(() => {
     async function fetchData() {
       try {
-        // Step 1: Fetch session to get month_id
-        // Note: Our API needs month_id in path, but we only have sessionId. 
-        // We might need an API that gets session by ID directly if path structure is strict.
-        // Let's try the direct API if exists or just fetch all months and sessions (not ideal but safe).
-        // Actually, our API /api/months/[id]/sessions/[sessionId] exists.
-        // We'll try to find which month this session belongs to or use a common API.
-        
-        // For now, let's assume we can fetch users and attendance.
         const usersResponse = await fetch('/api/users');
         const usersData = await usersResponse.json();
         const allUsers = usersData.data?.members || [];
         setUsers(allUsers);
 
-        // Fetch session details - we need to know the monthId. 
-        // Let's list months to find the session or use the GetSession API if it doesn't require monthId in logic.
-        // Actually, the sessions API route has parseSessionId that only looks at the ID.
         const sessionResponse = await fetch(`/api/months/0/sessions/${sessionId}`); 
         const sessionData = await sessionResponse.json();
         const sessionObj = sessionData.data?.session;
         setSession(sessionObj);
 
         if (sessionObj) {
-          // Fetch month status
           const monthRes = await fetch('/api/months');
           const monthData = await monthRes.json();
           const currentMonth = monthData.data?.months?.find((m: any) => m.id === sessionObj.month_id);
@@ -135,101 +123,111 @@ export default function AttendancePage({ params }: { params: Promise<{ id: strin
     }
   };
 
+  const attendedCount = Object.values(attendance).filter(Boolean).length;
+
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center p-12">
-        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />
-        <p className="mt-4 text-slate-600">Đang tải danh sách thành viên...</p>
+      <div className="max-w-3xl space-y-4">
+        <div className="skeleton h-8 w-32" />
+        <div className="skeleton h-4 w-48" />
+        <div className="space-y-2 mt-6">
+          {[...Array(6)].map((_, i) => <div key={i} className="skeleton h-14" />)}
+        </div>
       </div>
     );
   }
 
   if (!session && !loading) {
     return (
-      <div className="p-6 text-center">
-        <p className="text-red-600">Không tìm thấy thông tin buổi tập.</p>
-        <Link href="/dashboard/sessions" className="mt-4 inline-block text-blue-600 underline">
+      <div className="empty-state">
+        <svg className="empty-state-icon text-[var(--danger)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+        </svg>
+        <p className="empty-state-title">Không tìm thấy thông tin buổi tập</p>
+        <Link href="/dashboard/sessions" className="btn-primary mt-4">
           Quay lại danh sách
         </Link>
       </div>
     );
   }
 
+  const isEditable = monthStatus === 'open' && session?.status === 'open';
+
   return (
-    <div className="max-w-4xl space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/dashboard/sessions" className="rounded-lg border border-slate-200 p-2 hover:bg-slate-50">
-          <svg className="h-5 w-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    <div className="max-w-3xl space-y-5">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <Link href="/dashboard/sessions" className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--surface-border)] hover:bg-[var(--surface-hover)] cursor-pointer">
+          <svg className="h-4 w-4 text-[var(--muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
         </Link>
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Điểm danh</h1>
-          <div className="flex items-center gap-2">
-            <p className="text-sm text-slate-600">
+          <h1 className="text-xl font-bold text-[var(--foreground)]">Điểm danh</h1>
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm text-[var(--muted)]">
               Ngày {new Date(session!.session_date).toLocaleDateString('vi-VN')} • 
               Chi phí: {session!.court_expense_amount.toLocaleString('vi-VN')} đ
             </p>
             {monthStatus === 'closed' && (
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-600">
-                Đã đóng kỳ
-              </span>
+              <span className="badge badge-neutral">Đã đóng kỳ</span>
             )}
             {session?.status === 'closed' && monthStatus !== 'closed' && (
-              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700">
-                Đã đóng buổi
-              </span>
+              <span className="badge badge-warning">Đã đóng buổi</span>
             )}
           </div>
         </div>
       </div>
 
-      <div className="surface-card p-6">
+      {/* Attendance card */}
+      <div className="surface-card p-5">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-medium text-slate-900">Danh sách thành viên</h2>
-          <span className="text-sm text-slate-600">
-            Đã chọn: {Object.values(attendance).filter(Boolean).length} / {users.length}
-          </span>
+          <h2 className="text-base font-semibold text-[var(--foreground)]">Danh sách thành viên</h2>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xl font-bold text-[var(--primary)]">{attendedCount}</span>
+            <span className="text-sm text-[var(--muted)]">/ {users.length} người</span>
+          </div>
         </div>
 
         {error && (
-          <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-            {error}
+          <div className="mb-4 surface-card p-3 border-l-4 border-l-[var(--danger)]">
+            <p className="text-sm text-[var(--danger)]">{error}</p>
           </div>
         )}
 
         {success && (
-          <div className="mb-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">
-            Lưu điểm danh thành công! Đang chuyển hướng...
+          <div className="mb-4 surface-card p-3 border-l-4 border-l-[var(--accent)]">
+            <p className="text-sm text-[var(--accent)]">Lưu điểm danh thành công! Đang chuyển hướng...</p>
           </div>
         )}
 
-        <div className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-100">
+        {/* User list */}
+        <div className="divide-y divide-[var(--surface-border)] overflow-hidden rounded-lg border border-[var(--surface-border)]">
           {users.map((user) => (
             <div 
               key={user.id} 
               onClick={() => toggleAttendance(user.id)}
-              className="flex cursor-pointer items-center justify-between p-4 transition-colors hover:bg-slate-50"
+              className={`flex items-center justify-between p-3.5 transition-colors ${isEditable ? 'cursor-pointer hover:bg-[var(--surface-hover)]' : ''}`}
             >
               <div className="flex items-center gap-3">
-                <div className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${
-                  attendance[user.id] ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'
+                <div className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold transition-colors ${
+                  attendance[user.id] ? 'bg-[var(--primary-soft)] text-[var(--primary)]' : 'bg-[var(--surface-hover)] text-[var(--muted)]'
                 }`}>
                   {user.name.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <div className="font-medium text-slate-900">{user.name}</div>
-                  <div className="text-xs text-slate-500">{user.email}</div>
+                  <p className="text-sm font-medium text-[var(--foreground)]">{user.name}</p>
+                  <p className="text-xs text-[var(--muted)]">{user.email}</p>
                 </div>
               </div>
-              <div className={`h-6 w-6 rounded-md border flex items-center justify-center transition-colors ${
+              <div className={`flex h-6 w-6 items-center justify-center rounded-md border transition-colors ${
                 attendance[user.id] 
-                  ? 'bg-blue-600 border-blue-600 text-white' 
-                  : 'bg-white border-slate-300'
+                  ? 'bg-[var(--primary)] border-[var(--primary)] text-white' 
+                  : 'bg-white border-[var(--surface-border-strong)]'
               }`}>
                 {attendance[user.id] && (
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 )}
               </div>
@@ -237,8 +235,9 @@ export default function AttendancePage({ params }: { params: Promise<{ id: strin
           ))}
         </div>
 
-        <div className="mt-8 flex gap-3">
-          {monthStatus === 'open' && session?.status === 'open' ? (
+        {/* Actions */}
+        <div className="mt-6 flex gap-3">
+          {isEditable ? (
             <button
               onClick={handleSave}
               disabled={saving}
@@ -247,12 +246,12 @@ export default function AttendancePage({ params }: { params: Promise<{ id: strin
               {saving ? 'Đang lưu...' : 'Lưu điểm danh'}
             </button>
           ) : (
-            <div className="flex-1 rounded-xl bg-slate-50 p-3 text-center text-sm font-medium text-slate-500">
-              {session?.status === 'closed' ? 'Buổi tập đã đóng - Không thể chỉnh sửa' : 'Kỳ quản lý đã đóng - Không thể chỉnh sửa'}
+            <div className="flex-1 rounded-lg bg-[var(--surface-hover)] p-3 text-center text-sm font-medium text-[var(--muted)]">
+              {session?.status === 'closed' ? 'Buổi tập đã đóng — Không thể chỉnh sửa' : 'Kỳ quản lý đã đóng — Không thể chỉnh sửa'}
             </div>
           )}
           <Link href="/dashboard/sessions" className="btn-secondary flex-1 py-3 text-center">
-            {monthStatus === 'open' && session?.status === 'open' ? 'Hủy' : 'Quay lại'}
+            {isEditable ? 'Hủy' : 'Quay lại'}
           </Link>
         </div>
       </div>

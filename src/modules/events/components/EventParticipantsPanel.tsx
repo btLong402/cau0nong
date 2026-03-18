@@ -1,8 +1,3 @@
-/**
- * EventParticipantsPanel Component
- * Manages event participants: add, remove, mark paid, settle
- */
-
 'use client';
 
 import { useState } from 'react';
@@ -67,7 +62,7 @@ export function EventParticipantsPanel({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-base font-semibold text-slate-900">
+        <h3 className="text-base font-semibold text-[var(--foreground)]">
           Người tham gia ({participants.length})
         </h3>
         <div className="flex gap-2">
@@ -91,18 +86,18 @@ export function EventParticipantsPanel({
       </div>
 
       {isSettled && (
-        <div className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
+        <div className="rounded-lg bg-[var(--accent-soft)] px-4 py-3 text-sm text-[var(--accent)]">
           Đã tính tiền · {paidCount}/{participants.length} đã thanh toán
         </div>
       )}
 
       {showAddForm && (
-        <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4">
-          <p className="mb-3 text-sm font-medium text-slate-700">
+        <div className="surface-card-soft p-4">
+          <p className="mb-3 text-sm font-medium text-[var(--foreground)]">
             Chọn thành viên để thêm:
           </p>
           {availableMembers.length === 0 ? (
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-[var(--muted)]">
               Tất cả thành viên đã được thêm.
             </p>
           ) : (
@@ -110,16 +105,16 @@ export function EventParticipantsPanel({
               {availableMembers.map((member) => (
                 <label
                   key={member.id}
-                  className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 hover:bg-blue-100"
+                  className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 hover:bg-[var(--primary-soft)]"
                 >
                   <input
                     type="checkbox"
                     checked={selectedUserIds.includes(member.id)}
                     onChange={() => toggleUser(member.id)}
-                    className="h-4 w-4 rounded border-slate-300"
+                    className="h-4 w-4 rounded border-[var(--surface-border-strong)] accent-[var(--primary)]"
                   />
-                  <span className="text-sm text-slate-800">{member.name}</span>
-                  <span className="text-xs text-slate-500">{member.email}</span>
+                  <span className="text-sm text-[var(--foreground)]">{member.name}</span>
+                  <span className="text-xs text-[var(--muted)]">{member.email}</span>
                 </label>
               ))}
             </div>
@@ -146,22 +141,22 @@ export function EventParticipantsPanel({
       )}
 
       {participants.length === 0 ? (
-        <div className="py-8 text-center text-sm text-slate-500">
+        <div className="py-8 text-center text-sm text-[var(--muted)]">
           Chưa có người tham gia. Nhấn &quot;Thêm người&quot; để bắt đầu.
         </div>
       ) : (
-        <div className="divide-y divide-slate-100 rounded-xl border border-slate-200">
+        <div className="divide-y divide-[var(--surface-border)] overflow-hidden rounded-lg border border-[var(--surface-border)]">
           {participants.map((p) => (
             <div
               key={p.user_id}
               className="flex items-center justify-between px-4 py-3"
             >
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-slate-900">
+                <p className="text-sm font-medium text-[var(--foreground)]">
                   {p.user_name}
                 </p>
                 {p.contribution_per_person > 0 && (
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-[var(--muted)]">
                     {p.contribution_per_person.toLocaleString('vi-VN')}đ
                   </p>
                 )}
@@ -169,21 +164,19 @@ export function EventParticipantsPanel({
 
               <div className="flex items-center gap-2">
                 {p.is_paid ? (
-                  <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
-                    Đã đóng
-                  </span>
+                  <span className="badge badge-success">Đã đóng</span>
                 ) : (
                   <>
                     <button
                       onClick={() => onMarkPaid(p.user_id)}
-                      className="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100"
+                      className="btn-primary h-auto min-h-0 px-3 py-1.5 text-xs"
                       disabled={loading}
                     >
                       Xác nhận
                     </button>
                     <button
                       onClick={() => onRemoveParticipant(p.user_id)}
-                      className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100"
+                      className="btn-danger h-auto min-h-0 px-3 py-1.5 text-xs"
                       disabled={loading}
                     >
                       Xóa
