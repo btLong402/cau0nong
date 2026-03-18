@@ -20,7 +20,7 @@ export const createClient = () =>
 export const createServerSupabaseClient = async () => {
   const cookieStore = await cookies();
 
-  return createSupabaseServerClient(supabaseUrl, supabaseAnonKey, {
+  const client = createSupabaseServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -32,12 +32,21 @@ export const createServerSupabaseClient = async () => {
           );
         } catch {
           // The `setAll` method was called from a Server Component.
-          // This can be ignored if you have middleware refreshing
-          // user sessions.
         }
       },
     },
   });
+
+  // Manually set session if our custom auth_token exists
+  const customToken = cookieStore.get("auth_token")?.value;
+  if (customToken) {
+    await client.auth.setSession({
+      access_token: customToken,
+      refresh_token: "", // We don't store refresh token in this cookie
+    });
+  }
+
+  return client;
 };
 
 // Alias for backward compatibility
