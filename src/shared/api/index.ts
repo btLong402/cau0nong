@@ -97,6 +97,7 @@ export {
   bulkAttendanceSchema,
   createShuttlecockExpenseSchema,
   createMonthSchema,
+  confirmSettlementPaymentSchema,
   validateRequest,
   validateOrThrow,
   createRequestValidator,
@@ -108,6 +109,7 @@ export {
   type BulkAttendanceRequest,
   type CreateShuttlecockExpenseRequest,
   type CreateMonthRequest,
+  type ConfirmSettlementPaymentRequest,
 } from "./base-validators";
 
 // ============================================

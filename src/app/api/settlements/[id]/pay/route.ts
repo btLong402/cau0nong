@@ -1,4 +1,7 @@
-import { createPutHandler } from "@/shared/api";
+import {
+  confirmSettlementPaymentSchema,
+  createPutHandler,
+} from "@/shared/api";
 import { ValidationError } from "@/shared/api/base-errors";
 import { createSettlementsService } from "@/modules/settlements/settlements.service";
 
@@ -17,18 +20,10 @@ function parseSettlementId(url: string): number {
 export const PUT = createPutHandler({
   requireAuth: true,
   requireRole: ["admin"],
-  handler: async (req) => {
+  validationSchema: confirmSettlementPaymentSchema,
+  handler: async (req, _context, payload) => {
     const settlementId = parseSettlementId(req.url);
-    let paidAmount: number | undefined;
-
-    try {
-      const payload = await req.json();
-      if (payload?.paid_amount !== undefined) {
-        paidAmount = Number(payload.paid_amount);
-      }
-    } catch {
-      paidAmount = undefined;
-    }
+    const paidAmount = payload?.paid_amount;
 
     const settlementsService = await createSettlementsService();
     const settlement = await settlementsService.markPaid(settlementId, paidAmount);

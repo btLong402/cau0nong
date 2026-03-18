@@ -180,6 +180,18 @@ export const createMonthSchema = z.object({
 export type CreateMonthRequest = z.infer<typeof createMonthSchema>;
 
 // ============================================
+// Settlement Payment Schemas
+// ============================================
+
+export const confirmSettlementPaymentSchema = z.object({
+  paid_amount: z.number().nonnegative("paid_amount must be >= 0").optional(),
+});
+
+export type ConfirmSettlementPaymentRequest = z.infer<
+  typeof confirmSettlementPaymentSchema
+>;
+
+// ============================================
 // Validation Helper Functions
 // ============================================
 

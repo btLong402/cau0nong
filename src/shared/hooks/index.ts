@@ -46,7 +46,17 @@ export type { Session, Attendance } from './useSessions';
 export {
   useMonthSettlements,
   useSettlement,
+  useSettlementVietQR,
+  useMonthPaymentHistory,
   useGenerateMonthSettlements,
   useMarkSettlementPaid,
 } from './useSettlements';
-export type { GenerateSummary } from './useSettlements';
+export type {
+  GenerateSummary,
+  GeneratedVietQR,
+  SettlementListItem,
+  MonthPaymentItem,
+  MonthPaymentResponse,
+  SettlementVietQRResponse,
+  VietQRPayload,
+} from './useSettlements';

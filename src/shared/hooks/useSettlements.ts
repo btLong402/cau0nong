@@ -40,6 +40,52 @@ interface GenerateResponse {
   summary: GenerateSummary;
 }
 
+interface VietQRPayload {
+  bankBin: string;
+  accountNo: string;
+  accountName: string;
+  amount: number;
+  addInfo: string;
+  template: string;
+}
+
+interface GeneratedVietQR {
+  payment: {
+    id: number;
+    settlement_id: number;
+    user_id: string;
+    qr_content: string;
+    qr_image_url?: string;
+    paid_at?: string;
+    created_at: string;
+  };
+  payload: VietQRPayload;
+}
+
+interface SettlementVietQRResponse {
+  vietqr: GeneratedVietQR;
+}
+
+interface MonthPaymentItem {
+  settlement_id: number;
+  user_id: string;
+  user_name: string | null;
+  user_email: string | null;
+  month_id: number;
+  total_due: number;
+  is_paid: boolean;
+  paid_amount: number | null;
+  paid_at: string | null;
+  qr_content: string | null;
+  qr_image_url: string | null;
+  qr_created_at: string | null;
+}
+
+interface MonthPaymentResponse {
+  items: MonthPaymentItem[];
+  pagination: SettlementsPagination;
+}
+
 interface MutationState<T> {
   data: T | null;
   loading: boolean;
@@ -53,6 +99,13 @@ interface UseMonthSettlementsOptions {
   search?: string;
   sortBy?: 'total_due' | 'created_at' | 'paid_at' | 'user_id';
   sortOrder?: 'asc' | 'desc';
+}
+
+interface UseMonthPaymentHistoryOptions {
+  page?: number;
+  limit?: number;
+  status?: 'all' | 'paid' | 'unpaid';
+  search?: string;
 }
 
 export function useMonthSettlements(
@@ -102,6 +155,63 @@ export function useSettlement(settlementId: number | null) {
 
   return {
     settlement: data?.settlement || null,
+    loading,
+    error,
+    refetch,
+  };
+}
+
+export function useSettlementVietQR(
+  settlementId: number | null,
+  autoFetch: boolean = true,
+) {
+  const url = settlementId
+    ? `/api/settlements/${settlementId}/vietqr`
+    : '/api/settlements/0/vietqr';
+
+  const { data, loading, error, refetch } = useFetch<SettlementVietQRResponse>(url, {
+    skip: !settlementId || !autoFetch,
+  });
+
+  return {
+    vietqr: data?.vietqr || null,
+    loading,
+    error,
+    refetch,
+  };
+}
+
+export function useMonthPaymentHistory(
+  monthId: number | null,
+  options?: UseMonthPaymentHistoryOptions,
+) {
+  const query = new URLSearchParams();
+  query.set('page', String(options?.page || 1));
+  query.set('limit', String(options?.limit || 20));
+  query.set('status', options?.status || 'all');
+
+  const normalizedSearch = options?.search?.trim();
+  if (normalizedSearch) {
+    query.set('search', normalizedSearch);
+  }
+
+  const url = monthId
+    ? `/api/months/${monthId}/payments?${query.toString()}`
+    : '/api/months/0/payments';
+
+  const { data, loading, error, refetch } = useFetch<MonthPaymentResponse>(url, {
+    skip: !monthId,
+  });
+
+  return {
+    payments: data?.items || [],
+    pagination: data?.pagination || {
+      page: options?.page || 1,
+      limit: options?.limit || 20,
+      total: 0,
+      totalPages: 1,
+      hasMore: false,
+    },
     loading,
     error,
     refetch,
@@ -209,4 +319,9 @@ export type {
   GenerateSummary,
   SettlementResponse,
   GenerateResponse,
+  SettlementVietQRResponse,
+  GeneratedVietQR,
+  VietQRPayload,
+  MonthPaymentItem,
+  MonthPaymentResponse,
 };

@@ -12,7 +12,6 @@ import {
 } from "@/lib/types";
 import { createMonthsService } from "@/modules/months/months.service";
 import { createSessionsService } from "@/modules/sessions/sessions.service";
-import { createUsersService } from "@/modules/users/users.service";
 import {
   ConflictError,
   InvalidStateError,
@@ -223,13 +222,16 @@ export class SettlementsService {
       throw new ValidationError("paidAmount must be >= 0");
     }
 
-    const updatedSettlement = await this.repository.markPaid(settlementId, amount);
+    const normalizedAmount = Math.round(amount * 100) / 100;
+    const expectedAmount = Math.round(settlement.total_due * 100) / 100;
+    if (normalizedAmount !== expectedAmount) {
+      throw new ValidationError("paidAmount must be equal to settlement total_due");
+    }
 
-    // Sync user balance with overpayment amount only.
-    const usersService = await createUsersService();
-    const member = await usersService.getMember(updatedSettlement.user_id);
-    const overpaid = Math.max(0, amount - updatedSettlement.total_due);
-    await usersService.updateBalance(member.id, overpaid);
+    const updatedSettlement = await this.repository.markPaid(
+      settlementId,
+      normalizedAmount
+    );
 
     return updatedSettlement;
   }
