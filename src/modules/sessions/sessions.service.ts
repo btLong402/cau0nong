@@ -21,6 +21,7 @@ export interface UpdateSessionData {
   court_expense_amount?: number;
   payer_user_id?: string;
   notes?: string;
+  status?: "open" | "closed";
 }
 
 /**
@@ -52,6 +53,7 @@ export class SessionsService {
       court_expense_amount: data.court_expense_amount,
       payer_user_id: data.payer_user_id,
       notes: data.notes,
+      status: "open",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     } as any);
@@ -95,6 +97,8 @@ export class SessionsService {
       court_expense_amount: data.court_expense_amount || session.court_expense_amount,
       payer_user_id: data.payer_user_id || session.payer_user_id,
       notes: data.notes !== undefined ? data.notes : session.notes,
+      status: data.status || session.status,
+      updated_at: new Date().toISOString(),
     } as any);
   }
 

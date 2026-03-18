@@ -48,15 +48,7 @@ export function SettlementsTable({
             <thead className="border-b border-slate-200 bg-slate-50 text-left text-sm text-slate-700">
               <tr>
                 <th className="px-4 py-3 font-medium">Thành viên</th>
-                <th className="px-4 py-3 font-medium">
-                  <button
-                    type="button"
-                    onClick={() => onSortColumn('user_id')}
-                    className="font-medium text-slate-700 hover:text-slate-900"
-                  >
-                    ID Thành viên{renderSortIndicator('user_id')}
-                  </button>
-                </th>
+
                 <th className="px-4 py-3 font-medium">Tiền sân</th>
                 <th className="px-4 py-3 font-medium">Tiền cầu</th>
                 <th className="px-4 py-3 font-medium">Nợ cũ</th>
@@ -100,7 +92,7 @@ export function SettlementsTable({
                     <div className="font-medium text-slate-900">{item.user_name || 'N/A'}</div>
                     <div className="text-xs text-slate-500">{item.user_email || 'N/A'}</div>
                   </td>
-                  <td className="px-4 py-3 font-mono text-xs">{item.user_id}</td>
+
                   <td className="px-4 py-3">{formatCurrency(item.court_fee)}</td>
                   <td className="px-4 py-3">{formatCurrency(item.shuttlecock_fee)}</td>
                   <td className="px-4 py-3">{formatCurrency(item.past_debt)}</td>

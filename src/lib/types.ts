@@ -38,6 +38,7 @@ export interface Session {
   court_expense_amount: number;
   payer_user_id: string; // user id
   notes?: string;
+  status: "open" | "closed";
   created_at: string;
   updated_at: string;
 }

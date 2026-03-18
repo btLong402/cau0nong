@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 interface Month {
   id: number;
@@ -14,6 +15,7 @@ interface Session {
   court_expense_amount: number;
   payer_user_id: string;
   notes?: string;
+  status: 'open' | 'closed';
 }
 
 export default function SessionsPage() {
@@ -157,7 +159,7 @@ export default function SessionsPage() {
           <h1 className="text-3xl font-semibold text-slate-900">Buổi tập</h1>
           <p className="mt-1 text-sm text-slate-600">Quản lý danh sách buổi tập và thông tin điểm danh.</p>
         </div>
-        {selectedMonth && (
+        {selectedMonth && months.find(m => m.id === selectedMonth)?.status === 'open' && (
           <button
             onClick={() => setShowNewSessionForm((prev) => !prev)}
             className="btn-primary"
@@ -267,6 +269,7 @@ export default function SessionsPage() {
               <th className="px-6 py-4 text-left font-medium text-gray-700">Chi phí sân</th>
               <th className="px-6 py-4 text-left font-medium text-gray-700">Người trả</th>
               <th className="px-6 py-4 text-left font-medium text-gray-700">Ghi chú</th>
+              <th className="px-6 py-4 text-left font-medium text-gray-700">Trạng thái</th>
               <th className="px-6 py-4 text-left font-medium text-gray-700">Hành động</th>
             </tr>
           </thead>
@@ -279,15 +282,51 @@ export default function SessionsPage() {
                 <td className="px-6 py-4 font-medium text-slate-900">
                   {session.court_expense_amount.toLocaleString('vi-VN')} đ
                 </td>
-                <td className="px-6 py-4 text-sm text-slate-600">{session.payer_user_id.substring(0, 8)}</td>
+                <td className="px-6 py-4 text-sm text-slate-600">
+                  {users.find(u => u.id === session.payer_user_id)?.name || session.payer_user_id.substring(0, 8)}
+                </td>
                 <td className="px-6 py-4 text-sm text-slate-600">{session.notes || '-'}</td>
                 <td className="px-6 py-4">
-                  <a
-                    href={`/dashboard/sessions/${session.id}`}
-                    className="text-sm font-medium text-blue-700 hover:text-blue-900"
-                  >
-                    Điểm danh
-                  </a>
+                  <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
+                    session.status === 'open' ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-800'
+                  }`}>
+                    {session.status === 'open' ? 'Đang mở' : 'Đã đóng'}
+                  </span>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <Link
+                      href={`/dashboard/sessions/${session.id}`}
+                      className="text-sm font-medium text-blue-700 hover:text-blue-900"
+                    >
+                      {session.status === 'closed' || months.find(m => m.id === selectedMonth)?.status === 'closed' 
+                        ? 'Xem điểm danh' 
+                        : 'Điểm danh'}
+                    </Link>
+                    {session.status === 'open' && months.find(m => m.id === selectedMonth)?.status === 'open' && (
+                      <button
+                        onClick={async () => {
+                          if (!confirm('Bạn có chắc muốn đóng buổi tập này? Sau khi đóng sẽ không thể sửa điểm danh.')) return;
+                          try {
+                            const res = await fetch(`/api/months/${selectedMonth}/sessions/${session.id}`, {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ status: 'closed' }),
+                            });
+                            if (res.ok) {
+                              const data = await res.json();
+                              setSessions(prev => prev.map(s => s.id === session.id ? data.data.session : s));
+                            }
+                          } catch (err) {
+                            console.error('Error closing session:', err);
+                          }
+                        }}
+                        className="text-sm font-medium text-amber-600 hover:text-amber-800"
+                      >
+                        Đóng buổi
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
