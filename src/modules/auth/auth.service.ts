@@ -96,7 +96,11 @@ export class AuthService {
         token: authData.session?.access_token || "",
       };
     } catch (error) {
-      if (error instanceof (ConflictError || AuthenticationError || ServerError)) {
+      if (
+        error instanceof ConflictError ||
+        error instanceof AuthenticationError ||
+        error instanceof ServerError
+      ) {
         throw error;
       }
       throw new ServerError(`Sign up failed: ${error}`);
