@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:seed": "node --loader ts-node/esm src/db/seed.ts",
+    "db:seed": "tsx src/db/seed.ts",
     "db:apply-migrations": "bash src/db/apply-migrations.sh",
     "type-check": "tsc --noEmit"
   },
@@ -27,9 +27,12 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
+    "dotenv": "^17.3.1",
     "eslint": "^9",
     "eslint-config-next": "16.1.7",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

@@ -19,6 +19,37 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 -- ============================================================================
+-- FUNCTIONS (Security Definer to avoid RLS Recursion)
+-- ============================================================================
+
+-- Function to check if current user is admin
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.users
+    WHERE id = auth.uid() AND role = 'admin'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Function to get current user's role
+CREATE OR REPLACE FUNCTION public.get_my_role()
+RETURNS user_role AS $$
+BEGIN
+  RETURN (SELECT role FROM public.users WHERE id = auth.uid());
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Function to get current user's balance
+CREATE OR REPLACE FUNCTION public.get_my_balance()
+RETURNS NUMERIC AS $$
+BEGIN
+  RETURN (SELECT balance FROM public.users WHERE id = auth.uid());
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- ============================================================================
 -- TABLE: users
 -- ============================================================================
 
@@ -42,22 +73,30 @@ CREATE INDEX IF NOT EXISTS idx_users_is_active ON users(is_active);
 -- RLS for users table
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view their own profile" ON users;
 CREATE POLICY "Users can view their own profile"
   ON users FOR SELECT
   USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Admins can view all users" ON users;
 CREATE POLICY "Admins can view all users"
   ON users FOR SELECT
-  USING (EXISTS (SELECT 1 FROM users u WHERE u.id = auth.uid() AND u.role = 'admin'));
+  USING (public.is_admin());
 
+DROP POLICY IF EXISTS "Users can update their own profile (except role/balance)" ON users;
 CREATE POLICY "Users can update their own profile (except role/balance)"
   ON users FOR UPDATE
   USING (auth.uid() = id)
-  WITH CHECK (auth.uid() = id AND role = (SELECT role FROM users WHERE id = auth.uid()) AND balance = (SELECT balance FROM users WHERE id = auth.uid()));
+  WITH CHECK (
+    auth.uid() = id AND 
+    role = public.get_my_role() AND 
+    balance = public.get_my_balance()
+  );
 
+DROP POLICY IF EXISTS "Admins can update any user" ON users;
 CREATE POLICY "Admins can update any user"
   ON users FOR UPDATE
-  USING (EXISTS (SELECT 1 FROM users u WHERE u.id = auth.uid() AND u.role = 'admin'));
+  USING (public.is_admin());
 
 -- ============================================================================
 -- TABLE: months
@@ -77,17 +116,20 @@ CREATE INDEX IF NOT EXISTS idx_months_status ON months(status);
 
 ALTER TABLE months ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "All authenticated users can read months" ON months;
 CREATE POLICY "All authenticated users can read months"
   ON months FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Only admins can create months" ON months;
 CREATE POLICY "Only admins can create months"
   ON months FOR INSERT
-  WITH CHECK (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'));
+  WITH CHECK (public.is_admin());
 
+DROP POLICY IF EXISTS "Only admins can update months" ON months;
 CREATE POLICY "Only admins can update months"
   ON months FOR UPDATE
-  USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'));
+  USING (public.is_admin());
 
 -- ============================================================================
 -- TABLE: sessions
@@ -110,21 +152,25 @@ CREATE INDEX IF NOT EXISTS idx_sessions_payer_user_id ON sessions(payer_user_id)
 
 ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "All authenticated users can read sessions" ON sessions;
 CREATE POLICY "All authenticated users can read sessions"
   ON sessions FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Only admins can create sessions" ON sessions;
 CREATE POLICY "Only admins can create sessions"
   ON sessions FOR INSERT
-  WITH CHECK (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'));
+  WITH CHECK (public.is_admin());
 
+DROP POLICY IF EXISTS "Only admins can update sessions" ON sessions;
 CREATE POLICY "Only admins can update sessions"
   ON sessions FOR UPDATE
-  USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'));
+  USING (public.is_admin());
 
+DROP POLICY IF EXISTS "Only admins can delete sessions" ON sessions;
 CREATE POLICY "Only admins can delete sessions"
   ON sessions FOR DELETE
-  USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'));
+  USING (public.is_admin());
 
 -- ============================================================================
 -- TABLE: session_attendance
@@ -144,21 +190,25 @@ CREATE INDEX IF NOT EXISTS idx_attendance_user_id ON session_attendance(user_id)
 
 ALTER TABLE session_attendance ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can read their own attendance" ON session_attendance;
 CREATE POLICY "Users can read their own attendance"
   ON session_attendance FOR SELECT
   USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Admins can read all attendance" ON session_attendance;
 CREATE POLICY "Admins can read all attendance"
   ON session_attendance FOR SELECT
-  USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'));
+  USING (public.is_admin());
 
+DROP POLICY IF EXISTS "Only admins can write attendance" ON session_attendance;
 CREATE POLICY "Only admins can write attendance"
   ON session_attendance FOR INSERT
-  WITH CHECK (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'));
+  WITH CHECK (public.is_admin());
 
+DROP POLICY IF EXISTS "Only admins can update attendance" ON session_attendance;
 CREATE POLICY "Only admins can update attendance"
   ON session_attendance FOR UPDATE
-  USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'));
+  USING (public.is_admin());
 
 -- ============================================================================
 -- TABLE: shuttlecock_details
@@ -181,17 +231,20 @@ CREATE INDEX IF NOT EXISTS idx_shuttlecock_details_buyer_user_id ON shuttlecock_
 
 ALTER TABLE shuttlecock_details ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "All authenticated users can read shuttlecock details" ON shuttlecock_details;
 CREATE POLICY "All authenticated users can read shuttlecock details"
   ON shuttlecock_details FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Only admins can create shuttlecock details" ON shuttlecock_details;
 CREATE POLICY "Only admins can create shuttlecock details"
   ON shuttlecock_details FOR INSERT
-  WITH CHECK (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'));
+  WITH CHECK (public.is_admin());
 
+DROP POLICY IF EXISTS "Only admins can update shuttlecock details" ON shuttlecock_details;
 CREATE POLICY "Only admins can update shuttlecock details"
   ON shuttlecock_details FOR UPDATE
-  USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'));
+  USING (public.is_admin());
 
 -- ============================================================================
 -- TABLE: monthly_settlements
@@ -220,9 +273,15 @@ CREATE INDEX IF NOT EXISTS idx_settlements_is_paid ON monthly_settlements(is_pai
 
 ALTER TABLE monthly_settlements ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Admins only for settlements" ON monthly_settlements;
 CREATE POLICY "Admins only for settlements"
   ON monthly_settlements FOR ALL
-  USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'));
+  USING (public.is_admin());
+
+DROP POLICY IF EXISTS "Users can read their own settlements" ON monthly_settlements;
+CREATE POLICY "Users can read their own settlements"
+  ON monthly_settlements FOR SELECT
+  USING (user_id = auth.uid());
 
 -- ============================================================================
 -- TABLE: vietqr_payments
@@ -243,9 +302,15 @@ CREATE INDEX IF NOT EXISTS idx_vietqr_payments_user_id ON vietqr_payments(user_i
 
 ALTER TABLE vietqr_payments ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Admins only for VietQR payments" ON vietqr_payments;
 CREATE POLICY "Admins only for VietQR payments"
   ON vietqr_payments FOR ALL
-  USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'));
+  USING (public.is_admin());
+
+DROP POLICY IF EXISTS "Users can read their own VietQR payments" ON vietqr_payments;
+CREATE POLICY "Users can read their own VietQR payments"
+  ON vietqr_payments FOR SELECT
+  USING (user_id = auth.uid());
 
 -- ============================================================================
 -- TABLE: events
@@ -265,13 +330,15 @@ CREATE INDEX IF NOT EXISTS idx_events_event_date ON events(event_date);
 
 ALTER TABLE events ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "All authenticated users can read events" ON events;
 CREATE POLICY "All authenticated users can read events"
   ON events FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Only admins can manage events" ON events;
 CREATE POLICY "Only admins can manage events"
   ON events FOR ALL
-  USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'));
+  USING (public.is_admin());
 
 -- ============================================================================
 -- TABLE: event_participants
@@ -292,16 +359,18 @@ CREATE INDEX IF NOT EXISTS idx_event_participants_user_id ON event_participants(
 
 ALTER TABLE event_participants ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "All authenticated users can read event participants" ON event_participants;
 CREATE POLICY "All authenticated users can read event participants"
   ON event_participants FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Only admins can manage event participants" ON event_participants;
 CREATE POLICY "Only admins can manage event participants"
   ON event_participants FOR ALL
-  USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'));
+  USING (public.is_admin());
 
 -- ============================================================================
--- TABLE: videos (Phase 4 — Thu vien video)
+-- TABLE: videos
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS videos (
@@ -320,13 +389,15 @@ CREATE INDEX IF NOT EXISTS idx_videos_created_at ON videos(created_at);
 
 ALTER TABLE videos ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Anyone can read videos" ON videos;
 CREATE POLICY "Anyone can read videos"
   ON videos FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Admins can manage videos" ON videos;
 CREATE POLICY "Admins can manage videos"
   ON videos FOR ALL
-  USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'));
+  USING (public.is_admin());
 
 -- ============================================================================
 -- TRIGGERS
