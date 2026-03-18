@@ -17,30 +17,71 @@ export default function MembersPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  
+  // Add Member Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    role: 'member'
+  });
+
+  const fetchMembers = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/users?page=${page}&limit=20`);
+
+      if (!response.ok) throw new Error('Failed to fetch members');
+
+      const data = await response.json();
+      setMembers(data.data?.members || []);
+      
+      const total = data.data?.total || 0;
+      setTotalPages(Math.ceil(total / 20));
+    } catch (error) {
+      console.error('Error fetching members:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchMembers() {
-      try {
-        const response = await fetch(`/api/users?page=${page}&limit=20`);
-
-        if (!response.ok) throw new Error('Failed to fetch members');
-
-        const data = await response.json();
-        setMembers(data.data?.members || []);
-        
-        const total = data.data?.total || 0;
-        setTotalPages(Math.ceil(total / 20));
-      } catch (error) {
-        console.error('Error fetching members:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
     fetchMembers();
   }, [page]);
 
-  if (loading) {
+  const handleCreateMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || 'Failed to create member');
+      }
+
+      // Success
+      setIsModalOpen(false);
+      setFormData({ name: '', email: '', phone: '', password: '', role: 'member' });
+      fetchMembers(); // Refresh list
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (loading && members.length === 0) {
     return (
       <div className="space-y-4">
         <div className="skeleton h-8 w-48" />
@@ -61,7 +102,12 @@ export default function MembersPage() {
           <h1 className="page-title">Quản lý thành viên</h1>
           <p className="page-subtitle">Danh sách thành viên và trạng thái tài khoản.</p>
         </div>
-        <button className="btn-primary">Thêm thành viên</button>
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="btn-primary"
+        >
+          Thêm thành viên
+        </button>
       </div>
 
       {/* Desktop Table */}
@@ -142,13 +188,94 @@ export default function MembersPage() {
         ))}
       </div>
 
-      {members.length === 0 && (
-        <div className="surface-card empty-state">
-          <svg className="empty-state-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-          </svg>
-          <p className="empty-state-title">Chưa có thành viên nào</p>
-          <p className="empty-state-text">Thêm thành viên đầu tiên để bắt đầu.</p>
+      {/* Add Member Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="surface-card max-w-md w-full p-6 space-y-4">
+            <h2 className="text-xl font-bold">Thêm thành viên mới</h2>
+            
+            {error && (
+              <div className="p-3 bg-[var(--danger-soft)] text-[var(--danger)] text-sm rounded-md border border-[var(--danger)]">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateMember} className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold uppercase text-[var(--muted)]">Họ tên</label>
+                <input
+                  type="text"
+                  required
+                  className="input mt-1"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Nguyễn Văn A"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold uppercase text-[var(--muted)]">Email</label>
+                  <input
+                    type="email"
+                    required
+                    className="input mt-1"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="email@example.com"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase text-[var(--muted)]">Số điện thoại</label>
+                  <input
+                    type="tel"
+                    required
+                    className="input mt-1"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="09xxx..."
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold uppercase text-[var(--muted)]">Mật khẩu (mặc định: 123456)</label>
+                <input
+                  type="password"
+                  className="input mt-1"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="Để trống nếu dùng mặc định"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold uppercase text-[var(--muted)]">Vai trò</label>
+                <select 
+                  className="input mt-1"
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                >
+                  <option value="member">Thành viên</option>
+                  <option value="admin">Quản trị viên</option>
+                </select>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button 
+                  type="button" 
+                  onClick={() => setIsModalOpen(false)}
+                  className="btn-secondary flex-1"
+                >
+                  Hủy
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="btn-primary flex-1"
+                >
+                  {isSubmitting ? 'Đang tạo...' : 'Tạo thành viên'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

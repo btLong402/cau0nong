@@ -7,13 +7,15 @@ import { User } from "@/lib/types";
 import { UsersRepository, createUsersRepository } from "./users.repository";
 import { NotFoundError } from "@/shared/api";
 
+import { createAuthService } from "@/modules/auth/auth.service";
+
 export interface CreateUserData {
   name: string;
   email: string;
   phone: string;
+  password?: string;
   role?: "admin" | "member";
 }
-
 export interface UpdateUserData {
   name?: string;
   email?: string;
@@ -25,6 +27,28 @@ export interface UpdateUserData {
  */
 export class UsersService {
   constructor(private repository: UsersRepository) {}
+
+  /**
+   * Create a new member (admin operation)
+   */
+  async createMember(data: CreateUserData): Promise<User> {
+    const authService = await createAuthService();
+
+    // Sign up via AuthService (which also creates the profile)
+    const result = await authService.signUp({
+      email: data.email,
+      password: data.password || "123456", // Default password if not provided
+      name: data.name,
+      phone: data.phone,
+    });
+
+    // If role is admin, update it (AuthService defaults to member)
+    if (data.role === "admin") {
+      await this.repository.updateProfile(result.user.id, { role: "admin" });
+    }
+
+    return await this.getMember(result.user.id);
+  }
 
   /**
    * Get all active members with pagination

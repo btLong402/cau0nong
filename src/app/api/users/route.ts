@@ -21,14 +21,20 @@ export const GET = createGetHandler({
 
 export const POST = createPostHandler({
   handler: async (req) => {
-    const { email, phone, name } = await req.json();
+    const { email, phone, name, password, role } = await req.json();
 
     if (!email || !phone || !name) {
       throw new ValidationError('Missing required fields: email, phone, name');
     }
 
     const usersService = await createUsersService();
-    const user = await usersService.getMember(email);
+    const user = await usersService.createMember({
+      email,
+      phone,
+      name,
+      password,
+      role: role || 'member'
+    });
 
     return { user };
   },
