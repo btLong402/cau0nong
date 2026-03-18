@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/shared/hooks';
 
 interface User {
   id: string;
@@ -13,6 +14,7 @@ interface User {
 }
 
 export default function MembersPage() {
+  const { user: authUser } = useAuth();
   const [members, setMembers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -112,12 +114,14 @@ export default function MembersPage() {
           <h1 className="page-title">Quản lý thành viên</h1>
           <p className="page-subtitle">Danh sách thành viên và trạng thái tài khoản.</p>
         </div>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="btn-primary"
-        >
-          Thêm thành viên
-        </button>
+        {authUser?.role === 'admin' && (
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="btn-primary"
+          >
+            Thêm thành viên
+          </button>
+        )}
       </div>
 
       {/* Desktop Table */}

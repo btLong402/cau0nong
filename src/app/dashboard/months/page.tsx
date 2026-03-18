@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useCloseMonth, useCreateMonth, useMonths } from '@/shared/hooks';
+import { useCloseMonth, useCreateMonth, useMonths, useAuth } from '@/shared/hooks';
 
 export default function MonthsPage() {
+  const { user: authUser } = useAuth();
   const { months, loading, error, refetch } = useMonths();
   const { create, loading: creating } = useCreateMonth();
   const { close, loading: closing } = useCloseMonth();
@@ -81,12 +82,14 @@ export default function MonthsPage() {
           <h1 className="page-title">Kỳ quản lý</h1>
           <p className="page-subtitle">Quản lý trạng thái tháng, đóng kỳ và khởi tạo quyết toán.</p>
         </div>
-        <button
-          onClick={() => setShowNewMonthForm(!showNewMonthForm)}
-          className="btn-primary"
-        >
-          {showNewMonthForm ? 'Ẩn form' : 'Tạo kỳ mới'}
-        </button>
+        {authUser?.role === 'admin' && (
+          <button
+            onClick={() => setShowNewMonthForm(!showNewMonthForm)}
+            className="btn-primary"
+          >
+            {showNewMonthForm ? 'Ẩn form' : 'Tạo kỳ mới'}
+          </button>
+        )}
       </div>
 
       {/* Stats */}
@@ -187,7 +190,7 @@ export default function MonthsPage() {
               >
                 Quyết toán
               </Link>
-              {month.status === 'open' && (
+              {authUser?.role === 'admin' && month.status === 'open' && (
                 <button
                   onClick={() => handleCloseMonth(month.id)}
                   disabled={closing && closingMonthId === month.id}
@@ -207,9 +210,11 @@ export default function MonthsPage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
           </svg>
           <p className="empty-state-title">Chưa có kỳ quản lý nào</p>
-          <button onClick={() => setShowNewMonthForm(true)} className="btn-primary mt-4">
-            Tạo kỳ đầu tiên
-          </button>
+          {authUser?.role === 'admin' && (
+            <button onClick={() => setShowNewMonthForm(true)} className="btn-primary mt-4">
+              Tạo kỳ đầu tiên
+            </button>
+          )}
         </div>
       )}
     </div>

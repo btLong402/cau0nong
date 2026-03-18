@@ -16,7 +16,6 @@ function parseSettlementId(url: string): number {
 
 export const GET = createGetHandler({
   requireAuth: true,
-  requireRole: ["admin"],
   handler: async (req) => {
     const settlementId = parseSettlementId(req.url);
     const paymentsService = await createPaymentsService();

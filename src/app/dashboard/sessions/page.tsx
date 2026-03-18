@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { CustomSelect } from '@/shared/components/CustomSelect';
+import { useAuth } from '@/shared/hooks';
 
 interface Month {
   id: number;
@@ -20,6 +21,7 @@ interface Session {
 }
 
 export default function SessionsPage() {
+  const { user: authUser } = useAuth();
   const [months, setMonths] = useState<Month[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
@@ -166,7 +168,7 @@ export default function SessionsPage() {
           <h1 className="page-title">Buổi tập</h1>
           <p className="page-subtitle">Quản lý danh sách buổi tập và thông tin điểm danh.</p>
         </div>
-        {selectedMonth && months.find(m => m.id === selectedMonth)?.status === 'open' && (
+        {authUser?.role === 'admin' && selectedMonth && months.find(m => m.id === selectedMonth)?.status === 'open' && (
           <button
             onClick={() => setShowNewSessionForm((prev) => !prev)}
             className="btn-primary"
@@ -305,7 +307,7 @@ export default function SessionsPage() {
                         ? 'Xem điểm danh' 
                         : 'Điểm danh'}
                     </Link>
-                    {session.status === 'open' && months.find(m => m.id === selectedMonth)?.status === 'open' && (
+                    {authUser?.role === 'admin' && session.status === 'open' && months.find(m => m.id === selectedMonth)?.status === 'open' && (
                       <button
                         onClick={async () => {
                           if (!confirm('Bạn có chắc muốn đóng buổi tập này? Sau khi đóng sẽ không thể sửa điểm danh.')) return;

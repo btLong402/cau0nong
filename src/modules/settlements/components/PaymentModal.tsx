@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import QRCode from 'qrcode';
-import { SettlementListItem, useSettlementVietQR } from '@/shared/hooks';
+import { SettlementListItem, useSettlementVietQR, useAuth } from '@/shared/hooks';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -21,6 +21,7 @@ export function PaymentModal({
   onConfirm,
   formatCurrency,
 }: PaymentModalProps) {
+  const { user: authUser } = useAuth();
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [qrImageUrl, setQrImageUrl] = useState<string | null>(null);
@@ -246,10 +247,10 @@ export function PaymentModal({
           <button
             type="button"
             onClick={handleConfirm}
-            disabled={processing || settlement.is_paid}
+            disabled={processing || settlement.is_paid || authUser?.role !== 'admin'}
             className="btn-primary disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {processing ? 'Đang xác nhận...' : 'Xác nhận đã thu'}
+            {processing ? 'Đang xác nhận...' : authUser?.role !== 'admin' ? 'Chỉ Admin được xác nhận' : 'Xác nhận đã thu'}
           </button>
         </div>
       </div>

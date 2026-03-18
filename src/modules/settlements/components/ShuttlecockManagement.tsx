@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useMonthShuttlecocks, useMembers } from '@/shared/hooks';
+import { useMonthShuttlecocks, useMembers, useAuth } from '@/shared/hooks';
 import { CustomSelect } from '@/shared/components/CustomSelect';
 
 interface ShuttlecockManagementProps {
@@ -10,6 +10,7 @@ interface ShuttlecockManagementProps {
 }
 
 export function ShuttlecockManagement({ monthId, formatCurrency }: ShuttlecockManagementProps) {
+  const { user: authUser } = useAuth();
   const { shuttlecocks, loading: shuttlecocksLoading, error, refetch } = useMonthShuttlecocks(monthId);
   const { members, loading: membersLoading } = useMembers(1, 100);
   
@@ -83,15 +84,17 @@ export function ShuttlecockManagement({ monthId, formatCurrency }: ShuttlecockMa
           <h2 className="text-base font-semibold text-[var(--foreground)]">Chi phí mua cầu</h2>
           <p className="mt-0.5 text-sm text-[var(--muted)]">Quản lý các đợt mua cầu và người ứng tiền trong tháng.</p>
         </div>
-        <button 
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="btn-primary flex items-center gap-1.5 text-sm"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          Thêm đợt mua
-        </button>
+        {authUser?.role === 'admin' && (
+          <button 
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="btn-primary flex items-center gap-1.5 text-sm"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Thêm đợt mua
+          </button>
+        )}
       </div>
 
       {showAddForm && (
@@ -166,7 +169,7 @@ export function ShuttlecockManagement({ monthId, formatCurrency }: ShuttlecockMa
                   <th className="text-right">Số lượng</th>
                   <th className="text-right">Đơn giá</th>
                   <th className="text-right">Thành tiền</th>
-                  <th className="text-center">Thao tác</th>
+                  {authUser?.role === 'admin' && <th className="text-center">Thao tác</th>}
                 </tr>
               </thead>
               <tbody>
@@ -182,17 +185,19 @@ export function ShuttlecockManagement({ monthId, formatCurrency }: ShuttlecockMa
                     <td className="text-right font-bold text-[var(--foreground)]">
                       {formatCurrency(item.quantity * item.unit_price)}
                     </td>
-                    <td className="text-center">
-                      <button 
-                        onClick={() => handleDelete(item.id)}
-                        className="p-1.5 text-[var(--danger)] hover:bg-[var(--danger-soft)] rounded-lg transition-colors"
-                        title="Xóa"
-                      >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </td>
+                    {authUser?.role === 'admin' && (
+                      <td className="text-center">
+                        <button 
+                          onClick={() => handleDelete(item.id)}
+                          className="p-1.5 text-[var(--danger)] hover:bg-[var(--danger-soft)] rounded-lg transition-colors"
+                          title="Xóa"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -200,7 +205,7 @@ export function ShuttlecockManagement({ monthId, formatCurrency }: ShuttlecockMa
                 <tr className="bg-[var(--background)] font-bold">
                   <td colSpan={4} className="text-right py-4">Tổng cộng:</td>
                   <td className="text-right py-4 text-[var(--primary)] text-lg">{formatCurrency(totalExpense)}</td>
-                  <td></td>
+                  {authUser?.role === 'admin' && <td></td>}
                 </tr>
               </tfoot>
             </table>

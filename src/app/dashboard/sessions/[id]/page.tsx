@@ -3,6 +3,7 @@
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/shared/hooks';
 
 interface User {
   id: string;
@@ -27,6 +28,7 @@ interface Session {
 export default function AttendancePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { id: sessionId } = use(params);
+  const { user: authUser } = useAuth();
   
   const [session, setSession] = useState<Session | null>(null);
   const [monthStatus, setMonthStatus] = useState<string>('open');
@@ -151,7 +153,7 @@ export default function AttendancePage({ params }: { params: Promise<{ id: strin
     );
   }
 
-  const isEditable = monthStatus === 'open' && session?.status === 'open';
+  const isEditable = authUser?.role === 'admin' && monthStatus === 'open' && session?.status === 'open';
 
   return (
     <div className="max-w-3xl space-y-5">
@@ -247,7 +249,11 @@ export default function AttendancePage({ params }: { params: Promise<{ id: strin
             </button>
           ) : (
             <div className="flex-1 rounded-lg bg-[var(--surface-hover)] p-3 text-center text-sm font-medium text-[var(--muted)]">
-              {session?.status === 'closed' ? 'Buổi tập đã đóng — Không thể chỉnh sửa' : 'Kỳ quản lý đã đóng — Không thể chỉnh sửa'}
+              {authUser?.role !== 'admin' 
+                ? 'Chỉ xem (Không có quyền chỉnh sửa)' 
+                : session?.status === 'closed' 
+                  ? 'Buổi tập đã đóng — Không thể chỉnh sửa' 
+                  : 'Kỳ quản lý đã đóng — Không thể chỉnh sửa'}
             </div>
           )}
           <Link href="/dashboard/sessions" className="btn-secondary flex-1 py-3 text-center">

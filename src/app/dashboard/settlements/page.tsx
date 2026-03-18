@@ -10,6 +10,7 @@ import {
   useMonthSettlements,
   useMonths,
 } from '@/shared/hooks';
+import { useAuth } from '@/shared/hooks';
 import {
   PaymentHistoryPanel,
   PaymentModal,
@@ -31,6 +32,7 @@ function formatMonthLabel(value: string) {
 }
 
 export default function SettlementsPage() {
+  const { user: authUser } = useAuth();
   const { months, loading: monthsLoading, error: monthsError } = useMonths();
 
   const searchParams = useSearchParams();
@@ -193,22 +195,26 @@ export default function SettlementsPage() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => handleGenerate(false)}
-            disabled={!activeMonthId || generating}
-            className="btn-primary disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {generating ? 'Đang tạo...' : 'Tạo quyết toán'}
-          </button>
-          <button
-            type="button"
-            onClick={() => handleGenerate(true)}
-            disabled={!activeMonthId || generating}
-            className="btn-primary bg-[var(--warning)] hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {generating ? 'Đang xử lý...' : 'Tạo lại (force)'}
-          </button>
+          {authUser?.role === 'admin' && (
+            <>
+              <button
+                type="button"
+                onClick={() => handleGenerate(false)}
+                disabled={!activeMonthId || generating}
+                className="btn-primary disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {generating ? 'Đang tạo...' : 'Tạo quyết toán'}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleGenerate(true)}
+                disabled={!activeMonthId || generating}
+                className="btn-primary bg-[var(--warning)] hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {generating ? 'Đang xử lý...' : 'Tạo lại (force)'}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -303,16 +309,18 @@ export default function SettlementsPage() {
               </svg>
               <p className="empty-state-title">Chưa có dữ liệu quyết toán</p>
               <p className="empty-state-text">
-                Dữ liệu quyết toán cho tháng này chưa được khởi tạo. Nhấn nút bên dưới để hệ thống tự động tính toán.
+                Dữ liệu quyết toán cho tháng này chưa được khởi tạo.
               </p>
-              <button
-                type="button"
-                onClick={() => handleGenerate(false)}
-                disabled={generating}
-                className="btn-primary mt-4"
-              >
-                {generating ? 'Đang tạo...' : 'Tạo quyết toán ngay'}
-              </button>
+              {authUser?.role === 'admin' && (
+                <button
+                  type="button"
+                  onClick={() => handleGenerate(false)}
+                  disabled={generating}
+                  className="btn-primary mt-4"
+                >
+                  {generating ? 'Đang tạo...' : 'Tạo quyết toán ngay'}
+                </button>
+              )}
             </div>
           ) : (
             <SettlementsTable

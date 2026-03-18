@@ -1,6 +1,6 @@
 import { createMonthsService } from "@/modules/months/months.service";
 import { createSettlementsService } from "@/modules/settlements/settlements.service";
-import { InvalidStateError, ValidationError } from "@/shared/api";
+import { InvalidStateError, ValidationError, ApiError, ErrorCode } from "@/shared/api";
 import { createPaymentsRepository, PaymentsRepository } from "./payments.repository";
 import {
   GeneratedVietQR,
@@ -92,18 +92,36 @@ export class PaymentsService {
       };
     }
 
-    const payment = await this.repository.createVietQRPayment({
-      settlement_id: settlement.id,
-      user_id: settlement.user_id,
-      qr_content: nextContent,
-      qr_image_url: undefined,
-      paid_at: undefined,
-    });
+    try {
+      const payment = await this.repository.createVietQRPayment({
+        settlement_id: settlement.id,
+        user_id: settlement.user_id,
+        qr_content: nextContent,
+        qr_image_url: undefined,
+        paid_at: undefined,
+      });
 
-    return {
-      payment,
-      payload,
-    };
+      return {
+        payment,
+        payload,
+      };
+    } catch (error: any) {
+      if (error instanceof ApiError && error.code === ErrorCode.ERR_FORBIDDEN) {
+        return {
+          payment: {
+            id: 0,
+            settlement_id: settlement.id,
+            user_id: settlement.user_id,
+            qr_content: nextContent,
+            qr_image_url: undefined,
+            paid_at: undefined,
+            created_at: new Date().toISOString(),
+          },
+          payload,
+        };
+      }
+      throw error;
+    }
   }
 
   async listByMonth(monthId: number, filters?: PaymentListFilters): Promise<PaymentListResult> {

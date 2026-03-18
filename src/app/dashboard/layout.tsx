@@ -41,7 +41,12 @@ const adminNavItems: NavItem[] = [
 ];
 
 const memberNavItems: NavItem[] = [
+  { href: '/dashboard', label: 'Tổng quan', icon: 'home' },
   { href: '/dashboard/my-account', label: 'Cá nhân', icon: 'user' },
+  { href: '/dashboard/members', label: 'Thành viên', icon: 'users' },
+  { href: '/dashboard/months', label: 'Kỳ quản lý', icon: 'calendar' },
+  { href: '/dashboard/sessions', label: 'Buổi tập', icon: 'clipboard' },
+  { href: '/dashboard/settlements', label: 'Quyết toán', icon: 'wallet' },
   { href: '/dashboard/events', label: 'Sự kiện', icon: 'star' },
   { href: '/dashboard/videos', label: 'Video', icon: 'play' },
 ];
@@ -55,9 +60,10 @@ const adminBottomTabs: NavItem[] = [
 ];
 
 const memberBottomTabs: NavItem[] = [
+  { href: '/dashboard', label: 'Tổng quan', icon: 'home' },
+  { href: '/dashboard/months', label: 'Kỳ', icon: 'calendar' },
+  { href: '/dashboard/settlements', label: 'Quyết toán', icon: 'wallet' },
   { href: '/dashboard/my-account', label: 'Cá nhân', icon: 'user' },
-  { href: '/dashboard/events', label: 'Sự kiện', icon: 'star' },
-  { href: '/dashboard/videos', label: 'Video', icon: 'play' },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -189,19 +195,22 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* ============================================================ */}
       <aside className="fixed left-0 top-0 z-30 hidden h-screen w-[var(--sidebar-width)] flex-col border-r border-[var(--surface-border)] bg-[var(--surface)] lg:flex">
         {/* Brand */}
-        <div className="border-b border-[var(--surface-border)] px-5 py-5">
+        <Link 
+          href="/dashboard"
+          className="block border-b border-[var(--surface-border)] px-5 py-5 hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
+        >
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--primary)] text-white">
+            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-[var(--primary)] text-white">
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
               </svg>
             </div>
-            <div>
-              <p className="text-sm font-bold text-[var(--foreground)]">CLB Cầu Lông</p>
-              <p className="text-xs text-[var(--muted)]">Quản lý vận hành</p>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-bold text-[var(--foreground)]">CLB Cầu Lông</p>
+              <p className="truncate text-xs text-[var(--muted)]">Quản lý vận hành</p>
             </div>
           </div>
-        </div>
+        </Link>
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
