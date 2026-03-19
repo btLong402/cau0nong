@@ -31,7 +31,25 @@
  * }
  */
 
-import { createGetHandler, type RequestContext } from "@/shared/api";
+import {
+  createGetHandler,
+  createPutHandler,
+  phoneSchema,
+  type RequestContext,
+} from "@/shared/api";
+import { createUsersService } from "@/modules/users/users.service";
+import { z } from "zod";
+
+const updateMyProfileSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name must be at most 100 characters"),
+  phone: phoneSchema,
+});
+
+type UpdateMyProfileRequest = z.infer<typeof updateMyProfileSchema>;
 
 export const GET = createGetHandler({
   requireAuth: true,
@@ -44,5 +62,21 @@ export const GET = createGetHandler({
       email: authContext.auth.email || "not-provided",
       isAuthenticated: authContext.auth.isAuthenticated,
     };
+  },
+});
+
+export const PUT = createPutHandler<UpdateMyProfileRequest>({
+  requireAuth: true,
+  validationSchema: updateMyProfileSchema,
+  handler: async (req, context, validatedData) => {
+    const authContext = context as RequestContext;
+    const usersService = await createUsersService();
+
+    const user = await usersService.updateMember(authContext.auth.userId, {
+      name: validatedData?.name,
+      phone: validatedData?.phone,
+    });
+
+    return { user };
   },
 });

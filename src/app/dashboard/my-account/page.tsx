@@ -55,10 +55,22 @@ function formatMonth(dateStr: string): string {
   return `Tháng ${date.getMonth() + 1}/${date.getFullYear()}`;
 }
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
 export default function MyAccountPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [formSuccess, setFormSuccess] = useState<string | null>(null);
+  const [formValues, setFormValues] = useState({
+    name: '',
+    phone: '',
+  });
 
   useEffect(() => {
     async function fetchDashboard() {
@@ -67,14 +79,95 @@ export default function MyAccountPage() {
         if (!res.ok) throw new Error('Failed to load dashboard');
         const json = await res.json();
         setData(json.data);
-      } catch (err: any) {
-        setError(err.message || 'Error loading dashboard');
+      } catch (error: unknown) {
+        setError(getErrorMessage(error, 'Error loading dashboard'));
       } finally {
         setLoading(false);
       }
     }
     fetchDashboard();
   }, []);
+
+  useEffect(() => {
+    const profile = data?.profile;
+    if (profile) {
+      setFormValues({
+        name: profile.name || '',
+        phone: profile.phone || '',
+      });
+    }
+  }, [data?.profile]);
+
+  async function handleSaveProfile() {
+    if (!data?.profile || isSaving) return;
+
+    const trimmedName = formValues.name.trim();
+    const trimmedPhone = formValues.phone.trim();
+
+    if (trimmedName.length < 2) {
+      setFormError('Họ tên phải có ít nhất 2 ký tự.');
+      setFormSuccess(null);
+      return;
+    }
+
+    setIsSaving(true);
+    setFormError(null);
+    setFormSuccess(null);
+
+    try {
+      const res = await fetch('/api/me', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: trimmedName,
+          phone: trimmedPhone,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.error?.message || 'Không thể cập nhật thông tin.');
+      }
+
+      const updatedUser = json.data?.user;
+
+      setData((prev) => {
+        if (!prev || !prev.profile || !updatedUser) return prev;
+        return {
+          ...prev,
+          profile: {
+            ...prev.profile,
+            name: updatedUser.name,
+            phone: updatedUser.phone,
+            email: updatedUser.email || prev.profile.email,
+          },
+        };
+      });
+
+      setFormSuccess('Đã cập nhật thông tin cá nhân thành công.');
+      setIsEditing(false);
+    } catch (error: unknown) {
+      setFormError(getErrorMessage(error, 'Đã có lỗi xảy ra khi cập nhật.'));
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  function handleCancelEdit() {
+    if (data?.profile) {
+      setFormValues({
+        name: data.profile.name,
+        phone: data.profile.phone,
+      });
+    }
+    setFormError(null);
+    setFormSuccess(null);
+    setIsEditing(false);
+  }
 
   if (loading) {
     return (
@@ -109,7 +202,8 @@ export default function MyAccountPage() {
       {/* Profile Card */}
       {profile && (
         <div className="surface-card p-5">
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--primary-soft)] text-lg font-bold text-[var(--primary)]">
               {profile.name.charAt(0).toUpperCase()}
             </div>
@@ -117,8 +211,31 @@ export default function MyAccountPage() {
               <h2 className="text-lg font-bold text-[var(--foreground)]">{profile.name}</h2>
               <p className="text-sm text-[var(--muted)]">{profile.role === 'admin' ? 'Quản trị viên' : 'Thành viên'}</p>
             </div>
+            </div>
+            {!isEditing && (
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => {
+                  setFormError(null);
+                  setFormSuccess(null);
+                  setIsEditing(true);
+                }}
+              >
+                Chỉnh sửa
+              </button>
+            )}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+          {formSuccess && (
+            <p className="mb-3 text-sm font-medium text-[var(--accent)]">{formSuccess}</p>
+          )}
+          {formError && (
+            <p className="mb-3 text-sm font-medium text-[var(--danger)]">{formError}</p>
+          )}
+
+          {!isEditing ? (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <p className="text-xs text-[var(--muted)]">Số điện thoại</p>
               <p className="text-sm font-medium text-[var(--foreground)]">{profile.phone}</p>
@@ -133,7 +250,58 @@ export default function MyAccountPage() {
                 {formatCurrency(profile.balance)}
               </p>
             </div>
-          </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <label className="space-y-1">
+                  <span className="text-xs text-[var(--muted)]">Họ và tên</span>
+                  <input
+                    type="text"
+                    className="input-field"
+                    value={formValues.name}
+                    onChange={(e) => setFormValues((prev) => ({ ...prev, name: e.target.value }))}
+                    placeholder="Nhập họ và tên"
+                  />
+                </label>
+
+                <label className="space-y-1">
+                  <span className="text-xs text-[var(--muted)]">Số điện thoại</span>
+                  <input
+                    type="tel"
+                    className="input-field"
+                    value={formValues.phone}
+                    onChange={(e) => setFormValues((prev) => ({ ...prev, phone: e.target.value }))}
+                    placeholder="Nhập số điện thoại"
+                  />
+                </label>
+              </div>
+
+              <div>
+                <p className="text-xs text-[var(--muted)]">Email</p>
+                <p className="text-sm font-medium text-[var(--foreground)]">{profile.email}</p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={handleSaveProfile}
+                  disabled={isSaving}
+                >
+                  {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={handleCancelEdit}
+                  disabled={isSaving}
+                >
+                  Hủy
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

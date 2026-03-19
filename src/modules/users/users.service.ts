@@ -5,7 +5,7 @@
 
 import { User } from "@/lib/types";
 import { UsersRepository, createUsersRepository } from "./users.repository";
-import { NotFoundError } from "@/shared/api";
+import { ConflictError, NotFoundError } from "@/shared/api";
 
 import { createAuthService } from "@/modules/auth/auth.service";
 
@@ -115,7 +115,7 @@ export class UsersService {
     if (data.email && data.email !== user.email) {
       const existing = await this.repository.findByEmail(data.email);
       if (existing) {
-        throw new Error("Email already in use");
+        throw new ConflictError("Email already in use");
       }
     }
 
@@ -123,7 +123,7 @@ export class UsersService {
     if (data.phone && data.phone !== user.phone) {
       const existing = await this.repository.findByPhone(data.phone);
       if (existing) {
-        throw new Error("Phone already in use");
+        throw new ConflictError("Phone already in use");
       }
     }
 
@@ -138,7 +138,7 @@ export class UsersService {
    * Deactivate member
    */
   async deactivateMember(userId: string): Promise<User> {
-    const user = await this.getMember(userId);
+    await this.getMember(userId);
     return await this.repository.deactivate(userId);
   }
 
