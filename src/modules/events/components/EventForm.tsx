@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { useMonths } from '@/shared/hooks';
 
 interface EventFormData {
   event_name: string;
   event_date: string;
   total_support: number;
   total_expense: number;
+  month_id?: number;
 }
 
 interface EventFormProps {
@@ -24,11 +26,13 @@ export function EventForm({
   isEditing = false,
   loading = false,
 }: EventFormProps) {
+  const { months, loading: monthsLoading } = useMonths();
   const [form, setForm] = useState<EventFormData>({
     event_name: initialData?.event_name || '',
     event_date: initialData?.event_date || '',
     total_support: initialData?.total_support || 0,
     total_expense: initialData?.total_expense || 0,
+    month_id: initialData?.month_id,
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -86,6 +90,30 @@ export function EventForm({
           className="input-field"
           required
         />
+      </div>
+
+      <div>
+        <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
+          Gắn vào tháng (tùy chọn)
+        </label>
+        <select
+          value={form.month_id || ''}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              month_id: e.target.value ? Number(e.target.value) : undefined,
+            })
+          }
+          className="input-field"
+          disabled={monthsLoading}
+        >
+          <option value="">Không gắn vào tháng nào</option>
+          {months.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.month_year}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="grid grid-cols-2 gap-4">

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { UserAvatar } from "@/app/dashboard/_components/UserAvatar";
 
 import { MemberUser } from "@/modules/users/types";
 import {
@@ -15,7 +16,6 @@ export function MembersMobileList({ members }: MembersMobileListProps) {
     <div className="card-list lg:hidden">
       {members.map((member) => {
         const displayName = member.name?.trim() || "Chưa cập nhật";
-        const displayInitial = displayName.charAt(0).toUpperCase();
         const displayUsername = member.username?.trim() || "--";
         const displayPhone = member.phone?.trim() || "--";
         const displayBalance = typeof member.balance === "number" ? member.balance : 0;
@@ -27,9 +27,11 @@ export function MembersMobileList({ members }: MembersMobileListProps) {
             className="card-list-item cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--primary-soft)] text-sm font-bold text-[var(--primary)]">
-                {displayInitial}
-              </div>
+              <UserAvatar
+                name={displayName}
+                avatarUrl={member.avatar_url}
+                size="md"
+              />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <p className="truncate text-sm font-semibold text-[var(--foreground)]">{displayName}</p>

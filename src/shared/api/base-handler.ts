@@ -68,7 +68,10 @@ function generateTraceId(): string {
 export function createApiHandler<TReq = unknown, TRes = unknown>(
   options: ApiHandlerOptions<TReq>
 ) {
-  return async (req: NextRequest): Promise<NextResponse<any>> => {
+  return async (
+    req: NextRequest,
+    { params }: { params: Promise<any> }
+  ): Promise<NextResponse<any>> => {
     const traceId = generateTraceId();
     const path = req.nextUrl.pathname;
 
@@ -101,6 +104,7 @@ export function createApiHandler<TReq = unknown, TRes = unknown>(
         traceId,
         timestamp: new Date(),
         path,
+        params,
       };
 
       // ========================================

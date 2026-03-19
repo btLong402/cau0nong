@@ -11,12 +11,8 @@ import {
   useSession,
   useSessionAttendance,
 } from '@/shared/hooks';
+import { UserAvatar } from '@/app/dashboard/_components/UserAvatar';
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-}
 
 export default function AttendancePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -200,7 +196,6 @@ export default function AttendancePage({ params }: { params: Promise<{ id: strin
         <div className="divide-y divide-[var(--surface-border)] overflow-hidden rounded-lg border border-[var(--surface-border)]">
           {users.map((user) => {
             const displayName = user.name?.trim() || 'Chưa cập nhật';
-            const displayInitial = displayName.charAt(0).toUpperCase();
 
             return (
               <div 
@@ -209,11 +204,12 @@ export default function AttendancePage({ params }: { params: Promise<{ id: strin
                 className={`flex items-center justify-between p-3.5 transition-colors ${isEditable ? 'cursor-pointer hover:bg-[var(--surface-hover)]' : ''}`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold transition-colors ${
-                    attendance[user.id] ? 'bg-[var(--primary-soft)] text-[var(--primary)]' : 'bg-[var(--surface-hover)] text-[var(--muted)]'
-                  }`}>
-                    {displayInitial}
-                  </div>
+                  <UserAvatar
+                    name={displayName}
+                    avatarUrl={(user as any).avatar_url}
+                    size="sm"
+                    className={attendance[user.id] ? 'bg-[var(--primary-soft)] text-[var(--primary)]' : 'bg-[var(--surface-hover)] text-[var(--muted)]'}
+                  />
                   <div>
                     <p className="text-sm font-medium text-[var(--foreground)]">{displayName}</p>
                     <p className="text-xs text-[var(--muted)]">{user.email}</p>

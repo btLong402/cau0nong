@@ -1,19 +1,34 @@
 interface UserAvatarProps {
   name: string;
   avatarUrl?: string | null;
-  size?: "sm" | "md";
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
+  className?: string;
+  alt?: string;
 }
 
-export function UserAvatar({ name, avatarUrl, size = "md" }: UserAvatarProps) {
+export function UserAvatar({
+  name,
+  avatarUrl,
+  size = "md",
+  className = "",
+  alt,
+}: UserAvatarProps) {
   const initial = (name || "?").charAt(0).toUpperCase();
-  const sizeClass = size === "sm" ? "h-8 w-8 text-xs" : "h-10 w-10 text-sm";
+  const sizeClass =
+    size === "xs" ? "h-6 w-6 text-[10px]" :
+    size === "sm" ? "h-8 w-8 text-xs" :
+    size === "lg" ? "h-12 w-12 text-base" :
+    size === "xl" ? "h-16 w-16 text-xl" :
+    "h-10 w-10 text-sm";
+
+  const combinedClass = `${sizeClass} rounded-full object-cover transition-colors ${className}`;
 
   if (avatarUrl) {
     return (
       <img
         src={avatarUrl}
-        alt={`Avatar của ${name}`}
-        className={`${sizeClass} rounded-full object-cover border border-[var(--surface-border)]`}
+        alt={alt || `Avatar của ${name}`}
+        className={`${combinedClass} border border-[var(--surface-border)]`}
         loading="lazy"
       />
     );
@@ -21,7 +36,7 @@ export function UserAvatar({ name, avatarUrl, size = "md" }: UserAvatarProps) {
 
   return (
     <div
-      className={`${sizeClass} flex items-center justify-center rounded-full bg-[var(--primary-soft)] font-bold text-[var(--primary)]`}
+      className={`${combinedClass} flex items-center justify-center font-bold`}
     >
       {initial}
     </div>

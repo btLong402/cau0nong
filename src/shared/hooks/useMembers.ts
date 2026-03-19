@@ -17,6 +17,7 @@ export interface Member {
   role: 'admin' | 'member';
   balance: number;
   is_active: boolean;
+  avatar_url?: string | null;
   approval_status: 'pending' | 'approved' | 'rejected';
   created_at?: string;
   updated_at?: string;

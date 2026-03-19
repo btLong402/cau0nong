@@ -13,19 +13,14 @@ import {
 import { createEventsService } from "@/modules/events/events.service";
 import { ValidationError } from "@/shared/api/base-errors";
 
-function extractEventId(req: Request): number {
-  const url = new URL(req.url);
-  const segments = url.pathname.split("/");
-  const id = Number(segments[segments.length - 1]);
-  if (!id || isNaN(id)) throw new ValidationError("Invalid event ID");
-  return id;
-}
-
 export const GET = createGetHandler({
-  handler: async (req) => {
-    const id = extractEventId(req);
+  handler: async (req, context) => {
+    const { id } = await context.params;
+    const eventId = Number(id);
+    if (!eventId) throw new ValidationError("Invalid event ID");
+
     const service = await createEventsService();
-    const event = await service.getEventWithParticipants(id);
+    const event = await service.getEventWithParticipants(eventId);
     return { event };
   },
 });
@@ -33,12 +28,15 @@ export const GET = createGetHandler({
 export const PUT = createPutHandler({
   requireAuth: true,
   requireRole: ["admin"],
-  handler: async (req) => {
-    const id = extractEventId(req);
+  handler: async (req, context) => {
+    const { id } = await context.params;
+    const eventId = Number(id);
+    if (!eventId) throw new ValidationError("Invalid event ID");
+
     const body = await req.json();
     const service = await createEventsService();
 
-    const event = await service.updateEvent(id, {
+    const event = await service.updateEvent(eventId, {
       event_name: body.event_name,
       event_date: body.event_date,
       total_support:
@@ -49,6 +47,7 @@ export const PUT = createPutHandler({
         body.total_expense !== undefined
           ? Number(body.total_expense)
           : undefined,
+      month_id: body.month_id !== undefined ? Number(body.month_id) : undefined,
     });
 
     return { event };
@@ -58,10 +57,13 @@ export const PUT = createPutHandler({
 export const DELETE = createDeleteHandler({
   requireAuth: true,
   requireRole: ["admin"],
-  handler: async (req) => {
-    const id = extractEventId(req);
+  handler: async (req, context) => {
+    const { id } = await context.params;
+    const eventId = Number(id);
+    if (!eventId) throw new ValidationError("Invalid event ID");
+
     const service = await createEventsService();
-    await service.deleteEvent(id);
+    await service.deleteEvent(eventId);
     return { deleted: true };
   },
 });

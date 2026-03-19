@@ -2,23 +2,13 @@ import { createGetHandler, createPostHandler } from "@/shared/api";
 import { ValidationError } from "@/shared/api/base-errors";
 import { createShuttlecocksService } from "@/modules/shuttlecocks/shuttlecocks.service";
 
-function parseMonthId(url: string): number {
-  const pathname = new URL(url).pathname;
-  const segments = pathname.split("/").filter(Boolean);
-  // URL: /api/months/[id]/shuttlecocks
-  const monthId = Number(segments[segments.length - 2]);
-
-  if (!Number.isInteger(monthId) || monthId <= 0) {
-    throw new ValidationError("Invalid month ID");
-  }
-
-  return monthId;
-}
-
 export const GET = createGetHandler({
   requireAuth: true,
-  handler: async (req) => {
-    const monthId = parseMonthId(req.url);
+  handler: async (req, context) => {
+    const { id } = await context.params;
+    const monthId = Number(id);
+    if (!monthId || isNaN(monthId)) throw new ValidationError("Invalid month ID");
+
     const service = await createShuttlecocksService();
     const items = await service.listByMonth(monthId);
     return { items };
@@ -28,8 +18,11 @@ export const GET = createGetHandler({
 export const POST = createPostHandler({
   requireAuth: true,
   requireRole: ["admin"],
-  handler: async (req) => {
-    const monthId = parseMonthId(req.url);
+  handler: async (req, context) => {
+    const { id } = await context.params;
+    const monthId = Number(id);
+    if (!monthId || isNaN(monthId)) throw new ValidationError("Invalid month ID");
+
     const payload = await req.json();
 
     if (!payload.purchase_date || !payload.quantity || !payload.unit_price || !payload.buyer_user_id) {

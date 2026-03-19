@@ -44,6 +44,7 @@ export const POST = createPostHandler({
       event_date: body.event_date,
       total_support: Number(body.total_support) || 0,
       total_expense: Number(body.total_expense) || 0,
+      month_id: body.month_id ? Number(body.month_id) : undefined,
     });
 
     return { event };

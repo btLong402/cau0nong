@@ -31,6 +31,7 @@ export interface RequestContext {
   traceId: string;
   timestamp: Date;
   path?: string;
+  params: Promise<any>;
 }
 
 /**
@@ -41,6 +42,7 @@ export interface OptionalAuthContext {
   traceId: string;
   timestamp: Date;
   path?: string;
+  params: Promise<any>;
 }
 
 /**
@@ -78,7 +80,8 @@ export interface ApiHandlerOptions<TReq> {
  * Handler factory return type
  */
 export type HandlerFactory = (
-  req: NextRequest
+  req: NextRequest,
+  context: { params: Promise<any> }
 ) => Promise<NextResponse>;
 
 /**

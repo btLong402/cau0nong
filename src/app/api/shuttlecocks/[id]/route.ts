@@ -2,27 +2,17 @@ import { createDeleteHandler, createPatchHandler } from "@/shared/api";
 import { ValidationError } from "@/shared/api/base-errors";
 import { createShuttlecocksService } from "@/modules/shuttlecocks/shuttlecocks.service";
 
-function parseId(url: string): number {
-  const pathname = new URL(url).pathname;
-  const segments = pathname.split("/").filter(Boolean);
-  const id = Number(segments[segments.length - 1]);
-
-  if (!Number.isInteger(id) || id <= 0) {
-    throw new ValidationError("Invalid ID");
-  }
-
-  return id;
-}
-
 export const PATCH = createPatchHandler({
   requireAuth: true,
   requireRole: ["admin"],
-  handler: async (req) => {
-    const id = parseId(req.url);
-    const payload = await req.json();
+  handler: async (req, context) => {
+    const { id } = await context.params;
+    const shuttlecockId = Number(id);
+    if (!shuttlecockId || isNaN(shuttlecockId)) throw new ValidationError("Invalid ID");
 
+    const payload = await req.json();
     const service = await createShuttlecocksService();
-    const item = await service.updatePurchase(id, {
+    const item = await service.updatePurchase(shuttlecockId, {
       purchase_date: payload.purchase_date,
       quantity: payload.quantity ? Number(payload.quantity) : undefined,
       unit_price: payload.unit_price ? Number(payload.unit_price) : undefined,
@@ -37,10 +27,13 @@ export const PATCH = createPatchHandler({
 export const DELETE = createDeleteHandler({
   requireAuth: true,
   requireRole: ["admin"],
-  handler: async (req) => {
-    const id = parseId(req.url);
+  handler: async (req, context) => {
+    const { id } = await context.params;
+    const shuttlecockId = Number(id);
+    if (!shuttlecockId || isNaN(shuttlecockId)) throw new ValidationError("Invalid ID");
+
     const service = await createShuttlecocksService();
-    await service.deletePurchase(id);
+    await service.deletePurchase(shuttlecockId);
     return { success: true };
   },
 });

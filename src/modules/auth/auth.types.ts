@@ -19,6 +19,7 @@ export interface AuthResponse {
     email: string;
     name?: string;
     role: "admin" | "member";
+    avatar_url?: string | null;
     approvalStatus: "pending" | "approved" | "rejected";
   };
   token: string;
@@ -30,6 +31,7 @@ export interface CurrentUserResponse {
   email: string;
   name?: string;
   role: "admin" | "member";
+  avatar_url?: string | null;
   approvalStatus: "pending" | "approved" | "rejected";
 }
 

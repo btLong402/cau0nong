@@ -63,6 +63,7 @@ export interface MemberUser {
   role: string;
   balance: number;
   is_active: boolean;
+  avatar_url?: string | null;
   approval_status: ApprovalStatus;
 }
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { UserAvatar } from "@/app/dashboard/_components/UserAvatar";
 
 import { MemberUser } from "@/modules/users/types";
 import {
@@ -25,6 +26,7 @@ export function MembersDesktopTable({
         <table className="data-table">
           <thead>
             <tr>
+              <th></th>
               <th>Họ tên</th>
               <th>Username</th>
               <th>Email</th>
@@ -39,6 +41,13 @@ export function MembersDesktopTable({
           <tbody>
             {members.map((member) => (
               <tr key={member.id}>
+                <td>
+                  <UserAvatar
+                    name={member.name}
+                    avatarUrl={member.avatar_url}
+                    size="sm"
+                  />
+                </td>
                 <td className="font-medium">{member.name}</td>
                 <td className="font-mono text-sm text-[var(--muted)]">{member.username}</td>
                 <td className="text-[var(--muted)]">{member.email}</td>

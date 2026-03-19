@@ -3,7 +3,7 @@ import {
   UserProfile,
 } from "@modules/users/types";
 import { formatCurrency } from "@modules/users/lib/my-account-formatters";
-import { UserAvatar } from "./UserAvatar";
+import { UserAvatar } from "@/app/dashboard/_components/UserAvatar";
 
 interface MyAccountProfileCardProps {
   profile: UserProfile;
@@ -43,9 +43,9 @@ export function MyAccountProfileCard({
       <div className="flex items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-4">
           <UserAvatar
-            profile={profile}
+            name={profile.name}
+            avatarUrl={isEditing ? avatarPreviewUrl : profile.avatar_url}
             size="md"
-            srcOverride={isEditing ? avatarPreviewUrl : null}
           />
           <div>
             <h2 className="text-lg font-bold text-[var(--foreground)]">{profile.name}</h2>
@@ -124,9 +124,9 @@ export function MyAccountProfileCard({
           <div className="flex items-center gap-3">
             <p className="text-xs text-[var(--muted)]">Xem trước avatar:</p>
             <UserAvatar
-              profile={profile}
+              name={profile.name}
+              avatarUrl={avatarPreviewUrl}
               size="sm"
-              srcOverride={avatarPreviewUrl}
               alt="Xem trước avatar"
             />
           </div>

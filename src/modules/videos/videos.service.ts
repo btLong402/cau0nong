@@ -8,15 +8,26 @@ import {
   VideosRepository,
   createVideosRepository,
 } from "./videos.repository";
-import type { CreateVideoData, UpdateVideoData, Video } from "./types";
+import {
+  CreateVideoData,
+  UpdateVideoData,
+  Video,
+  VIDEO_CATEGORIES,
+} from "./types";
 
 const YOUTUBE_URL_REGEX =
   /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/|shorts\/)|youtu\.be\/)/;
 
 function validateYouTubeUrl(url: string) {
   if (!YOUTUBE_URL_REGEX.test(url)) {
+    throw new ValidationError("youtube_url must be a valid YouTube URL");
+  }
+}
+
+function validateCategory(category?: string) {
+  if (category && !VIDEO_CATEGORIES.includes(category as any)) {
     throw new ValidationError(
-      "youtube_url must be a valid YouTube URL"
+      `Invalid category. Must be one of: ${VIDEO_CATEGORIES.join(", ")}`
     );
   }
 }
@@ -42,6 +53,7 @@ export class VideosService {
       throw new ValidationError("youtube_url is required");
     }
     validateYouTubeUrl(data.youtube_url);
+    validateCategory(data.category);
 
     return this.repository.createVideo({
       title: data.title.trim(),
@@ -57,6 +69,9 @@ export class VideosService {
 
     if (data.youtube_url) {
       validateYouTubeUrl(data.youtube_url);
+    }
+    if (data.category) {
+      validateCategory(data.category);
     }
 
     return this.repository.updateVideo(id, data);

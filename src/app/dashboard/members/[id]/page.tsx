@@ -3,6 +3,7 @@
 import { use, useMemo } from 'react';
 import Link from 'next/link';
 import { useMember } from '@/shared/hooks';
+import { UserAvatar } from '@/app/dashboard/_components/UserAvatar';
 import { ApiRequestError } from '@/shared/lib';
 
 export default function MemberDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -100,7 +101,6 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
   }
 
   const displayName = member.name?.trim() || 'Chưa cập nhật';
-  const displayInitial = displayName.charAt(0).toUpperCase();
   const displayUsername = member.username?.trim() || '--';
   const displayEmail = member.email?.trim() || '--';
   const displayPhone = member.phone?.trim() || '--';
@@ -135,9 +135,11 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
       <section className="surface-card-soft p-5">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--primary)] text-2xl font-bold text-white">
-              {displayInitial}
-            </div>
+            <UserAvatar
+              name={displayName}
+              avatarUrl={member.avatar_url}
+              size="xl"
+            />
             <div>
               <h2 className="text-xl font-bold text-[var(--foreground)]">{displayName}</h2>
               <p className="text-sm text-[var(--muted)]">@{displayUsername} • {displayEmail}</p>

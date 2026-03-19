@@ -66,6 +66,10 @@ describe('VideosService', () => {
       await expect(service.createVideo({ ...validData, youtube_url: 'https://vimeo.com/123' })).rejects.toThrow('youtube_url must be a valid YouTube URL');
     });
 
+    it('should throw ValidationError if category is invalid', async () => {
+      await expect(service.createVideo({ ...validData, category: 'invalid-cat' })).rejects.toThrow(/Invalid category/);
+    });
+
     it('should successfully create and trim inputs, defaulting category to general', async () => {
       vi.mocked(mockVideosRepo.createVideo).mockResolvedValueOnce({ id: 1 } as any);
       const result = await service.createVideo(validData, 'u1');
@@ -93,6 +97,10 @@ describe('VideosService', () => {
 
     it('should validate partial youtube_url updates', async () => {
       await expect(service.updateVideo(1, { youtube_url: 'invalid' })).rejects.toThrow('youtube_url must be a valid YouTube URL');
+    });
+
+    it('should throw ValidationError if category is invalid', async () => {
+      await expect(service.updateVideo(1, { category: 'bad' })).rejects.toThrow(/Invalid category/);
     });
 
     it('should successfully update valid data', async () => {
