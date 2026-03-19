@@ -242,7 +242,7 @@ export function validateOrThrow<T>(
   const result = validateRequest(data, schema);
   if (!result.isValid) {
     throw new ValidationError(
-      "Request validation failed",
+      "Dữ liệu yêu cầu không hợp lệ",
       result.errors,
       traceId
     );

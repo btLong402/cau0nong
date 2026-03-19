@@ -17,7 +17,7 @@ export const POST = createPostHandler({
     const { username, email, phone, password, identifier } = await req.json();
 
     if (!password) {
-      throw new ValidationError('Missing required field: password');
+      throw new ValidationError('Thiếu trường bắt buộc: password');
     }
 
     const authService = await createAuthService();
@@ -37,7 +37,7 @@ export const POST = createPostHandler({
     } else {
       const loginIdentifier = identifier || email;
       if (!loginIdentifier) {
-        throw new ValidationError('Missing required field: username, identifier, email, or phone');
+        throw new ValidationError('Thiếu trường bắt buộc: username, identifier, email hoặc phone');
       }
       result = await authService.signIn({ identifier: loginIdentifier, password });
     }

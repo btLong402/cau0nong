@@ -77,7 +77,7 @@ export async function extractAuthContext(
   const payload = decodeJWT(token);
 
   if (!payload) {
-    throw new AuthenticationError("Invalid token format", traceId);
+      throw new AuthenticationError("Định dạng token không hợp lệ", traceId);
   }
 
   // Extract expected fields from JWT payload
@@ -97,7 +97,7 @@ export async function extractAuthContext(
   const email = payload.email as string | undefined;
 
   if (!userId) {
-    throw new AuthenticationError("Token missing user ID", traceId);
+     throw new AuthenticationError("Token thiếu ID người dùng", traceId);
   }
 
   return {
@@ -146,7 +146,7 @@ export function requireAuthentication(
   traceId: string
 ): void {
   if (!context.isAuthenticated) {
-    throw new AuthenticationError("Authentication required", traceId);
+    throw new AuthenticationError("Yêu cầu đăng nhập", traceId);
   }
 }
 

@@ -54,16 +54,16 @@ describe('VideosService', () => {
     };
 
     it('should throw ValidationError if title is missing or empty', async () => {
-      await expect(service.createVideo({ ...validData, title: '   ' })).rejects.toThrow('title is required');
-      await expect(service.createVideo({ ...validData, title: undefined as any })).rejects.toThrow('title is required');
+      await expect(service.createVideo({ ...validData, title: '   ' })).rejects.toThrow('Thiếu tiêu đề');
+      await expect(service.createVideo({ ...validData, title: undefined as any })).rejects.toThrow('Thiếu tiêu đề');
     });
 
     it('should throw ValidationError if youtube_url is missing or empty', async () => {
-      await expect(service.createVideo({ ...validData, youtube_url: '   ' })).rejects.toThrow('youtube_url is required');
+      await expect(service.createVideo({ ...validData, youtube_url: '   ' })).rejects.toThrow('Thiếu youtube_url');
     });
 
     it('should throw ValidationError if youtube_url is invalid format', async () => {
-      await expect(service.createVideo({ ...validData, youtube_url: 'https://vimeo.com/123' })).rejects.toThrow('youtube_url must be a valid YouTube URL');
+      await expect(service.createVideo({ ...validData, youtube_url: 'https://vimeo.com/123' })).rejects.toThrow('youtube_url phải là URL YouTube hợp lệ');
     });
 
     it('should throw ValidationError if category is invalid', async () => {
@@ -96,7 +96,7 @@ describe('VideosService', () => {
     });
 
     it('should validate partial youtube_url updates', async () => {
-      await expect(service.updateVideo(1, { youtube_url: 'invalid' })).rejects.toThrow('youtube_url must be a valid YouTube URL');
+      await expect(service.updateVideo(1, { youtube_url: 'invalid' })).rejects.toThrow('youtube_url phải là URL YouTube hợp lệ');
     });
 
     it('should throw ValidationError if category is invalid', async () => {

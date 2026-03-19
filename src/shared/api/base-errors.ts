@@ -77,7 +77,7 @@ export class ValidationError extends ApiError {
   ) {
     super(
       ErrorCode.ERR_VALIDATION,
-      message || "Request validation failed",
+      message || "Dữ liệu yêu cầu không hợp lệ",
       400,
       details,
       traceId
@@ -92,7 +92,7 @@ export class ValidationError extends ApiError {
  * Used when user is not authenticated
  */
 export class AuthenticationError extends ApiError {
-  constructor(message: string = "Authentication required", traceId?: string) {
+  constructor(message: string = "Yêu cầu đăng nhập", traceId?: string) {
     super(
       ErrorCode.ERR_UNAUTHENTICATED,
       message,
@@ -110,7 +110,7 @@ export class AuthenticationError extends ApiError {
  * Used when user lacks permission for the action
  */
 export class AuthorizationError extends ApiError {
-  constructor(message: string = "Access denied", traceId?: string) {
+  constructor(message: string = "Bạn không có quyền truy cập", traceId?: string) {
     super(
       ErrorCode.ERR_FORBIDDEN,
       message,
@@ -134,7 +134,7 @@ export class NotFoundError extends ApiError {
   ) {
     super(
       ErrorCode.ERR_NOT_FOUND,
-      `${resourceType} not found`,
+      `Không tìm thấy ${resourceType}`,
       404,
       undefined,
       traceId
@@ -150,7 +150,7 @@ export class NotFoundError extends ApiError {
  */
 export class ConflictError extends ApiError {
   constructor(
-    message: string = "Resource already exists",
+    message: string = "Dữ liệu đã tồn tại",
     details?: Record<string, unknown>,
     traceId?: string
   ) {
@@ -193,7 +193,7 @@ export class InvalidStateError extends ApiError {
  * Used for unexpected server-side failures
  */
 export class ServerError extends ApiError {
-  constructor(message: string = "Internal server error", traceId?: string) {
+  constructor(message: string = "Lỗi máy chủ nội bộ", traceId?: string) {
     super(
       ErrorCode.ERR_SERVER,
       message,
@@ -214,7 +214,7 @@ export class ServiceUnavailableError extends ApiError {
   constructor(service: string = "Service", traceId?: string) {
     super(
       ErrorCode.ERR_SERVICE_UNAVAILABLE,
-      `${service} is temporarily unavailable`,
+      `${service} tạm thời không khả dụng`,
       503,
       undefined,
       traceId

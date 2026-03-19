@@ -17,7 +17,7 @@ export const GET = createGetHandler({
   handler: async (req, context) => {
     const { id } = await context.params;
     const eventId = Number(id);
-    if (!eventId) throw new ValidationError("Invalid event ID");
+    if (!eventId) throw new ValidationError("ID sự kiện không hợp lệ");
 
     const service = await createEventsService();
     const event = await service.getEventWithParticipants(eventId);
@@ -31,7 +31,7 @@ export const PUT = createPutHandler({
   handler: async (req, context) => {
     const { id } = await context.params;
     const eventId = Number(id);
-    if (!eventId) throw new ValidationError("Invalid event ID");
+    if (!eventId) throw new ValidationError("ID sự kiện không hợp lệ");
 
     const body = await req.json();
     const service = await createEventsService();
@@ -60,7 +60,7 @@ export const DELETE = createDeleteHandler({
   handler: async (req, context) => {
     const { id } = await context.params;
     const eventId = Number(id);
-    if (!eventId) throw new ValidationError("Invalid event ID");
+    if (!eventId) throw new ValidationError("ID sự kiện không hợp lệ");
 
     const service = await createEventsService();
     await service.deleteEvent(eventId);

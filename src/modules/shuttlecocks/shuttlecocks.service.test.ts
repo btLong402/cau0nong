@@ -68,20 +68,20 @@ describe('ShuttlecocksService', () => {
     };
 
     it('should throw ValidationError if purchase_date is invalid', async () => {
-      await expect(service.createDetail({ ...validData, purchase_date: '2023/10/01' })).rejects.toThrow('purchase_date must be in format YYYY-MM-DD');
+      await expect(service.createDetail({ ...validData, purchase_date: '2023/10/01' })).rejects.toThrow('purchase_date phải có định dạng YYYY-MM-DD');
     });
 
     it('should throw ValidationError if quantity is invalid', async () => {
-      await expect(service.createDetail({ ...validData, quantity: 0 })).rejects.toThrow('quantity must be a positive integer');
-      await expect(service.createDetail({ ...validData, quantity: 1.5 })).rejects.toThrow('quantity must be a positive integer');
+      await expect(service.createDetail({ ...validData, quantity: 0 })).rejects.toThrow('quantity phải là số nguyên dương');
+      await expect(service.createDetail({ ...validData, quantity: 1.5 })).rejects.toThrow('quantity phải là số nguyên dương');
     });
 
     it('should throw ValidationError if unit_price is invalid', async () => {
-      await expect(service.createDetail({ ...validData, unit_price: 0 })).rejects.toThrow('unit_price must be greater than 0');
+      await expect(service.createDetail({ ...validData, unit_price: 0 })).rejects.toThrow('unit_price phải lớn hơn 0');
     });
 
     it('should throw ValidationError if buyer_user_id is empty', async () => {
-      await expect(service.createDetail({ ...validData, buyer_user_id: '' })).rejects.toThrow('buyer_user_id is required');
+      await expect(service.createDetail({ ...validData, buyer_user_id: '' })).rejects.toThrow('Thiếu buyer_user_id');
     });
 
     it('should successfully create record', async () => {
@@ -103,15 +103,15 @@ describe('ShuttlecocksService', () => {
     });
 
     it('should validate partial date update', async () => {
-      await expect(service.updateDetail(1, { purchase_date: 'INVALID' })).rejects.toThrow('purchase_date must be in format YYYY-MM-DD');
+      await expect(service.updateDetail(1, { purchase_date: 'INVALID' })).rejects.toThrow('purchase_date phải có định dạng YYYY-MM-DD');
     });
 
     it('should validate partial quantity update', async () => {
-      await expect(service.updateDetail(1, { quantity: 0 })).rejects.toThrow('quantity must be a positive integer');
+      await expect(service.updateDetail(1, { quantity: 0 })).rejects.toThrow('quantity phải là số nguyên dương');
     });
 
     it('should validate partial unit_price update', async () => {
-      await expect(service.updateDetail(1, { unit_price: -5 })).rejects.toThrow('unit_price must be greater than 0');
+      await expect(service.updateDetail(1, { unit_price: -5 })).rejects.toThrow('unit_price phải lớn hơn 0');
     });
 
     it('should successfully update valid data', async () => {

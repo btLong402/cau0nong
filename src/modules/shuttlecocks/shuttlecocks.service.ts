@@ -8,36 +8,36 @@ export class ShuttlecocksService {
 
   private validateId(id: number) {
     if (!Number.isInteger(id) || id <= 0) {
-      throw new ValidationError("Invalid shuttlecock detail ID");
+      throw new ValidationError("ID chi tiết cầu không hợp lệ");
     }
   }
 
   private validatePurchaseDate(date: string) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      throw new ValidationError("purchase_date must be in format YYYY-MM-DD");
+      throw new ValidationError("purchase_date phải có định dạng YYYY-MM-DD");
     }
   }
 
   private validateQuantity(quantity: number) {
     if (!Number.isInteger(quantity) || quantity <= 0) {
-      throw new ValidationError("quantity must be a positive integer");
+      throw new ValidationError("quantity phải là số nguyên dương");
     }
   }
 
   private validateUnitPrice(unitPrice: number) {
     if (unitPrice <= 0) {
-      throw new ValidationError("unit_price must be greater than 0");
+      throw new ValidationError("unit_price phải lớn hơn 0");
     }
   }
 
   private validateBuyerUserId(buyerUserId: string) {
     if (!buyerUserId?.trim()) {
-      throw new ValidationError("buyer_user_id is required");
+      throw new ValidationError("Thiếu buyer_user_id");
     }
   }
 
   async listByMonth(monthId: number) {
-    if (!Number.isInteger(monthId) || monthId <= 0) throw new ValidationError("Invalid month ID");
+    if (!Number.isInteger(monthId) || monthId <= 0) throw new ValidationError("ID tháng không hợp lệ");
     return this.repository.findByMonthWithBuyer(monthId);
   }
 
@@ -47,11 +47,11 @@ export class ShuttlecocksService {
     try {
       const detail = await this.repository.findById(id);
       if (!detail) {
-        throw new NotFoundError("Shuttlecock detail");
+        throw new NotFoundError("chi tiết mua cầu");
       }
       return detail;
     } catch {
-      throw new NotFoundError("Shuttlecock detail");
+      throw new NotFoundError("chi tiết mua cầu");
     }
   }
 
@@ -64,7 +64,7 @@ export class ShuttlecocksService {
     notes?: string;
   }) {
     if (!Number.isInteger(data.month_id) || data.month_id <= 0) {
-      throw new ValidationError("Invalid month ID");
+      throw new ValidationError("ID tháng không hợp lệ");
     }
     this.validatePurchaseDate(data.purchase_date);
     this.validateQuantity(data.quantity);
@@ -89,7 +89,7 @@ export class ShuttlecocksService {
     try {
       await this.repository.findById(id);
     } catch {
-      throw new NotFoundError("Shuttlecock detail");
+      throw new NotFoundError("chi tiết mua cầu");
     }
 
     if (data.purchase_date !== undefined) {
@@ -114,7 +114,7 @@ export class ShuttlecocksService {
     try {
       await this.repository.findById(id);
     } catch {
-      throw new NotFoundError("Shuttlecock detail");
+      throw new NotFoundError("chi tiết mua cầu");
     }
 
     return this.repository.deleteDetail(id);
@@ -152,7 +152,7 @@ export class ShuttlecocksService {
 
   async deletePurchase(id: number) {
     const detail = await this.repository.findById(id);
-    if (!detail) throw new NotFoundError("Shuttlecock detail");
+    if (!detail) throw new NotFoundError("chi tiết mua cầu");
     
     await this.repository.deleteDetail(id);
     await this.syncMonthTotal(detail.month_id);

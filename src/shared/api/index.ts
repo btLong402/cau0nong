@@ -216,7 +216,7 @@ export {
  *   "success": false,
  *   "error": {
  *     "code": "ERR_VALIDATION",
- *     "message": "Request validation failed",
+ *     "message": "Dữ liệu yêu cầu không hợp lệ",
  *     "details": {
  *       "court_expense_amount": ["Amount must be greater than 0"]
  *     }

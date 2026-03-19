@@ -24,7 +24,7 @@ export class MonthsService {
   async createMonth(data: CreateMonthData): Promise<Month> {
     // Validate format
     if (!/^\d{4}-\d{2}-01$/.test(data.month_year)) {
-      throw new Error("month_year must be in format YYYY-MM-01");
+      throw new Error("month_year phải có định dạng YYYY-MM-01");
     }
 
     // Check if month already exists
@@ -49,7 +49,7 @@ export class MonthsService {
     const month = await this.repository.findById(monthId);
 
     if (!month) {
-      throw new NotFoundError("Month");
+      throw new NotFoundError("tháng");
     }
 
     return month;
@@ -83,7 +83,7 @@ export class MonthsService {
     const month = await this.getMonth(monthId);
 
     if (month.status === "closed") {
-      throw new Error("Month is already closed");
+      throw new Error("Tháng đã được đóng");
     }
 
     return await this.repository.updateStatus(monthId, "closed");
@@ -96,7 +96,7 @@ export class MonthsService {
     const month = await this.getMonth(monthId);
 
     if (month.status === "open") {
-      throw new Error("Month is already open");
+      throw new Error("Tháng đã mở");
     }
 
     return await this.repository.updateStatus(monthId, "open");

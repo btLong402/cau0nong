@@ -45,7 +45,7 @@ export function ShuttlecockManagement({ monthId, formatCurrency }: ShuttlecockMa
         body: JSON.stringify(form),
       });
 
-      if (!res.ok) throw new Error('Failed to add purchase');
+      if (!res.ok) throw new Error('Không thể thêm lượt mua cầu');
       
       setShowAddForm(false);
       await refetch();
@@ -67,7 +67,7 @@ export function ShuttlecockManagement({ monthId, formatCurrency }: ShuttlecockMa
 
     try {
       const res = await fetch(`/api/shuttlecocks/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete');
+      if (!res.ok) throw new Error('Không thể xóa');
       await refetch();
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Error deleting');

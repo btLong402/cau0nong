@@ -8,7 +8,7 @@ export const PATCH = createPatchHandler({
   handler: async (req, context) => {
     const { id } = await context.params;
     const shuttlecockId = Number(id);
-    if (!shuttlecockId || isNaN(shuttlecockId)) throw new ValidationError("Invalid ID");
+    if (!shuttlecockId || isNaN(shuttlecockId)) throw new ValidationError("ID không hợp lệ");
 
     const payload = await req.json();
     const service = await createShuttlecocksService();
@@ -30,7 +30,7 @@ export const DELETE = createDeleteHandler({
   handler: async (req, context) => {
     const { id } = await context.params;
     const shuttlecockId = Number(id);
-    if (!shuttlecockId || isNaN(shuttlecockId)) throw new ValidationError("Invalid ID");
+    if (!shuttlecockId || isNaN(shuttlecockId)) throw new ValidationError("ID không hợp lệ");
 
     const service = await createShuttlecocksService();
     await service.deletePurchase(shuttlecockId);

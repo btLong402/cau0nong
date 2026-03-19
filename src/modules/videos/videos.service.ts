@@ -20,7 +20,7 @@ const YOUTUBE_URL_REGEX =
 
 function validateYouTubeUrl(url: string) {
   if (!YOUTUBE_URL_REGEX.test(url)) {
-    throw new ValidationError("youtube_url must be a valid YouTube URL");
+    throw new ValidationError("youtube_url phải là URL YouTube hợp lệ");
   }
 }
 
@@ -41,16 +41,16 @@ export class VideosService {
 
   async getVideo(id: number): Promise<Video> {
     const video = await this.repository.findById(id);
-    if (!video) throw new NotFoundError("Video");
+    if (!video) throw new NotFoundError("video");
     return video;
   }
 
   async createVideo(data: CreateVideoData, userId?: string): Promise<Video> {
     if (!data.title?.trim()) {
-      throw new ValidationError("title is required");
+      throw new ValidationError("Thiếu tiêu đề");
     }
     if (!data.youtube_url?.trim()) {
-      throw new ValidationError("youtube_url is required");
+      throw new ValidationError("Thiếu youtube_url");
     }
     validateYouTubeUrl(data.youtube_url);
     validateCategory(data.category);

@@ -81,7 +81,7 @@ export async function resolveEmailForLogin(identifier: string): Promise<string> 
       return String(phoneLookup.data.email).trim().toLowerCase();
     }
 
-    throw new AuthenticationError("Invalid username/phone or password");
+    throw new AuthenticationError("Tên đăng nhập/số điện thoại hoặc mật khẩu không đúng");
   }
 
   const usernameLookup = await adminClient
@@ -103,7 +103,7 @@ export async function resolveEmailForLogin(identifier: string): Promise<string> 
     return String(usernameLookup.data.email).trim().toLowerCase();
   }
 
-  throw new AuthenticationError("Invalid username/phone or password");
+  throw new AuthenticationError("Tên đăng nhập/số điện thoại hoặc mật khẩu không đúng");
 }
 
 export function assertAccountCanLogin(
@@ -111,7 +111,7 @@ export function assertAccountCanLogin(
   signOut: () => Promise<{ error: null | unknown }> | Promise<void> | void,
 ): asserts profile is LoginProfile {
   if (!profile) {
-    throw new AuthenticationError("Account profile not found");
+    throw new AuthenticationError("Không tìm thấy hồ sơ tài khoản");
   }
 
   const profileData = profile as {

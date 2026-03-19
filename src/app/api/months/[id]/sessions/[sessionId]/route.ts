@@ -8,7 +8,7 @@ function parseSessionId(url: string): number {
   const sessionId = Number(segments[segments.length - 1]);
 
   if (!Number.isInteger(sessionId) || sessionId <= 0) {
-    throw new ValidationError('Session ID is required');
+    throw new ValidationError('Thiếu ID buổi tập');
   }
 
   return sessionId;
@@ -42,6 +42,6 @@ export const DELETE = createDeleteHandler({
     const sessionsService = await createSessionsService();
     await sessionsService.deleteSession(sessionId);
 
-    return { message: 'Session deleted successfully' };
+    return { message: 'Xóa buổi tập thành công' };
   },
 });

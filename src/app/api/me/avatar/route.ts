@@ -20,7 +20,7 @@ const ALLOWED_AVATAR_TYPES = [
 function buildAvatarPublicUrl(path: string): string {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!supabaseUrl) {
-    throw new ServerError("Supabase URL is not configured");
+      throw new ServerError("Supabase URL chưa được cấu hình");
   }
 
   return `${supabaseUrl}/storage/v1/object/public/${AVATAR_BUCKET}/${path}`;
@@ -64,7 +64,7 @@ async function ensureAvatarBucket() {
 
   const isNotFound = getBucketError.message.toLowerCase().includes("not found");
   if (!isNotFound) {
-    throw new ServerError("Failed to verify avatar storage bucket");
+    throw new ServerError("Không thể kiểm tra bucket lưu trữ avatar");
   }
 
   const { error: createBucketError } = await adminClient.storage.createBucket(AVATAR_BUCKET, {
@@ -74,7 +74,7 @@ async function ensureAvatarBucket() {
   });
 
   if (createBucketError) {
-    throw new ServerError("Failed to create avatar storage bucket");
+    throw new ServerError("Không thể tạo bucket lưu trữ avatar");
   }
 }
 
@@ -86,7 +86,7 @@ async function deleteAvatarPath(path: string): Promise<void> {
     const message = error.message.toLowerCase();
     const isNotFound = message.includes("not found") || message.includes("does not exist");
     if (!isNotFound) {
-      throw new ServerError("Failed to delete old avatar");
+      throw new ServerError("Không thể xóa avatar cũ");
     }
   }
 }
@@ -104,15 +104,15 @@ export const POST = createPostHandler({
     const filePart = formData.get("avatar");
 
     if (!(filePart instanceof File)) {
-      throw new ValidationError("Avatar file is required");
+      throw new ValidationError("Thiếu tệp avatar");
     }
 
     if (!ALLOWED_AVATAR_TYPES.includes(filePart.type as (typeof ALLOWED_AVATAR_TYPES)[number])) {
-      throw new ValidationError("Invalid avatar file type. Supported: jpg, png, webp, gif");
+      throw new ValidationError("Loại tệp avatar không hợp lệ. Hỗ trợ: jpg, png, webp, gif");
     }
 
     if (filePart.size > MAX_AVATAR_FILE_SIZE) {
-      throw new ValidationError("Avatar file is too large. Maximum size is 5MB");
+      throw new ValidationError("Tệp avatar quá lớn. Kích thước tối đa là 5MB");
     }
 
     await ensureAvatarBucket();
@@ -129,7 +129,7 @@ export const POST = createPostHandler({
       });
 
     if (uploadError) {
-      throw new ServerError("Failed to upload avatar");
+      throw new ServerError("Không thể tải avatar lên");
     }
 
     const oldAvatarPath = extractAvatarPath(currentUser.avatar_url);

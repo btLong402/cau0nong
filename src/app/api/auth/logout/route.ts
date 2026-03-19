@@ -9,7 +9,7 @@ export const POST = createPostHandler({
     await authService.signOut();
 
     const response = NextResponse.json(
-      successResponse({ message: 'Logged out successfully' }, context.traceId),
+      successResponse({ message: 'Đăng xuất thành công' }, context.traceId),
       { status: 200 },
     );
 

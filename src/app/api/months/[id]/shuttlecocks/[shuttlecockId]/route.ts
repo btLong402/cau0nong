@@ -14,10 +14,10 @@ function parseIds(url: string): { monthId: number; shuttlecockId: number } {
   const shuttlecockId = Number(segments[segments.length - 1]);
 
   if (!Number.isInteger(monthId) || monthId <= 0) {
-    throw new ValidationError("Month ID is required");
+    throw new ValidationError("Thiếu ID tháng");
   }
   if (!Number.isInteger(shuttlecockId) || shuttlecockId <= 0) {
-    throw new ValidationError("Shuttlecock ID is required");
+    throw new ValidationError("Thiếu ID cầu");
   }
 
   return { monthId, shuttlecockId };

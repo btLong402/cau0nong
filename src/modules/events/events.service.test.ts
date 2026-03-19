@@ -59,19 +59,19 @@ describe('EventsService', () => {
       expect(result.pagination.hasMore).toBe(true);
     });
 
-    it('should throw ValidationError if sortBy is invalid', async () => {
-      await expect(service.listEvents({ sortBy: 'invalid' as any })).rejects.toThrow('Invalid sortBy field');
+    it('should throw ValidationError if sortBy không hợp lệ', async () => {
+      await expect(service.listEvents({ sortBy: 'invalid' as any })).rejects.toThrow('Trường sortBy không hợp lệ');
     });
 
     it('should throw ValidationError if sortOrder is invalid', async () => {
-      await expect(service.listEvents({ sortOrder: 'invalid' as any })).rejects.toThrow('sortOrder must be asc or desc');
+      await expect(service.listEvents({ sortOrder: 'invalid' as any })).rejects.toThrow('sortOrder phải là asc hoặc desc');
     });
   });
 
   describe('getEventWithParticipants', () => {
     it('should throw NotFoundError if event does not exist', async () => {
       vi.mocked(mockEventsRepo.findEventById).mockResolvedValueOnce(null);
-      await expect(service.getEventWithParticipants(1)).rejects.toThrow('Event not found');
+      await expect(service.getEventWithParticipants(1)).rejects.toThrow('Không tìm thấy sự kiện');
     });
 
     it('should map event and calculate is_settled based on contributions', async () => {
@@ -130,15 +130,15 @@ describe('EventsService', () => {
     });
 
     it('should throw ValidationError if date is invalid format', async () => {
-      await expect(service.createEvent({ ...validData, event_date: '2023/10/01' })).rejects.toThrow('event_date must be in format YYYY-MM-DD');
+      await expect(service.createEvent({ ...validData, event_date: '2023/10/01' })).rejects.toThrow('event_date phải có định dạng YYYY-MM-DD');
     });
 
     it('should throw ValidationError if expense is negative', async () => {
-      await expect(service.createEvent({ ...validData, total_expense: -1 })).rejects.toThrow('total_expense must be >= 0');
+      await expect(service.createEvent({ ...validData, total_expense: -1 })).rejects.toThrow('total_expense phải lớn hơn hoặc bằng 0');
     });
 
     it('should throw ValidationError if support is negative', async () => {
-      await expect(service.createEvent({ ...validData, total_support: -1 })).rejects.toThrow('total_support must be >= 0');
+      await expect(service.createEvent({ ...validData, total_support: -1 })).rejects.toThrow('total_support phải lớn hơn hoặc bằng 0');
     });
   });
 
@@ -149,7 +149,7 @@ describe('EventsService', () => {
 
     it('should throw NotFoundError if event does not exist', async () => {
       vi.mocked(mockEventsRepo.findEventById).mockResolvedValueOnce(null);
-      await expect(service.updateEvent(1, {})).rejects.toThrow('Event not found');
+      await expect(service.updateEvent(1, {})).rejects.toThrow('Không tìm thấy sự kiện');
     });
 
     it('should validate partial name updates', async () => {
@@ -158,7 +158,7 @@ describe('EventsService', () => {
     });
 
     it('should validate partial date updates', async () => {
-      await expect(service.updateEvent(1, { event_date: '2023/10/01' })).rejects.toThrow('event_date must be in format YYYY-MM-DD');
+      await expect(service.updateEvent(1, { event_date: '2023/10/01' })).rejects.toThrow('event_date phải có định dạng YYYY-MM-DD');
     });
 
     it('should successfully update valid name', async () => {
@@ -175,7 +175,7 @@ describe('EventsService', () => {
   describe('deleteEvent', () => {
     it('should throw NotFoundError if event does not exist', async () => {
       vi.mocked(mockEventsRepo.findEventById).mockResolvedValueOnce(null);
-      await expect(service.deleteEvent(1)).rejects.toThrow('Event not found');
+      await expect(service.deleteEvent(1)).rejects.toThrow('Không tìm thấy sự kiện');
     });
 
     it('should throw InvalidStateError if any participant has already paid', async () => {
@@ -197,12 +197,12 @@ describe('EventsService', () => {
   describe('addParticipants', () => {
     it('should throw NotFoundError if event does not exist', async () => {
       vi.mocked(mockEventsRepo.findEventById).mockResolvedValueOnce(null);
-      await expect(service.addParticipants(1, ['u1'])).rejects.toThrow('Event not found');
+      await expect(service.addParticipants(1, ['u1'])).rejects.toThrow('Không tìm thấy sự kiện');
     });
 
     it('should throw ValidationError if userIds array is empty', async () => {
       vi.mocked(mockEventsRepo.findEventById).mockResolvedValueOnce({ id: 1 } as any);
-      await expect(service.addParticipants(1, [])).rejects.toThrow('At least one userId is required');
+      await expect(service.addParticipants(1, [])).rejects.toThrow('Cần ít nhất một userId');
     });
 
     it('should bulk add participants', async () => {
@@ -215,12 +215,12 @@ describe('EventsService', () => {
   describe('removeParticipant', () => {
     it('should throw NotFoundError if participant does not exist', async () => {
       vi.mocked(mockParticipantsRepo.findByEvent).mockResolvedValueOnce([]);
-      await expect(service.removeParticipant(1, 'u1')).rejects.toThrow('Participant not found');
+      await expect(service.removeParticipant(1, 'u1')).rejects.toThrow('Không tìm thấy người tham gia');
     });
 
     it('should throw InvalidStateError if participant is already paid', async () => {
       vi.mocked(mockParticipantsRepo.findByEvent).mockResolvedValueOnce([{ user_id: 'u1', is_paid: true }] as any);
-      await expect(service.removeParticipant(1, 'u1')).rejects.toThrow('Cannot remove a paid participant');
+      await expect(service.removeParticipant(1, 'u1')).rejects.toThrow('Không thể xóa người tham gia đã thanh toán');
     });
 
     it('should remove participant successfully', async () => {
@@ -233,13 +233,13 @@ describe('EventsService', () => {
   describe('settleEvent', () => {
     it('should throw NotFoundError if event does not exist', async () => {
       vi.mocked(mockEventsRepo.findEventById).mockResolvedValueOnce(null);
-      await expect(service.settleEvent(1)).rejects.toThrow('Event not found');
+      await expect(service.settleEvent(1)).rejects.toThrow('Không tìm thấy sự kiện');
     });
 
     it('should throw InvalidStateError if no participants', async () => {
       vi.mocked(mockEventsRepo.findEventById).mockResolvedValueOnce({ id: 1 } as any);
       vi.mocked(mockParticipantsRepo.countByEvent).mockResolvedValueOnce(0);
-      await expect(service.settleEvent(1)).rejects.toThrow('Cannot settle event with no participants');
+      await expect(service.settleEvent(1)).rejects.toThrow('Không thể chốt sự kiện khi chưa có người tham gia');
     });
 
     it('should calculate and update contributions', async () => {
@@ -260,19 +260,19 @@ describe('EventsService', () => {
   describe('markParticipantPaid', () => {
     it('should throw NotFoundError if event does not exist', async () => {
       vi.mocked(mockEventsRepo.findEventById).mockResolvedValueOnce(null);
-      await expect(service.markParticipantPaid(1, 'u1')).rejects.toThrow('Event not found');
+      await expect(service.markParticipantPaid(1, 'u1')).rejects.toThrow('Không tìm thấy sự kiện');
     });
 
     it('should throw NotFoundError if participant does not exist in event', async () => {
       vi.mocked(mockEventsRepo.findEventById).mockResolvedValueOnce({ id: 1 } as any);
       vi.mocked(mockParticipantsRepo.findByEvent).mockResolvedValueOnce([]);
-      await expect(service.markParticipantPaid(1, 'u1')).rejects.toThrow('Participant not found');
+      await expect(service.markParticipantPaid(1, 'u1')).rejects.toThrow('Không tìm thấy người tham gia');
     });
 
     it('should throw ConflictError if participant is already paid', async () => {
       vi.mocked(mockEventsRepo.findEventById).mockResolvedValueOnce({ id: 1 } as any);
       vi.mocked(mockParticipantsRepo.findByEvent).mockResolvedValueOnce([{ user_id: 'u1', is_paid: true }] as any);
-      await expect(service.markParticipantPaid(1, 'u1')).rejects.toThrow('Participant is already marked as paid');
+      await expect(service.markParticipantPaid(1, 'u1')).rejects.toThrow('Người tham gia đã được đánh dấu đã thanh toán');
     });
 
     it('should mark participant as paid successfully', async () => {

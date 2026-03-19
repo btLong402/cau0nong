@@ -46,7 +46,7 @@ describe('SessionsService', () => {
           court_expense_amount: 100000,
           payer_user_id: 'u1',
         })
-      ).rejects.toThrow('session_date must be in format YYYY-MM-DD');
+      ).rejects.toThrow('session_date phải có định dạng YYYY-MM-DD');
     });
 
     it('should validate court expense > 0', async () => {
@@ -57,7 +57,7 @@ describe('SessionsService', () => {
           court_expense_amount: 0, // Invalid
           payer_user_id: 'u1',
         })
-      ).rejects.toThrow('court_expense_amount must be greater than 0');
+      ).rejects.toThrow('court_expense_amount phải lớn hơn 0');
     });
 
     it('should set status to open on create and call repository', async () => {
@@ -86,14 +86,14 @@ describe('SessionsService', () => {
       vi.mocked(mockSessionsRepo.findById).mockResolvedValueOnce(null as any);
       await expect(
         service.updateSession(999, { court_expense_amount: 100 })
-      ).rejects.toThrow('Session not found');
+      ).rejects.toThrow('Không tìm thấy buổi tập');
     });
 
     it('should validate court expense if updated', async () => {
       vi.mocked(mockSessionsRepo.findById).mockResolvedValueOnce({ id: 1 } as any);
       await expect(
         service.updateSession(1, { court_expense_amount: -50000 })
-      ).rejects.toThrow('court_expense_amount must be greater than 0');
+      ).rejects.toThrow('court_expense_amount phải lớn hơn 0');
     });
 
     it('should successfully update status', async () => {
@@ -128,7 +128,7 @@ describe('SessionsService', () => {
 
       await expect(
         service.recordAttendance(1, [{ userId: 'u1', isAttended: true }])
-      ).rejects.toThrow('Session not found');
+      ).rejects.toThrow('Không tìm thấy buổi tập');
       
       expect(mockAttendanceRepo.bulkUpsertAttendance).not.toHaveBeenCalled();
     });
@@ -161,7 +161,7 @@ describe('SessionsService', () => {
   describe('Attendance Queries', () => {
     it('getSessionAttendance should throw if session not found', async () => {
       vi.mocked(mockSessionsRepo.findById).mockResolvedValueOnce(null as any);
-      await expect(service.getSessionAttendance(1)).rejects.toThrow('Session not found');
+      await expect(service.getSessionAttendance(1)).rejects.toThrow('Không tìm thấy buổi tập');
     });
 
     it('getSessionAttendance should return attendance records', async () => {

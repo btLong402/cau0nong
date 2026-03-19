@@ -123,7 +123,7 @@ export function useCreateSession() {
         const err =
           error instanceof Error
             ? error
-            : new Error('Failed to create session');
+            : new Error('Không thể tạo buổi tập');
         setState({ loading: false, error: err });
         throw err;
       }
@@ -164,7 +164,7 @@ export function useUpdateSession() {
         const err =
           error instanceof Error
             ? error
-            : new Error('Failed to update session');
+            : new Error('Không thể cập nhật buổi tập');
         setState({ loading: false, error: err });
         throw err;
       }
@@ -203,7 +203,7 @@ export function useDeleteSession() {
         const err =
           error instanceof Error
             ? error
-            : new Error('Failed to delete session');
+            : new Error('Không thể xóa buổi tập');
         setState({ loading: false, error: err });
         throw err;
       }
@@ -248,7 +248,7 @@ export function useRecordAttendance() {
         const err =
           error instanceof Error
             ? error
-            : new Error('Failed to record attendance');
+            : new Error('Không thể lưu điểm danh');
         setState({ loading: false, error: err });
         throw err;
       }

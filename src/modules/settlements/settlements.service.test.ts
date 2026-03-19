@@ -81,7 +81,7 @@ describe('SettlementsService', () => {
         total_due: 100000
       } as any);
 
-      await expect(service.markPaid(1)).rejects.toThrow('Settlement is already marked as paid');
+      await expect(service.markPaid(1)).rejects.toThrow('Khoản quyết toán đã được đánh dấu đã thanh toán');
     });
 
     it('should throw error if paid amount does not match total due', async () => {
@@ -91,7 +91,7 @@ describe('SettlementsService', () => {
         total_due: 100000
       } as any);
 
-      await expect(service.markPaid(1, 50000)).rejects.toThrow('paidAmount must be equal to settlement total_due');
+      await expect(service.markPaid(1, 50000)).rejects.toThrow('paidAmount phải bằng total_due của khoản quyết toán');
     });
 
     it('should throw ValidationError if paidAmount is negative', async () => {
@@ -99,7 +99,7 @@ describe('SettlementsService', () => {
         id: 1, is_paid: false, total_due: 100000
       } as any);
 
-      await expect(service.markPaid(1, -50000)).rejects.toThrow('paidAmount must be >= 0');
+      await expect(service.markPaid(1, -50000)).rejects.toThrow('paidAmount phải lớn hơn hoặc bằng 0');
     });
 
     it('should successfully mark as paid when valid', async () => {
@@ -127,7 +127,7 @@ describe('SettlementsService', () => {
       vi.mocked(mockSettlementsRepo.findByMonth).mockResolvedValueOnce([{ id: 1 } as any]);
 
       await expect(service.generateForMonth(1)).rejects.toThrow(
-        'Settlements for this month already exist. Use force=true to regenerate.'
+        'Quyết toán của tháng này đã tồn tại. Dùng force=true để tạo lại.'
       );
     });
 
@@ -136,7 +136,7 @@ describe('SettlementsService', () => {
       mockListSessionsByMonth.mockResolvedValueOnce([]); // No sessions
 
       await expect(service.generateForMonth(1)).rejects.toThrow(
-        'Cannot generate settlements for a month with no sessions'
+        'Không thể tạo quyết toán cho tháng không có buổi tập'
       );
     });
 
@@ -172,7 +172,7 @@ describe('SettlementsService', () => {
       // Mock 0 attendees
       mockGetSessionAttendance.mockResolvedValueOnce([]);
 
-      await expect(service.generateForMonth(1)).rejects.toThrow('Cannot generate settlements: no attended records found');
+      await expect(service.generateForMonth(1)).rejects.toThrow('Không thể tạo quyết toán: không có dữ liệu điểm danh đã tham gia');
     });
 
     it('should handle repository exceptions in shuttlecock and event fetches by returning empty arrays', async () => {
@@ -223,7 +223,7 @@ describe('SettlementsService', () => {
 
   describe('listByMonth', () => {
     it('should validate monthId', async () => {
-      await expect(service.listByMonth(-1)).rejects.toThrow('monthId must be a positive integer');
+      await expect(service.listByMonth(-1)).rejects.toThrow('monthId phải là số nguyên dương');
     });
 
     it('should return settlements', async () => {
@@ -235,19 +235,19 @@ describe('SettlementsService', () => {
 
   describe('listByMonthPaginated', () => {
     it('should validate monthId', async () => {
-      await expect(service.listByMonthPaginated(-1)).rejects.toThrow('monthId must be a positive integer');
+      await expect(service.listByMonthPaginated(-1)).rejects.toThrow('monthId phải là số nguyên dương');
     });
 
     it('should throw ValidationError if status is invalid', async () => {
-      await expect(service.listByMonthPaginated(1, { status: 'invalid' as any })).rejects.toThrow('status must be one of: all, paid, unpaid');
+      await expect(service.listByMonthPaginated(1, { status: 'invalid' as any })).rejects.toThrow('status phải là một trong: all, paid, unpaid');
     });
 
-    it('should throw ValidationError if sortBy is invalid', async () => {
-      await expect(service.listByMonthPaginated(1, { sortBy: 'invalid' as any })).rejects.toThrow('sortBy is invalid');
+    it('should throw ValidationError if sortBy không hợp lệ', async () => {
+      await expect(service.listByMonthPaginated(1, { sortBy: 'invalid' as any })).rejects.toThrow('sortBy không hợp lệ');
     });
 
     it('should throw ValidationError if sortOrder is invalid', async () => {
-      await expect(service.listByMonthPaginated(1, { sortOrder: 'invalid' as any })).rejects.toThrow('sortOrder must be asc or desc');
+      await expect(service.listByMonthPaginated(1, { sortOrder: 'invalid' as any })).rejects.toThrow('sortOrder phải là asc hoặc desc');
     });
 
     it('should paginate results normally', async () => {
@@ -259,12 +259,12 @@ describe('SettlementsService', () => {
 
   describe('getById', () => {
     it('should throw ValidationError if id invalid', async () => {
-      await expect(service.getById(-1)).rejects.toThrow('Settlement ID is invalid');
+      await expect(service.getById(-1)).rejects.toThrow('ID quyết toán không hợp lệ');
     });
 
     it('should throw NotFoundError if null', async () => {
       vi.mocked(mockSettlementsRepo.findById).mockResolvedValueOnce(null as any);
-      await expect(service.getById(1)).rejects.toThrow('Settlement not found');
+      await expect(service.getById(1)).rejects.toThrow('Không tìm thấy khoản quyết toán');
     });
   });
 

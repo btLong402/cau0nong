@@ -31,7 +31,7 @@ describe('MonthsService', () => {
     it('should throw Error if date format is invalid', async () => {
       await expect(
         service.createMonth({ month_year: '2023-13' })
-      ).rejects.toThrow('month_year must be in format YYYY-MM-01');
+      ).rejects.toThrow('month_year phải có định dạng YYYY-MM-01');
     });
 
     it('should throw ConflictError if month already exists', async () => {
@@ -72,7 +72,7 @@ describe('MonthsService', () => {
   describe('getMonth', () => {
     it('should throw NotFoundError if month does not exist', async () => {
       vi.mocked(mockMonthsRepo.findById).mockResolvedValueOnce(null as any);
-      await expect(service.getMonth(1)).rejects.toThrow('Month not found');
+      await expect(service.getMonth(1)).rejects.toThrow('Không tìm thấy tháng');
     });
 
     it('should return month if exists', async () => {
@@ -110,7 +110,7 @@ describe('MonthsService', () => {
   describe('closeMonth', () => {
     it('should throw Error if month is already closed', async () => {
       vi.mocked(mockMonthsRepo.findById).mockResolvedValueOnce({ id: 1, status: 'closed' } as any);
-      await expect(service.closeMonth(1)).rejects.toThrow('Month is already closed');
+      await expect(service.closeMonth(1)).rejects.toThrow('Tháng đã được đóng');
     });
 
     it('should update status to closed', async () => {
@@ -125,7 +125,7 @@ describe('MonthsService', () => {
   describe('reopenMonth', () => {
     it('should throw Error if month is already open', async () => {
       vi.mocked(mockMonthsRepo.findById).mockResolvedValueOnce({ id: 1, status: 'open' } as any);
-      await expect(service.reopenMonth(1)).rejects.toThrow('Month is already open');
+      await expect(service.reopenMonth(1)).rejects.toThrow('Tháng đã mở');
     });
 
     it('should update status to open', async () => {
@@ -159,7 +159,7 @@ describe('MonthsService', () => {
   describe('updateShuttlecockExpense', () => {
     it('should verify month exists before updating expense', async () => {
       vi.mocked(mockMonthsRepo.findById).mockResolvedValueOnce(null as any);
-      await expect(service.updateShuttlecockExpense(1, 500000)).rejects.toThrow('Month not found');
+      await expect(service.updateShuttlecockExpense(1, 500000)).rejects.toThrow('Không tìm thấy tháng');
       expect(mockMonthsRepo.updateShuttlecockExpense).not.toHaveBeenCalled();
     });
 

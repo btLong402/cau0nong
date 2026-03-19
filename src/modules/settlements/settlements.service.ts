@@ -55,7 +55,7 @@ export interface SettlementListResult {
 
 function validateMonthId(monthId: number) {
   if (!Number.isInteger(monthId) || monthId <= 0) {
-    throw new ValidationError("monthId must be a positive integer");
+    throw new ValidationError("monthId phải là số nguyên dương");
   }
 }
 
@@ -67,15 +67,15 @@ function normalizeQuery(filters?: SettlementListFilters) {
   const sortOrder = filters?.sortOrder || "desc";
 
   if (!["all", "paid", "unpaid"].includes(status)) {
-    throw new ValidationError("status must be one of: all, paid, unpaid");
+    throw new ValidationError("status phải là một trong: all, paid, unpaid");
   }
 
   if (!["total_due", "created_at", "paid_at", "user_id"].includes(sortBy)) {
-    throw new ValidationError("sortBy is invalid");
+    throw new ValidationError("sortBy không hợp lệ");
   }
 
   if (!["asc", "desc"].includes(sortOrder)) {
-    throw new ValidationError("sortOrder must be asc or desc");
+    throw new ValidationError("sortOrder phải là asc hoặc desc");
   }
 
   return {
@@ -128,11 +128,11 @@ export class SettlementsService {
 
   async getById(id: number): Promise<MonthlySetting> {
     if (!Number.isInteger(id) || id <= 0) {
-      throw new ValidationError("Settlement ID is invalid");
+      throw new ValidationError("ID quyết toán không hợp lệ");
     }
     const settlement = await this.repository.findById(id);
     if (!settlement) {
-      throw new NotFoundError("Settlement");
+      throw new NotFoundError("khoản quyết toán");
     }
     return settlement;
   }
@@ -151,14 +151,14 @@ export class SettlementsService {
 
     if (existing.length > 0 && !force) {
       throw new ConflictError(
-        "Settlements for this month already exist. Use force=true to regenerate."
+        "Quyết toán của tháng này đã tồn tại. Dùng force=true để tạo lại."
       );
     }
 
     const sessions = await sessionsService.listSessionsByMonth(monthId);
     if (sessions.length === 0) {
       throw new InvalidStateError(
-        "Cannot generate settlements for a month with no sessions"
+        "Không thể tạo quyết toán cho tháng không có buổi tập"
       );
     }
 
@@ -170,7 +170,7 @@ export class SettlementsService {
     const participants = getParticipantIds(attendances);
     if (participants.length === 0) {
       throw new InvalidStateError(
-        "Cannot generate settlements: no attended records found"
+        "Không thể tạo quyết toán: không có dữ liệu điểm danh đã tham gia"
       );
     }
 
@@ -223,18 +223,18 @@ export class SettlementsService {
     const settlement = await this.getById(settlementId);
 
     if (settlement.is_paid) {
-      throw new ConflictError("Settlement is already marked as paid");
+      throw new ConflictError("Khoản quyết toán đã được đánh dấu đã thanh toán");
     }
 
     const amount = paidAmount ?? settlement.total_due;
     if (amount < 0) {
-      throw new ValidationError("paidAmount must be >= 0");
+      throw new ValidationError("paidAmount phải lớn hơn hoặc bằng 0");
     }
 
     const normalizedAmount = Math.round(amount * 100) / 100;
     const expectedAmount = Math.round(settlement.total_due * 100) / 100;
     if (normalizedAmount !== expectedAmount) {
-      throw new ValidationError("paidAmount must be equal to settlement total_due");
+      throw new ValidationError("paidAmount phải bằng total_due của khoản quyết toán");
     }
 
     const updatedSettlement = await this.repository.markPaid(

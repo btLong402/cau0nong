@@ -63,7 +63,7 @@ describe('UsersService', () => {
   describe('getMember', () => {
     it('should throw NotFoundError if member does not exist', async () => {
       vi.mocked(mockUsersRepo.findById).mockResolvedValueOnce(null as any);
-      await expect(service.getMember('u1')).rejects.toThrow('Member not found');
+      await expect(service.getMember('u1')).rejects.toThrow('Không tìm thấy thành viên');
     });
 
     it('should return member if exists', async () => {
@@ -106,7 +106,7 @@ describe('UsersService', () => {
 
       await expect(
         service.updateMember('u1', { email: 'new@test.com' })
-      ).rejects.toThrow('Email already in use');
+      ).rejects.toThrow('Email đã được sử dụng');
     });
 
     it('should throw Error if new phone is already in use', async () => {
@@ -115,7 +115,7 @@ describe('UsersService', () => {
 
       await expect(
         service.updateMember('u1', { phone: '0987654321' })
-      ).rejects.toThrow('Phone already in use');
+      ).rejects.toThrow('Số điện thoại đã được sử dụng');
     });
 
     it('should successfully update member with fallback to old values', async () => {

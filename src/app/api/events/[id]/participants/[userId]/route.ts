@@ -16,10 +16,10 @@ function extractParams(req: Request): { eventId: number; userId: string } {
   const eventId = Number(segments[segments.length - 3]);
 
   if (!eventId || isNaN(eventId)) {
-    throw new ValidationError("Invalid event ID");
+    throw new ValidationError("ID sự kiện không hợp lệ");
   }
   if (!userId) {
-    throw new ValidationError("Invalid userId");
+    throw new ValidationError("userId không hợp lệ");
   }
 
   return { eventId, userId };

@@ -8,7 +8,7 @@ function parseMonthId(url: string): number {
   const monthId = Number(segments[segments.length - 2]);
 
   if (!Number.isInteger(monthId) || monthId <= 0) {
-    throw new ValidationError('Month ID is required');
+    throw new ValidationError('Thiếu ID tháng');
   }
 
   return monthId;
@@ -30,7 +30,7 @@ export const POST = createPostHandler({
     const { session_date, court_expense_amount, payer_user_id, notes } = await req.json();
 
     if (!session_date || !court_expense_amount || !payer_user_id) {
-      throw new ValidationError('Missing required fields: session_date, court_expense_amount, payer_user_id');
+      throw new ValidationError('Thiếu các trường bắt buộc: session_date, court_expense_amount, payer_user_id');
     }
 
     const sessionsService = await createSessionsService();

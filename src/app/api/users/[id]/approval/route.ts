@@ -9,7 +9,7 @@ function parseUserId(url: string): string {
   const userId = approvalIndex > 0 ? segments[approvalIndex - 1] : '';
 
   if (!userId) {
-    throw new ValidationError('User ID is required');
+    throw new ValidationError('Thiếu ID người dùng');
   }
 
   return userId;
@@ -23,7 +23,7 @@ export const PATCH = createPatchHandler({
     const { action } = await req.json();
 
     if (!action || !['approve', 'reject'].includes(action)) {
-      throw new ValidationError("Action must be either 'approve' or 'reject'");
+      throw new ValidationError("Action phải là 'approve' hoặc 'reject'");
     }
 
     const usersService = await createUsersService();

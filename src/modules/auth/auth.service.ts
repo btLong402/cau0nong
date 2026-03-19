@@ -39,13 +39,13 @@ export class AuthService {
 
       if (authError) {
         if (authError.message.includes("already")) {
-          throw new ConflictError("Email already registered");
+          throw new ConflictError("Email đã được đăng ký");
         }
         throw new AuthenticationError(authError.message);
       }
 
       if (!authData.user) {
-        throw new ServerError("Failed to create user");
+        throw new ServerError("Không thể tạo người dùng");
       }
 
       const adminClient = createAdminClient();
@@ -79,7 +79,7 @@ export class AuthService {
       ) {
         throw error;
       }
-      throw new ServerError(`Sign up failed: ${error}`);
+      throw new ServerError(`Đăng ký thất bại: ${error}`);
     }
   }
 
@@ -102,13 +102,13 @@ export class AuthService {
 
       if (authError) {
         if (authError.message.includes("already")) {
-          throw new ConflictError("Email already registered");
+          throw new ConflictError("Email đã được đăng ký");
         }
         throw new AuthenticationError(authError.message);
       }
 
       if (!authData.user) {
-        throw new ServerError("Failed to create user");
+        throw new ServerError("Không thể tạo người dùng");
       }
 
       await createUserProfile(adminClient, {
@@ -141,7 +141,7 @@ export class AuthService {
       ) {
         throw error;
       }
-      throw new ServerError(`Create user failed: ${error}`);
+      throw new ServerError(`Tạo người dùng thất bại: ${error}`);
     }
   }
 
@@ -149,7 +149,7 @@ export class AuthService {
     try {
       const identifier = data.identifier || data.email;
       if (!identifier) {
-        throw new AuthenticationError("Missing login identifier");
+        throw new AuthenticationError("Thiếu định danh đăng nhập");
       }
 
       const emailForAuth = await resolveEmailForLogin(identifier);
@@ -163,11 +163,11 @@ export class AuthService {
         if (error.message?.toLowerCase().includes("email not confirmed")) {
           throw new AuthenticationError("Email chưa được xác nhận. Vui lòng liên hệ admin để kích hoạt tài khoản.");
         }
-        throw new AuthenticationError("Invalid email or password");
+        throw new AuthenticationError("Email hoặc mật khẩu không đúng");
       }
 
       if (!authData.user || !authData.session) {
-        throw new ServerError("Failed to authenticate");
+        throw new ServerError("Không thể xác thực đăng nhập");
       }
 
       const userProfile = await this.getUserById(authData.user.id);
@@ -188,7 +188,7 @@ export class AuthService {
       if (error instanceof AuthenticationError) {
         throw error;
       }
-      throw new ServerError(`Sign in failed: ${error}`);
+      throw new ServerError(`Đăng nhập thất bại: ${error}`);
     }
   }
 
@@ -204,7 +204,7 @@ export class AuthService {
     const { data, error } = await this.supabase.auth.getSession();
 
     if (error || !data?.session) {
-      throw new AuthenticationError("No active session");
+      throw new AuthenticationError("Không có phiên đăng nhập hoạt động");
     }
 
     return data.session;
@@ -230,7 +230,7 @@ export class AuthService {
     const { data, error } = await this.supabase.auth.refreshSession();
 
     if (error || !data?.session) {
-      throw new AuthenticationError("Failed to refresh session");
+      throw new AuthenticationError("Không thể làm mới phiên đăng nhập");
     }
 
     return data.session;
@@ -240,7 +240,7 @@ export class AuthService {
     const { error } = await this.supabase.auth.signOut();
 
     if (error) {
-      throw new ServerError("Sign out failed");
+      throw new ServerError("Đăng xuất thất bại");
     }
   }
 
@@ -251,7 +251,7 @@ export class AuthService {
     });
 
     if (error) {
-      throw new ServerError(`Failed to confirm user email: ${error.message}`);
+      throw new ServerError(`Không thể xác nhận email người dùng: ${error.message}`);
     }
   }
 

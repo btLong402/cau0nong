@@ -31,7 +31,7 @@ export const PG_ERROR_CODES = {
   // Syntax error
   SYNTAX_ERROR: "42601",
 
-  // Access denied
+  // Bạn không có quyền truy cập
   INSUFFICIENT_PRIVILEGE: "42501",
 
   // Auth
@@ -67,7 +67,7 @@ export function mapSupabaseError(error: any): ApiError {
 
   // Handle null/undefined
   if (!error) {
-    return new ServerError("Unknown error occurred");
+      return new ServerError("Đã xảy ra lỗi không xác định");
   }
 
   // Supabase auth error
@@ -75,17 +75,17 @@ export function mapSupabaseError(error: any): ApiError {
     const desc = error.error_description.toLowerCase();
 
     if (desc.includes("invalid_grant") || desc.includes("invalid credentials")) {
-      return new AuthenticationError("Invalid credentials");
+      return new AuthenticationError("Thông tin đăng nhập không hợp lệ");
     }
 
     if (desc.includes("user not found")) {
-      return new NotFoundError("User");
+      return new NotFoundError("người dùng");
     }
 
     if (desc.includes("invalid email")) {
       return new ApiError(
         ErrorCode.ERR_INVALID_REQUEST,
-        "Invalid email format",
+        "Định dạng email không hợp lệ",
         400
       );
     }
@@ -96,11 +96,11 @@ export function mapSupabaseError(error: any): ApiError {
     const msg = error.message.toLowerCase();
 
     if (msg.includes("invalid jwt")) {
-      return new AuthenticationError("Invalid or expired token");
+      return new AuthenticationError("Token không hợp lệ hoặc đã hết hạn");
     }
 
     if (msg.includes("expired jwt")) {
-      return new AuthenticationError("Token expired");
+      return new AuthenticationError("Token đã hết hạn");
     }
   }
 
@@ -114,14 +114,14 @@ export function mapSupabaseError(error: any): ApiError {
       code === SUPABASE_ERROR_CODES.ROW_NOT_FOUND
     ) {
       return new ConflictError(
-        error.message || "Unique constraint violation"
+        error.message || "Vi phạm ràng buộc duy nhất"
       );
     }
 
     // Foreign key constraint violation
     if (code === PG_ERROR_CODES.FOREIGN_KEY_VIOLATION) {
       return new InvalidStateError(
-        "Cannot perform operation: related records exist or required reference missing"
+        "Không thể thực hiện thao tác: tồn tại dữ liệu liên quan hoặc thiếu tham chiếu bắt buộc"
       );
     }
 
@@ -129,7 +129,7 @@ export function mapSupabaseError(error: any): ApiError {
     if (code === PG_ERROR_CODES.NOT_NULL_VIOLATION) {
       return new ApiError(
         ErrorCode.ERR_INVALID_REQUEST,
-        `Required field missing: ${error.message}`,
+        `Thiếu trường bắt buộc: ${error.message}`,
         400
       );
     }
@@ -139,26 +139,26 @@ export function mapSupabaseError(error: any): ApiError {
       code === PG_ERROR_CODES.UNDEFINED_TABLE ||
       code === PG_ERROR_CODES.UNDEFINED_COLUMN
     ) {
-      return new ServerError("Database schema error");
+      return new ServerError("Lỗi cấu trúc cơ sở dữ liệu");
     }
 
     // Insufficient privilege
     if (code === PG_ERROR_CODES.INSUFFICIENT_PRIVILEGE) {
       return new ApiError(
         ErrorCode.ERR_FORBIDDEN,
-        "Insufficient permissions for this operation",
+        "Không đủ quyền để thực hiện thao tác này",
         403
       );
     }
 
     // Authentication failed
     if (code === PG_ERROR_CODES.AUTHENTICATION_FAILED) {
-      return new AuthenticationError("Database authentication failed");
+      return new AuthenticationError("Xác thực cơ sở dữ liệu thất bại");
     }
   }
 
   // Generic fallback
-  const message = error.message || error.toString() || "Unknown error";
+  const message = error.message || error.toString() || "Lỗi không xác định";
   return new ServerError(message);
 }
 
@@ -181,7 +181,7 @@ export async function handleSupabaseError<T>(
     }
 
     if (!data) {
-      throw new ServerError("No data returned from database");
+        throw new ServerError("Cơ sở dữ liệu không trả về dữ liệu");
     }
 
     return data;

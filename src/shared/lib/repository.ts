@@ -289,7 +289,7 @@ export class Repository<T extends Record<string, any>> {
 
         default:
           return new ServerError(
-            `Database error: ${error.message || "Unknown error"}`
+            `Database error: ${error.message || "Lỗi không xác định"}`
           );
       }
     }

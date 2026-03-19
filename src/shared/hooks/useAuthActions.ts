@@ -48,7 +48,7 @@ export function useAuthActions() {
 
         return { user: data.user, token: data.token };
       } catch (error) {
-        const err = error instanceof Error ? error : new Error('Login failed');
+        const err = error instanceof Error ? error : new Error('Đăng nhập thất bại');
         updateAuthState((prev) => ({
           ...prev,
           loading: false,
@@ -83,7 +83,7 @@ export function useAuthActions() {
 
         return user;
       } catch (error) {
-        const err = error instanceof Error ? error : new Error('Registration failed');
+        const err = error instanceof Error ? error : new Error('Đăng ký thất bại');
         updateAuthState((prev) => ({
           ...prev,
           loading: false,
@@ -99,7 +99,7 @@ export function useAuthActions() {
     try {
       await logoutRequest();
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('Lỗi đăng xuất:', error);
     } finally {
       publishSignedOutState();
     }

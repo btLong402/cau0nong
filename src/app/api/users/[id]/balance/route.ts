@@ -8,7 +8,7 @@ function parseUserId(url: string): string {
   const userId = segments[segments.length - 2];
 
   if (!userId) {
-    throw new ValidationError('User ID is required');
+    throw new ValidationError('Thiếu ID người dùng');
   }
 
   return userId;
@@ -20,7 +20,7 @@ export const PUT = createPutHandler({
     const { amount } = await req.json();
 
     if (amount === undefined || typeof amount !== 'number') {
-      throw new ValidationError('Amount is required and must be a number');
+      throw new ValidationError('Amount là bắt buộc và phải là số');
     }
 
     const usersService = await createUsersService();

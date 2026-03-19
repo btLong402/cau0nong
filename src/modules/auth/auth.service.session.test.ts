@@ -68,7 +68,7 @@ describe("AuthService session", () => {
         data: { session: null },
         error: null,
       });
-      await expect(service.getSession()).rejects.toThrow("No active session");
+      await expect(service.getSession()).rejects.toThrow("Không có phiên đăng nhập hoạt động");
     });
 
     it("getCurrentUser should combine session user and profile data", async () => {
@@ -121,7 +121,7 @@ describe("AuthService session", () => {
         data: { session: null },
         error: { message: "Expired" },
       });
-      await expect(service.refreshSession()).rejects.toThrow("Failed to refresh session");
+      await expect(service.refreshSession()).rejects.toThrow("Không thể làm mới phiên đăng nhập");
     });
 
     it("signOut should clear session", async () => {
@@ -132,7 +132,7 @@ describe("AuthService session", () => {
 
     it("signOut should throw ServerError if it fails", async () => {
       mockSupabase.auth.signOut.mockResolvedValueOnce({ error: { message: "Network failed" } });
-      await expect(service.signOut()).rejects.toThrow("Sign out failed");
+      await expect(service.signOut()).rejects.toThrow("Đăng xuất thất bại");
     });
   });
 

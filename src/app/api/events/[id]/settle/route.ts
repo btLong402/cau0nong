@@ -12,7 +12,7 @@ function extractEventId(req: Request): number {
   const segments = url.pathname.split("/");
   // URL: /api/events/:id/settle → id is at index -2
   const id = Number(segments[segments.length - 2]);
-  if (!id || isNaN(id)) throw new ValidationError("Invalid event ID");
+  if (!id || isNaN(id)) throw new ValidationError("ID sự kiện không hợp lệ");
   return id;
 }
 

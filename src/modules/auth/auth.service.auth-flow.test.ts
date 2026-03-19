@@ -113,7 +113,7 @@ describe("AuthService auth flow", () => {
         error: null,
       });
 
-      await expect(service.signUp(validData)).rejects.toThrow("Failed to create user");
+      await expect(service.signUp(validData)).rejects.toThrow("Không thể tạo người dùng");
     });
 
     it("should console.error if profile creation fails but still return auth user", async () => {
@@ -197,7 +197,7 @@ describe("AuthService auth flow", () => {
         error: null,
       });
 
-      await expect(service.signIn(validData)).rejects.toThrow("Failed to authenticate");
+      await expect(service.signIn(validData)).rejects.toThrow("Không thể xác thực đăng nhập");
     });
 
     it("should wrap unknown errors in ServerError unless it is AuthenticationError", async () => {
@@ -287,7 +287,7 @@ describe("AuthService auth flow", () => {
 
     it("should throw AuthenticationError if phone not found", async () => {
       mockAdminClient.single.mockResolvedValueOnce({ data: null, error: { message: "Not found" } });
-      await expect(service.signInWithPhone("000", "123")).rejects.toThrow("Invalid username/phone or password");
+      await expect(service.signInWithPhone("000", "123")).rejects.toThrow("Tên đăng nhập/số điện thoại hoặc mật khẩu không đúng");
     });
   });
 });

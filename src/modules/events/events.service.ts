@@ -45,15 +45,15 @@ function validateEventData(data: CreateEventData) {
   }
 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(data.event_date)) {
-    throw new ValidationError("event_date must be in format YYYY-MM-DD");
+    throw new ValidationError("event_date phải có định dạng YYYY-MM-DD");
   }
 
   if (data.total_expense < 0) {
-    throw new ValidationError("total_expense must be >= 0");
+    throw new ValidationError("total_expense phải lớn hơn hoặc bằng 0");
   }
 
   if (data.total_support < 0) {
-    throw new ValidationError("total_support must be >= 0");
+    throw new ValidationError("total_support phải lớn hơn hoặc bằng 0");
   }
 }
 
@@ -67,10 +67,10 @@ function normalizeFilters(filters?: EventListFilters) {
   const sortOrder = filters?.sortOrder || EVENT_DEFAULTS.sortOrder;
 
   if (!VALID_SORT_FIELDS.includes(sortBy as any)) {
-    throw new ValidationError("Invalid sortBy field");
+    throw new ValidationError("Trường sortBy không hợp lệ");
   }
   if (!VALID_SORT_ORDERS.includes(sortOrder as any)) {
-    throw new ValidationError("sortOrder must be asc or desc");
+    throw new ValidationError("sortOrder phải là asc hoặc desc");
   }
 
   return { page, limit, sortBy, sortOrder, search: filters?.search?.trim() };
@@ -107,7 +107,7 @@ export class EventsService {
    */
   async getEventWithParticipants(id: number): Promise<EventWithParticipants> {
     const event = await this.eventsRepo.findEventById(id);
-    if (!event) throw new NotFoundError("Event");
+    if (!event) throw new NotFoundError("sự kiện");
 
     const participants =
       await this.participantsRepo.findByEventWithUsers(id);
@@ -136,7 +136,7 @@ export class EventsService {
    */
   async updateEvent(id: number, data: UpdateEventData) {
     const event = await this.eventsRepo.findEventById(id);
-    if (!event) throw new NotFoundError("Event");
+    if (!event) throw new NotFoundError("sự kiện");
 
     if (data.event_name !== undefined) {
       if (
@@ -149,7 +149,7 @@ export class EventsService {
       }
     }
     if (data.event_date && !/^\d{4}-\d{2}-\d{2}$/.test(data.event_date)) {
-      throw new ValidationError("event_date must be in format YYYY-MM-DD");
+      throw new ValidationError("event_date phải có định dạng YYYY-MM-DD");
     }
 
     return this.eventsRepo.updateEvent(id, data);
@@ -160,7 +160,7 @@ export class EventsService {
    */
   async deleteEvent(id: number) {
     const event = await this.eventsRepo.findEventById(id);
-    if (!event) throw new NotFoundError("Event");
+    if (!event) throw new NotFoundError("sự kiện");
 
     const participants = await this.participantsRepo.findByEvent(id);
     const hasPaid = participants.some((p) => p.is_paid);
@@ -178,10 +178,10 @@ export class EventsService {
    */
   async addParticipants(eventId: number, userIds: string[]) {
     const event = await this.eventsRepo.findEventById(eventId);
-    if (!event) throw new NotFoundError("Event");
+    if (!event) throw new NotFoundError("sự kiện");
 
     if (!userIds.length) {
-      throw new ValidationError("At least one userId is required");
+      throw new ValidationError("Cần ít nhất một userId");
     }
 
     return this.participantsRepo.bulkAdd(eventId, userIds);
@@ -194,9 +194,9 @@ export class EventsService {
     const participants = await this.participantsRepo.findByEvent(eventId);
     const participant = participants.find((p) => p.user_id === userId);
 
-    if (!participant) throw new NotFoundError("Participant");
+    if (!participant) throw new NotFoundError("người tham gia");
     if (participant.is_paid) {
-      throw new InvalidStateError("Cannot remove a paid participant");
+      throw new InvalidStateError("Không thể xóa người tham gia đã thanh toán");
     }
 
     return this.participantsRepo.removeParticipant(eventId, userId);
@@ -209,11 +209,11 @@ export class EventsService {
    */
   async settleEvent(eventId: number) {
     const event = await this.eventsRepo.findEventById(eventId);
-    if (!event) throw new NotFoundError("Event");
+    if (!event) throw new NotFoundError("sự kiện");
 
     const participantCount = await this.participantsRepo.countByEvent(eventId);
     if (participantCount === 0) {
-      throw new InvalidStateError("Cannot settle event with no participants");
+      throw new InvalidStateError("Không thể chốt sự kiện khi chưa có người tham gia");
     }
 
     const contribution = calculateEventContributionPerPerson(
@@ -243,14 +243,14 @@ export class EventsService {
    */
   async markParticipantPaid(eventId: number, userId: string) {
     const event = await this.eventsRepo.findEventById(eventId);
-    if (!event) throw new NotFoundError("Event");
+    if (!event) throw new NotFoundError("sự kiện");
 
     const participants = await this.participantsRepo.findByEvent(eventId);
     const participant = participants.find((p) => p.user_id === userId);
-    if (!participant) throw new NotFoundError("Participant");
+    if (!participant) throw new NotFoundError("người tham gia");
 
     if (participant.is_paid) {
-      throw new ConflictError("Participant is already marked as paid");
+      throw new ConflictError("Người tham gia đã được đánh dấu đã thanh toán");
     }
 
     return this.participantsRepo.markPaid(eventId, userId);

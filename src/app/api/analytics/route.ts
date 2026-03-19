@@ -15,7 +15,7 @@ export const GET = createGetHandler({
     const type = url.searchParams.get("type") as AnalyticsType;
 
     if (!type) {
-      throw new ValidationError("type query parameter is required");
+      throw new ValidationError("Thiếu tham số truy vấn type");
     }
 
     const service = await createAnalyticsService();

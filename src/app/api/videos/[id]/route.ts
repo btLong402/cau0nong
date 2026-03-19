@@ -14,7 +14,7 @@ export const PUT = createPutHandler({
   handler: async (req, context) => {
     const { id } = await context.params;
     const videoId = Number(id);
-    if (!videoId || isNaN(videoId)) throw new ValidationError("Invalid video ID");
+    if (!videoId || isNaN(videoId)) throw new ValidationError("ID video không hợp lệ");
 
     const body = await req.json();
     const service = await createVideosService();
@@ -36,7 +36,7 @@ export const DELETE = createDeleteHandler({
   handler: async (req, context) => {
     const { id } = await context.params;
     const videoId = Number(id);
-    if (!videoId || isNaN(videoId)) throw new ValidationError("Invalid video ID");
+    if (!videoId || isNaN(videoId)) throw new ValidationError("ID video không hợp lệ");
 
     const service = await createVideosService();
     await service.deleteVideo(videoId);

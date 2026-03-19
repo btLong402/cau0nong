@@ -9,7 +9,7 @@ function parseMonthId(url: string): number {
   const id = Number(segments[segments.length - 2]);
 
   if (!Number.isInteger(id) || id <= 0) {
-    throw new ValidationError('Month ID is required');
+    throw new ValidationError('Thiếu ID tháng');
   }
 
   return id;
@@ -35,11 +35,11 @@ export const PUT = createPutHandler({
     const month = await monthsService.getMonth(monthId);
 
     if (!month) {
-      throw new NotFoundError('Month not found');
+      throw new NotFoundError('Không tìm thấy tháng');
     }
 
     if (month.status === 'closed') {
-      throw new InvalidStateError('Month is already closed');
+      throw new InvalidStateError('Tháng đã được đóng');
     }
 
     const closedMonth = await monthsService.closeMonth(monthId);

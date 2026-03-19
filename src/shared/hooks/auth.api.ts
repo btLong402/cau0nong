@@ -30,7 +30,7 @@ export async function loginRequest(identifier: string, password: string): Promis
 
   const payload = await response.json();
   if (!response.ok) {
-    throw new Error(asErrorMessage(payload, 'Login failed'));
+    throw new Error(asErrorMessage(payload, 'Đăng nhập thất bại'));
   }
 
   return {
@@ -50,7 +50,7 @@ export async function registerRequest(data: RegisterPayload): Promise<User> {
 
   const payload = await response.json();
   if (!response.ok) {
-    throw new Error(asErrorMessage(payload, 'Registration failed'));
+    throw new Error(asErrorMessage(payload, 'Đăng ký thất bại'));
   }
 
   return payload.data?.user as User;
@@ -68,7 +68,7 @@ export async function refreshTokenRequest(): Promise<LoginResponseData> {
 
   const payload = await response.json();
   if (!response.ok) {
-    throw new Error('Token refresh failed');
+    throw new Error('Làm mới phiên đăng nhập thất bại');
   }
 
   return {

@@ -97,7 +97,7 @@ export function useUpdateMember() {
         return data.user;
       } catch (error) {
         const err =
-          error instanceof Error ? error : new Error('Failed to update member');
+          error instanceof Error ? error : new Error('Không thể cập nhật thành viên');
         setState({ loading: false, error: err });
         throw err;
       }
@@ -135,7 +135,7 @@ export function useUpdateMemberBalance() {
         const err =
           error instanceof Error
             ? error
-            : new Error('Failed to update balance');
+            : new Error('Không thể cập nhật số dư');
         setState({ loading: false, error: err });
         throw err;
       }

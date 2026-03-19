@@ -62,7 +62,7 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error?.message || 'Registration failed');
+        setError(data.error?.message || 'Đăng ký thất bại');
         return;
       }
 

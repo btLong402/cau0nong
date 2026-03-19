@@ -13,7 +13,7 @@ function extractEventId(req: Request): number {
   const segments = url.pathname.split("/");
   // URL: /api/events/:id/participants → id is at index -2
   const id = Number(segments[segments.length - 2]);
-  if (!id || isNaN(id)) throw new ValidationError("Invalid event ID");
+  if (!id || isNaN(id)) throw new ValidationError("ID sự kiện không hợp lệ");
   return id;
 }
 
@@ -34,7 +34,7 @@ export const POST = createPostHandler({
     const body = await req.json();
 
     if (!body.userIds || !Array.isArray(body.userIds) || !body.userIds.length) {
-      throw new ValidationError("userIds must be a non-empty array");
+      throw new ValidationError("userIds phải là mảng không rỗng");
     }
 
     const service = await createEventsService();

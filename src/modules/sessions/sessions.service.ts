@@ -39,12 +39,12 @@ export class SessionsService {
   async createSession(data: CreateSessionData): Promise<Session> {
     // Validate date format
     if (!/^\d{4}-\d{2}-\d{2}$/.test(data.session_date)) {
-      throw new Error("session_date must be in format YYYY-MM-DD");
+      throw new Error("session_date phải có định dạng YYYY-MM-DD");
     }
 
     // Validate court expense
     if (data.court_expense_amount <= 0) {
-      throw new Error("court_expense_amount must be greater than 0");
+      throw new Error("court_expense_amount phải lớn hơn 0");
     }
 
     return await this.sessionsRepo.create({
@@ -66,7 +66,7 @@ export class SessionsService {
     const session = await this.sessionsRepo.findById(sessionId);
 
     if (!session) {
-      throw new NotFoundError("Session");
+      throw new NotFoundError("buổi tập");
     }
 
     return session;
@@ -89,7 +89,7 @@ export class SessionsService {
     const session = await this.getSession(sessionId);
 
     if (data.court_expense_amount && data.court_expense_amount <= 0) {
-      throw new Error("court_expense_amount must be greater than 0");
+      throw new Error("court_expense_amount phải lớn hơn 0");
     }
 
     return await this.sessionsRepo.updateSession(sessionId, {

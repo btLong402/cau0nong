@@ -142,7 +142,7 @@ export function useGenerateMonthSettlements(monthId: number | null) {
   const generate = useCallback(
     async (force: boolean = false) => {
       if (!monthId) {
-        throw new Error('monthId is required to generate settlements');
+        throw new Error('Cần monthId để tạo quyết toán');
       }
 
       setState({ data: null, loading: true, error: null });
@@ -160,14 +160,14 @@ export function useGenerateMonthSettlements(monthId: number | null) {
         const payload = await response.json();
 
         if (!response.ok) {
-          throw new Error(payload.error?.message || 'Failed to generate settlements');
+          throw new Error(payload.error?.message || 'Không thể tạo quyết toán');
         }
 
         const summary: GenerateSummary | null = payload.data?.summary || null;
         setState({ data: summary, loading: false, error: null });
         return summary;
       } catch (error) {
-        const err = error instanceof Error ? error : new Error('Failed to generate settlements');
+        const err = error instanceof Error ? error : new Error('Không thể tạo quyết toán');
         setState({ data: null, loading: false, error: err });
         throw err;
       }
@@ -207,7 +207,7 @@ export function useMarkSettlementPaid() {
 
   const markPaid = useCallback(async (settlementId: number, paidAmount?: number) => {
     if (!settlementId || settlementId <= 0) {
-      throw new Error('settlementId must be a positive integer');
+      throw new Error('settlementId phải là số nguyên dương');
     }
 
     setState({ data: null, loading: true, error: null });
@@ -227,14 +227,14 @@ export function useMarkSettlementPaid() {
       const payload = await response.json();
 
       if (!response.ok) {
-        throw new Error(payload.error?.message || 'Failed to mark settlement as paid');
+        throw new Error(payload.error?.message || 'Không thể đánh dấu khoản quyết toán đã thanh toán');
       }
 
       const settlement: MonthlySetting | null = payload.data?.settlement || null;
       setState({ data: settlement, loading: false, error: null });
       return settlement;
     } catch (error) {
-      const err = error instanceof Error ? error : new Error('Failed to mark settlement as paid');
+      const err = error instanceof Error ? error : new Error('Không thể đánh dấu khoản quyết toán đã thanh toán');
       setState({ data: null, loading: false, error: err });
       throw err;
     }

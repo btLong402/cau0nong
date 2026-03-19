@@ -24,7 +24,7 @@ function normalizeQuery(filters?: PaymentListFilters) {
   const status = filters?.status || "all";
 
   if (!["all", "paid", "unpaid"].includes(status)) {
-    throw new ValidationError("status must be one of: all, paid, unpaid");
+    throw new ValidationError("status phải là một trong: all, paid, unpaid");
   }
 
   return {
@@ -59,7 +59,7 @@ export class PaymentsService {
 
   async createOrReuseSettlementVietQR(settlementId: number): Promise<GeneratedVietQR> {
     if (!Number.isInteger(settlementId) || settlementId <= 0) {
-      throw new ValidationError("settlementId must be a positive integer");
+      throw new ValidationError("settlementId phải là số nguyên dương");
     }
 
     const settlementsService = await createSettlementsService();
@@ -67,7 +67,7 @@ export class PaymentsService {
 
     const settlement = await settlementsService.getById(settlementId);
     if (settlement.is_paid) {
-      throw new InvalidStateError("Cannot generate VietQR for a paid settlement");
+      throw new InvalidStateError("Không thể tạo VietQR cho khoản đã thanh toán");
     }
 
     const month = await monthsService.getMonth(settlement.month_id);
@@ -126,7 +126,7 @@ export class PaymentsService {
 
   async listByMonth(monthId: number, filters?: PaymentListFilters): Promise<PaymentListResult> {
     if (!Number.isInteger(monthId) || monthId <= 0) {
-      throw new ValidationError("monthId must be a positive integer");
+      throw new ValidationError("monthId phải là số nguyên dương");
     }
 
     const query = normalizeQuery(filters);

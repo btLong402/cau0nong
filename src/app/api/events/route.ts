@@ -32,10 +32,10 @@ export const POST = createPostHandler({
     const body = await req.json();
 
     if (!body.event_name) {
-      throw new ValidationError("event_name is required");
+      throw new ValidationError("Thiếu event_name");
     }
     if (!body.event_date) {
-      throw new ValidationError("event_date is required");
+      throw new ValidationError("Thiếu event_date");
     }
 
     const service = await createEventsService();

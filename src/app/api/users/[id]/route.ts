@@ -7,7 +7,7 @@ export const GET = createGetHandler({
   requireRole: ['admin'],
   handler: async (req, context) => {
     const { id: userId } = await context.params;
-    if (!userId) throw new ValidationError('User ID is required');
+    if (!userId) throw new ValidationError('Thiếu ID người dùng');
 
     const usersService = await createUsersService();
     const user = await usersService.getMember(userId);
@@ -21,7 +21,7 @@ export const PUT = createPutHandler({
   requireRole: ['admin'],
   handler: async (req, context) => {
     const { id: userId } = await context.params;
-    if (!userId) throw new ValidationError('User ID is required');
+    if (!userId) throw new ValidationError('Thiếu ID người dùng');
 
     const data = await req.json();
     const usersService = await createUsersService();

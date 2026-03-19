@@ -8,7 +8,7 @@ function parseMonthId(url: string): number {
   const monthId = Number(segments[segments.length - 2]);
 
   if (!Number.isInteger(monthId) || monthId <= 0) {
-    throw new ValidationError("Invalid month ID");
+    throw new ValidationError("ID tháng không hợp lệ");
   }
 
   return monthId;

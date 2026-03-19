@@ -8,7 +8,7 @@ function parseSessionId(url: string): number {
   const sessionId = Number(segments[segments.length - 2]);
 
   if (!Number.isInteger(sessionId) || sessionId <= 0) {
-    throw new ValidationError('Session ID is required');
+    throw new ValidationError('Thiếu ID buổi tập');
   }
 
   return sessionId;
@@ -20,7 +20,7 @@ export const POST = createPostHandler({
     const { records } = await req.json();
 
     if (!Array.isArray(records) || records.length === 0) {
-      throw new ValidationError('records must be a non-empty array');
+      throw new ValidationError('records phải là mảng không rỗng');
     }
 
     const sessionsService = await createSessionsService();

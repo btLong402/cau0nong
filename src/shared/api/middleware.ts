@@ -131,7 +131,7 @@ export async function withValidationMiddleware<T>(
     if (!validation.isValid) {
       const error = new ApiError(
         ErrorCode.ERR_VALIDATION,
-        "Request validation failed",
+        "Dữ liệu yêu cầu không hợp lệ",
         400,
         validation.errors,
         traceId
@@ -176,7 +176,7 @@ export async function withErrorHandlingMiddleware(
     }
 
     console.error(`[${traceId}] Unexpected error:`, error);
-    const serverError = new ServerError("Internal server error", traceId);
+    const serverError = new ServerError("Lỗi máy chủ nội bộ", traceId);
     return NextResponse.json(
       errorResponse(serverError.code, serverError.message, traceId),
       { status: 500 }

@@ -76,7 +76,7 @@ export function useCreateMonth() {
         return data.month;
       } catch (error) {
         const err =
-          error instanceof Error ? error : new Error('Failed to create month');
+          error instanceof Error ? error : new Error('Không thể tạo tháng');
         setState({ loading: false, error: err });
         throw err;
       }
@@ -112,7 +112,7 @@ export function useUpdateMonth() {
         return data.month;
       } catch (error) {
         const err =
-          error instanceof Error ? error : new Error('Failed to update month');
+          error instanceof Error ? error : new Error('Không thể cập nhật tháng');
         setState({ loading: false, error: err });
         throw err;
       }
@@ -146,7 +146,7 @@ export function useCloseMonth() {
       return data.month;
     } catch (error) {
       const err =
-        error instanceof Error ? error : new Error('Failed to close month');
+        error instanceof Error ? error : new Error('Không thể đóng tháng');
       setState({ loading: false, error: err });
       throw err;
     }

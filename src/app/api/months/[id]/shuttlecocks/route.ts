@@ -7,7 +7,7 @@ export const GET = createGetHandler({
   handler: async (req, context) => {
     const { id } = await context.params;
     const monthId = Number(id);
-    if (!monthId || isNaN(monthId)) throw new ValidationError("Invalid month ID");
+    if (!monthId || isNaN(monthId)) throw new ValidationError("ID tháng không hợp lệ");
 
     const service = await createShuttlecocksService();
     const items = await service.listByMonth(monthId);
@@ -21,12 +21,12 @@ export const POST = createPostHandler({
   handler: async (req, context) => {
     const { id } = await context.params;
     const monthId = Number(id);
-    if (!monthId || isNaN(monthId)) throw new ValidationError("Invalid month ID");
+    if (!monthId || isNaN(monthId)) throw new ValidationError("ID tháng không hợp lệ");
 
     const payload = await req.json();
 
     if (!payload.purchase_date || !payload.quantity || !payload.unit_price || !payload.buyer_user_id) {
-      throw new ValidationError("Missing required fields");
+      throw new ValidationError("Thiếu các trường bắt buộc");
     }
 
     const service = await createShuttlecocksService();

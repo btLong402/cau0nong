@@ -63,7 +63,7 @@ export function useMutation<T, V = unknown>(
         options?.onSuccess?.(result);
         return result;
       } catch (error) {
-        const err = error instanceof Error ? error : new Error('Unknown error');
+        const err = error instanceof Error ? error : new Error('Lỗi không xác định');
         setState({
           data: null,
           loading: false,

@@ -79,7 +79,7 @@ export class UsersService {
     const user = await this.repository.findById(userId);
 
     if (!user) {
-      throw new NotFoundError("Member");
+      throw new NotFoundError("thành viên");
     }
 
     return user;
@@ -116,7 +116,7 @@ export class UsersService {
     if (data.email && data.email !== user.email) {
       const existing = await this.repository.findByEmail(data.email);
       if (existing) {
-        throw new ConflictError("Email already in use");
+        throw new ConflictError("Email đã được sử dụng");
       }
     }
 
@@ -124,7 +124,7 @@ export class UsersService {
     if (data.phone && data.phone !== user.phone) {
       const existing = await this.repository.findByPhone(data.phone);
       if (existing) {
-        throw new ConflictError("Phone already in use");
+        throw new ConflictError("Số điện thoại đã được sử dụng");
       }
     }
 

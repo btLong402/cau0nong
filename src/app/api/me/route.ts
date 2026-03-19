@@ -25,7 +25,7 @@
  *   "success": false,
  *   "error": {
  *     "code": "ERR_UNAUTHENTICATED",
- *     "message": "Authentication required"
+ *     "message": "Yêu cầu đăng nhập"
  *   },
  *   "traceId": "..."
  * }

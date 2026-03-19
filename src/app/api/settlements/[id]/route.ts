@@ -8,7 +8,7 @@ function parseSettlementId(url: string): number {
   const id = Number(segments[segments.length - 1]);
 
   if (!Number.isInteger(id) || id <= 0) {
-    throw new ValidationError("Invalid settlement ID");
+    throw new ValidationError("ID quyết toán không hợp lệ");
   }
 
   return id;

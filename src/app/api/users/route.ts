@@ -11,7 +11,7 @@ export const GET = createGetHandler({
     const limit = parseInt(url.searchParams.get('limit') || '20');
 
     if (page < 1 || limit < 1) {
-      throw new ValidationError('Invalid pagination parameters');
+      throw new ValidationError('Tham số phân trang không hợp lệ');
     }
 
     const usersService = await createUsersService();
@@ -28,11 +28,11 @@ export const POST = createPostHandler({
     const { username, email, phone, name, password, role } = await req.json();
 
     if (!email || !phone || !name || !username) {
-      throw new ValidationError('Missing required fields: username, email, phone, name');
+      throw new ValidationError('Thiếu các trường bắt buộc: username, email, phone, name');
     }
 
     if (!/^[a-zA-Z0-9_]{4,30}$/.test(username)) {
-      throw new ValidationError('Username must be 4-30 characters and only include letters, numbers, underscore');
+      throw new ValidationError('Username phải dài 4-30 ký tự và chỉ gồm chữ cái, số, dấu gạch dưới');
     }
 
     const usersService = await createUsersService();

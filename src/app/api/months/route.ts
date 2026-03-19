@@ -19,7 +19,7 @@ export const POST = createPostHandler({
     const { month_year, status } = await req.json();
 
     if (!month_year) {
-      throw new ValidationError('month_year is required (format: YYYY-MM-01)');
+      throw new ValidationError('Thiếu month_year (định dạng: YYYY-MM-01)');
     }
 
     const monthsService = await createMonthsService();

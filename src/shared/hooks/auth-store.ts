@@ -141,7 +141,7 @@ export async function syncCurrentUser(force = false): Promise<void> {
         user: null,
         token: null,
         loading: false,
-        error: error instanceof Error ? error : new Error("Failed to fetch user"),
+        error: error instanceof Error ? error : new Error("Không thể tải thông tin người dùng"),
       });
       authInitialized = true;
     } finally {
