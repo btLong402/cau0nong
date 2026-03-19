@@ -188,10 +188,27 @@ export function useMyAccountDashboard(): UseMyAccountDashboardResult {
         latestAvatarUrl = await uploadMyAvatar(avatarFile);
       }
 
-      const updatedUser = await updateMyProfile({
-        name: trimmedName,
-        phone: trimmedPhone,
-      });
+      const profileUpdates: {
+        name?: string;
+        phone?: string;
+      } = {};
+
+      if (trimmedName !== (data.profile.name || "").trim()) {
+        profileUpdates.name = trimmedName;
+      }
+
+      if (trimmedPhone !== (data.profile.phone || "").trim()) {
+        profileUpdates.phone = trimmedPhone;
+      }
+
+      const hasProfileUpdates = Object.keys(profileUpdates).length > 0;
+      const updatedUser = hasProfileUpdates
+        ? await updateMyProfile(profileUpdates)
+        : {
+            name: data.profile.name,
+            phone: data.profile.phone,
+            email: data.profile.email,
+          };
 
       setData((prev) => {
         if (!prev || !prev.profile) {

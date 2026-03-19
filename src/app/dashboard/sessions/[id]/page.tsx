@@ -198,36 +198,41 @@ export default function AttendancePage({ params }: { params: Promise<{ id: strin
 
         {/* User list */}
         <div className="divide-y divide-[var(--surface-border)] overflow-hidden rounded-lg border border-[var(--surface-border)]">
-          {users.map((user) => (
-            <div 
-              key={user.id} 
-              onClick={() => toggleAttendance(user.id)}
-              className={`flex items-center justify-between p-3.5 transition-colors ${isEditable ? 'cursor-pointer hover:bg-[var(--surface-hover)]' : ''}`}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold transition-colors ${
-                  attendance[user.id] ? 'bg-[var(--primary-soft)] text-[var(--primary)]' : 'bg-[var(--surface-hover)] text-[var(--muted)]'
+          {users.map((user) => {
+            const displayName = user.name?.trim() || 'Chưa cập nhật';
+            const displayInitial = displayName.charAt(0).toUpperCase();
+
+            return (
+              <div 
+                key={user.id} 
+                onClick={() => toggleAttendance(user.id)}
+                className={`flex items-center justify-between p-3.5 transition-colors ${isEditable ? 'cursor-pointer hover:bg-[var(--surface-hover)]' : ''}`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold transition-colors ${
+                    attendance[user.id] ? 'bg-[var(--primary-soft)] text-[var(--primary)]' : 'bg-[var(--surface-hover)] text-[var(--muted)]'
+                  }`}>
+                    {displayInitial}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-[var(--foreground)]">{displayName}</p>
+                    <p className="text-xs text-[var(--muted)]">{user.email}</p>
+                  </div>
+                </div>
+                <div className={`flex h-6 w-6 items-center justify-center rounded-md border transition-colors ${
+                  attendance[user.id] 
+                    ? 'bg-[var(--primary)] border-[var(--primary)] text-white' 
+                    : 'bg-white border-[var(--surface-border-strong)]'
                 }`}>
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-[var(--foreground)]">{user.name}</p>
-                  <p className="text-xs text-[var(--muted)]">{user.email}</p>
+                  {attendance[user.id] && (
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
                 </div>
               </div>
-              <div className={`flex h-6 w-6 items-center justify-center rounded-md border transition-colors ${
-                attendance[user.id] 
-                  ? 'bg-[var(--primary)] border-[var(--primary)] text-white' 
-                  : 'bg-white border-[var(--surface-border-strong)]'
-              }`}>
-                {attendance[user.id] && (
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Actions */}

@@ -57,8 +57,8 @@ export async function uploadMyAvatar(file: File): Promise<string | null> {
 }
 
 export async function updateMyProfile(input: {
-  name: string;
-  phone: string;
+  name?: string;
+  phone?: string;
 }): Promise<{ name: string; phone: string; email?: string }> {
   const response = await fetch("/api/me", {
     method: "PUT",

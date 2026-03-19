@@ -30,6 +30,10 @@ interface MembersResponse {
   hasMore: boolean;
 }
 
+interface MemberResponse {
+  user: Member;
+}
+
 interface UseMembersOptions {
   enabled?: boolean;
 }
@@ -58,12 +62,12 @@ export function useMembers(
 
 export function useMember(memberId: string) {
   const url = `/api/users/${memberId}`;
-  const { data, loading, error, refetch } = useFetch<Member>(url, {
+  const { data, loading, error, refetch } = useFetch<MemberResponse | Member>(url, {
     skip: !memberId,
   });
 
   return {
-    member: data || null,
+    member: (data && 'user' in data ? data.user : data) || null,
     loading,
     error,
     refetch,

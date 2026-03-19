@@ -42,7 +42,11 @@ export function MyAccountProfileCard({
     <div className="surface-card p-5">
       <div className="flex items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-4">
-          <UserAvatar profile={profile} size="md" />
+          <UserAvatar
+            profile={profile}
+            size="md"
+            srcOverride={isEditing ? avatarPreviewUrl : null}
+          />
           <div>
             <h2 className="text-lg font-bold text-[var(--foreground)]">{profile.name}</h2>
             <p className="text-sm text-[var(--muted)]">

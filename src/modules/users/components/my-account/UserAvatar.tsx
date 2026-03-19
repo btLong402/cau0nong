@@ -20,12 +20,14 @@ export function UserAvatar({
 }: UserAvatarProps) {
   const src = srcOverride ?? profile.avatar_url;
   const sizeClass = avatarClassMap[size];
+  const displayName = profile.name?.trim() || "Người dùng";
+  const displayInitial = displayName.charAt(0).toUpperCase();
 
   if (src) {
     return (
       <img
         src={src}
-        alt={alt || `Avatar của ${profile.name}`}
+        alt={alt || `Avatar của ${displayName}`}
         className={`${sizeClass} rounded-full object-cover border border-[var(--surface-border)]`}
         loading="lazy"
       />
@@ -36,7 +38,7 @@ export function UserAvatar({
     <div
       className={`flex ${sizeClass} items-center justify-center rounded-full bg-[var(--primary-soft)] font-bold text-[var(--primary)]`}
     >
-      {profile.name.charAt(0).toUpperCase()}
+      {displayInitial}
     </div>
   );
 }

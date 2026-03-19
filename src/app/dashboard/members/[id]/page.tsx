@@ -99,6 +99,13 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
     );
   }
 
+  const displayName = member.name?.trim() || 'Chưa cập nhật';
+  const displayInitial = displayName.charAt(0).toUpperCase();
+  const displayUsername = member.username?.trim() || '--';
+  const displayEmail = member.email?.trim() || '--';
+  const displayPhone = member.phone?.trim() || '--';
+  const displayBalance = typeof member.balance === 'number' ? member.balance : 0;
+
   return (
     <div className="space-y-5 max-w-5xl mobile-bottom-pad">
       <div className="page-header">
@@ -129,12 +136,12 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--primary)] text-2xl font-bold text-white">
-              {member.name.charAt(0).toUpperCase()}
+              {displayInitial}
             </div>
             <div>
-              <h2 className="text-xl font-bold text-[var(--foreground)]">{member.name}</h2>
-              <p className="text-sm text-[var(--muted)]">@{member.username} • {member.email}</p>
-              <p className="text-sm text-[var(--muted)]">{member.phone}</p>
+              <h2 className="text-xl font-bold text-[var(--foreground)]">{displayName}</h2>
+              <p className="text-sm text-[var(--muted)]">@{displayUsername} • {displayEmail}</p>
+              <p className="text-sm text-[var(--muted)]">{displayPhone}</p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -150,8 +157,8 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <article className="stat-card">
           <p className="stat-label">Số dư hiện tại</p>
-          <p className={`stat-value ${member.balance >= 0 ? 'text-[var(--accent)]' : 'text-[var(--danger)]'}`}>
-            {member.balance.toLocaleString('vi-VN')} đ
+          <p className={`stat-value ${displayBalance >= 0 ? 'text-[var(--accent)]' : 'text-[var(--danger)]'}`}>
+            {displayBalance.toLocaleString('vi-VN')} đ
           </p>
         </article>
         <article className="stat-card">
@@ -171,15 +178,15 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
           <dl className="space-y-3">
             <div className="flex flex-col rounded-lg border border-[var(--surface-border)] p-3 sm:flex-row sm:items-center sm:justify-between">
               <dt className="text-xs font-medium uppercase text-[var(--muted)]">Họ tên</dt>
-              <dd className="text-sm font-semibold text-[var(--foreground)]">{member.name}</dd>
+              <dd className="text-sm font-semibold text-[var(--foreground)]">{displayName}</dd>
             </div>
             <div className="flex flex-col rounded-lg border border-[var(--surface-border)] p-3 sm:flex-row sm:items-center sm:justify-between">
               <dt className="text-xs font-medium uppercase text-[var(--muted)]">Email</dt>
-              <dd className="text-sm font-semibold text-[var(--foreground)]">{member.email}</dd>
+              <dd className="text-sm font-semibold text-[var(--foreground)]">{displayEmail}</dd>
             </div>
             <div className="flex flex-col rounded-lg border border-[var(--surface-border)] p-3 sm:flex-row sm:items-center sm:justify-between">
               <dt className="text-xs font-medium uppercase text-[var(--muted)]">Điện thoại</dt>
-              <dd className="text-sm font-semibold text-[var(--foreground)]">{member.phone}</dd>
+              <dd className="text-sm font-semibold text-[var(--foreground)]">{displayPhone}</dd>
             </div>
             <div className="flex flex-col rounded-lg border border-[var(--surface-border)] p-3 sm:flex-row sm:items-center sm:justify-between">
               <dt className="text-xs font-medium uppercase text-[var(--muted)]">Mã thành viên</dt>
