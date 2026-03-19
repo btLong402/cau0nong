@@ -237,7 +237,7 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
           </dl>
         </section>
 
-        <aside className="surface-card-teal p-5">
+        {/* <aside className="surface-card-teal p-5">
           <h3 className="text-base font-semibold text-[var(--foreground)]">Lưu ý</h3>
           <div className="mt-4 space-y-3 rounded-lg border border-[var(--surface-border)] bg-white/70 p-3 text-sm text-[var(--muted)]">
             <p>Trang này chỉ dùng để xem thông tin thành viên.</p>
@@ -246,7 +246,7 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
           <Link href="/dashboard/my-account" className="btn-primary mt-4 w-full">
             Đến trang tài khoản cá nhân
           </Link>
-        </aside>
+        </aside> */}
       </div>
     </div>
   );
