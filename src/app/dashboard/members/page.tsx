@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/shared/hooks';
 
 interface User {
@@ -230,9 +231,9 @@ export default function MembersPage() {
                           </button>
                         </>
                       )}
-                      <a href={`/dashboard/members/${member.id}`} className="text-sm font-medium text-[var(--primary)] hover:text-[var(--primary-hover)] cursor-pointer">
+                      <Link href={`/dashboard/members/${member.id}`} className="text-sm font-medium text-[var(--primary)] hover:text-[var(--primary-hover)] cursor-pointer">
                         Chi tiết
-                      </a>
+                      </Link>
                     </div>
                   </td>
                 </tr>
@@ -245,7 +246,7 @@ export default function MembersPage() {
       {/* Mobile Card List */}
       <div className="card-list lg:hidden">
         {members.map((member) => (
-          <a key={member.id} href={`/dashboard/members/${member.id}`} className="card-list-item cursor-pointer">
+          <Link key={member.id} href={`/dashboard/members/${member.id}`} className="card-list-item cursor-pointer">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--primary-soft)] text-sm font-bold text-[var(--primary)]">
                 {member.name.charAt(0).toUpperCase()}
@@ -271,7 +272,7 @@ export default function MembersPage() {
                 </span>
               </div>
             </div>
-          </a>
+          </Link>
         ))}
       </div>
 

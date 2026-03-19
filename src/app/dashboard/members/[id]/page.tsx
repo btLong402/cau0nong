@@ -1,8 +1,7 @@
 'use client';
 
-import { FormEvent, use, useEffect, useMemo, useState } from 'react';
+import { use, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/shared/hooks';
 
 interface MemberDetail {
   id: string;
@@ -18,34 +17,13 @@ interface MemberDetail {
   updated_at: string;
 }
 
-interface MemberUpdateForm {
-  name: string;
-  email: string;
-  phone: string;
-}
-
 export default function MemberDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: memberId } = use(params);
-  const { user: authUser } = useAuth();
 
   const [member, setMember] = useState<MemberDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
-
-  const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isProcessingApproval, setIsProcessingApproval] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
-
-  const [formData, setFormData] = useState<MemberUpdateForm>({
-    name: '',
-    email: '',
-    phone: '',
-  });
-
-  const isAdmin = authUser?.role === 'admin';
 
   const statusTone = useMemo(() => {
     if (!member) return 'badge-neutral';
@@ -101,11 +79,6 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
       }
 
       setMember(payload);
-      setFormData({
-        name: payload.name || '',
-        email: payload.email || '',
-        phone: payload.phone || '',
-      });
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Không thể tải thông tin thành viên';
@@ -118,91 +91,6 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
   useEffect(() => {
     loadMember();
   }, [memberId]);
-
-  const handleSaveProfile = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!member) return;
-
-    setIsSaving(true);
-    setActionError(null);
-    setActionSuccess(null);
-
-    try {
-      const response = await fetch(`/api/users/${member.id}`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result?.error?.message || 'Cập nhật thành viên thất bại');
-      }
-
-      const updated = result?.data?.user as MemberDetail | undefined;
-      if (!updated) {
-        throw new Error('Không nhận được dữ liệu cập nhật hợp lệ');
-      }
-
-      setMember(updated);
-      setIsEditing(false);
-      setActionSuccess('Đã lưu thông tin thành viên thành công.');
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Không thể cập nhật thông tin thành viên';
-      setActionError(message);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleApprovalAction = async (action: 'approve' | 'reject') => {
-    if (!member) return;
-
-    setIsProcessingApproval(true);
-    setActionError(null);
-    setActionSuccess(null);
-
-    try {
-      const response = await fetch(`/api/users/${member.id}/approval`, {
-        method: 'PATCH',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ action }),
-      });
-
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(
-          result?.error?.message ||
-            (action === 'approve' ? 'Duyệt thành viên thất bại' : 'Từ chối thành viên thất bại'),
-        );
-      }
-
-      const updated = result?.data?.user as MemberDetail | undefined;
-      if (!updated) {
-        throw new Error('Không nhận được dữ liệu sau khi xử lý duyệt');
-      }
-
-      setMember(updated);
-      setActionSuccess(
-        action === 'approve'
-          ? 'Tài khoản đã được duyệt và có thể đăng nhập.'
-          : 'Tài khoản đã bị từ chối.',
-      );
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Không thể xử lý trạng thái duyệt';
-      setActionError(message);
-    } finally {
-      setIsProcessingApproval(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -279,21 +167,11 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
           </div>
         </div>
 
-        {isAdmin && (
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={() => {
-                setIsEditing((prev) => !prev);
-                setActionError(null);
-                setActionSuccess(null);
-              }}
-            >
-              {isEditing ? 'Hủy chỉnh sửa' : 'Chỉnh sửa hồ sơ'}
-            </button>
-          </div>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" className="btn-secondary" onClick={loadMember}>
+            Tải mới dữ liệu
+          </button>
+        </div>
       </div>
 
       <section className="surface-card-soft p-5">
@@ -335,160 +213,39 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
         </article>
       </section>
 
-      {actionError && (
-        <div className="surface-card border-l-4 border-l-[var(--danger)] p-4">
-          <p className="text-sm text-[var(--danger)]">{actionError}</p>
-        </div>
-      )}
-
-      {actionSuccess && (
-        <div className="surface-card border-l-4 border-l-[var(--accent)] p-4">
-          <p className="text-sm text-[var(--accent)]">{actionSuccess}</p>
-        </div>
-      )}
-
       <div className="grid gap-4 lg:grid-cols-3">
         <section className="surface-card p-5 lg:col-span-2">
           <h3 className="text-base font-semibold text-[var(--foreground)] mb-4">Thông tin liên hệ</h3>
 
-          {isEditing && isAdmin ? (
-            <form onSubmit={handleSaveProfile} className="space-y-4">
-              <div>
-                <label htmlFor="member-name" className="mb-1 block text-xs font-medium uppercase text-[var(--muted)]">
-                  Họ tên
-                </label>
-                <input
-                  id="member-name"
-                  type="text"
-                  required
-                  className="input-field"
-                  value={formData.name}
-                  onChange={(event) => setFormData((prev) => ({ ...prev, name: event.target.value }))}
-                  placeholder="Nhập họ tên"
-                />
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label htmlFor="member-email" className="mb-1 block text-xs font-medium uppercase text-[var(--muted)]">
-                    Email
-                  </label>
-                  <input
-                    id="member-email"
-                    type="email"
-                    required
-                    className="input-field"
-                    value={formData.email}
-                    onChange={(event) => setFormData((prev) => ({ ...prev, email: event.target.value }))}
-                    placeholder="email@example.com"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="member-phone" className="mb-1 block text-xs font-medium uppercase text-[var(--muted)]">
-                    Điện thoại
-                  </label>
-                  <input
-                    id="member-phone"
-                    type="tel"
-                    required
-                    className="input-field"
-                    value={formData.phone}
-                    onChange={(event) => setFormData((prev) => ({ ...prev, phone: event.target.value }))}
-                    placeholder="09xxxxxxxx"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-3 pt-2">
-                <button type="submit" className="btn-primary" disabled={isSaving}>
-                  {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
-                </button>
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  onClick={() => {
-                    setIsEditing(false);
-                    setFormData({
-                      name: member.name,
-                      email: member.email,
-                      phone: member.phone,
-                    });
-                  }}
-                  disabled={isSaving}
-                >
-                  Hủy
-                </button>
-              </div>
-            </form>
-          ) : (
-            <dl className="space-y-3">
-              <div className="flex flex-col rounded-lg border border-[var(--surface-border)] p-3 sm:flex-row sm:items-center sm:justify-between">
-                <dt className="text-xs font-medium uppercase text-[var(--muted)]">Họ tên</dt>
-                <dd className="text-sm font-semibold text-[var(--foreground)]">{member.name}</dd>
-              </div>
-              <div className="flex flex-col rounded-lg border border-[var(--surface-border)] p-3 sm:flex-row sm:items-center sm:justify-between">
-                <dt className="text-xs font-medium uppercase text-[var(--muted)]">Email</dt>
-                <dd className="text-sm font-semibold text-[var(--foreground)]">{member.email}</dd>
-              </div>
-              <div className="flex flex-col rounded-lg border border-[var(--surface-border)] p-3 sm:flex-row sm:items-center sm:justify-between">
-                <dt className="text-xs font-medium uppercase text-[var(--muted)]">Điện thoại</dt>
-                <dd className="text-sm font-semibold text-[var(--foreground)]">{member.phone}</dd>
-              </div>
-              <div className="flex flex-col rounded-lg border border-[var(--surface-border)] p-3 sm:flex-row sm:items-center sm:justify-between">
-                <dt className="text-xs font-medium uppercase text-[var(--muted)]">Mã thành viên</dt>
-                <dd className="text-xs font-mono text-[var(--muted)]">{member.id}</dd>
-              </div>
-            </dl>
-          )}
+          <dl className="space-y-3">
+            <div className="flex flex-col rounded-lg border border-[var(--surface-border)] p-3 sm:flex-row sm:items-center sm:justify-between">
+              <dt className="text-xs font-medium uppercase text-[var(--muted)]">Họ tên</dt>
+              <dd className="text-sm font-semibold text-[var(--foreground)]">{member.name}</dd>
+            </div>
+            <div className="flex flex-col rounded-lg border border-[var(--surface-border)] p-3 sm:flex-row sm:items-center sm:justify-between">
+              <dt className="text-xs font-medium uppercase text-[var(--muted)]">Email</dt>
+              <dd className="text-sm font-semibold text-[var(--foreground)]">{member.email}</dd>
+            </div>
+            <div className="flex flex-col rounded-lg border border-[var(--surface-border)] p-3 sm:flex-row sm:items-center sm:justify-between">
+              <dt className="text-xs font-medium uppercase text-[var(--muted)]">Điện thoại</dt>
+              <dd className="text-sm font-semibold text-[var(--foreground)]">{member.phone}</dd>
+            </div>
+            <div className="flex flex-col rounded-lg border border-[var(--surface-border)] p-3 sm:flex-row sm:items-center sm:justify-between">
+              <dt className="text-xs font-medium uppercase text-[var(--muted)]">Mã thành viên</dt>
+              <dd className="text-xs font-mono text-[var(--muted)]">{member.id}</dd>
+            </div>
+          </dl>
         </section>
 
         <aside className="surface-card-teal p-5">
-          <h3 className="text-base font-semibold text-[var(--foreground)]">Hành động nhanh</h3>
-          <p className="mt-1 text-sm text-[var(--muted)]">Các tác vụ quản trị cho trạng thái tài khoản thành viên.</p>
-
-          {isAdmin ? (
-            <div className="mt-4 space-y-3">
-              <button
-                type="button"
-                className="btn-primary w-full"
-                onClick={loadMember}
-                disabled={loading}
-              >
-                Tải mới dữ liệu
-              </button>
-
-              {member.approval_status === 'pending' && (
-                <>
-                  <button
-                    type="button"
-                    className="btn-secondary w-full"
-                    onClick={() => handleApprovalAction('approve')}
-                    disabled={isProcessingApproval}
-                  >
-                    {isProcessingApproval ? 'Đang xử lý...' : 'Duyệt tài khoản'}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-danger w-full"
-                    onClick={() => handleApprovalAction('reject')}
-                    disabled={isProcessingApproval}
-                  >
-                    {isProcessingApproval ? 'Đang xử lý...' : 'Từ chối tài khoản'}
-                  </button>
-                </>
-              )}
-
-              {member.approval_status !== 'pending' && (
-                <div className="rounded-lg border border-[var(--surface-border)] bg-white/70 p-3 text-sm text-[var(--muted)]">
-                  Tài khoản đã ở trạng thái {approvalLabel.toLowerCase()}.
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="mt-4 rounded-lg border border-[var(--surface-border)] bg-white/70 p-3 text-sm text-[var(--muted)]">
-              Bạn chỉ có quyền xem thông tin. Hãy liên hệ quản trị viên để cập nhật dữ liệu thành viên.
-            </div>
-          )}
+          <h3 className="text-base font-semibold text-[var(--foreground)]">Lưu ý</h3>
+          <div className="mt-4 space-y-3 rounded-lg border border-[var(--surface-border)] bg-white/70 p-3 text-sm text-[var(--muted)]">
+            <p>Trang này chỉ dùng để xem thông tin thành viên.</p>
+            <p>Thành viên tự cập nhật thông tin cá nhân tại trang tài khoản của chính mình.</p>
+          </div>
+          <Link href="/dashboard/my-account" className="btn-primary mt-4 w-full">
+            Đến trang tài khoản cá nhân
+          </Link>
         </aside>
       </div>
     </div>
