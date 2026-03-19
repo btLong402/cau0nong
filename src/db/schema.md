@@ -11,28 +11,34 @@ Stores member profiles and information. This mirrors Supabase Auth users for eas
 ```sql
 CREATE TABLE users (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  username VARCHAR(50) UNIQUE NOT NULL,
   name VARCHAR(255) NOT NULL,
   phone VARCHAR(20) UNIQUE NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   role ENUM('admin', 'member') DEFAULT 'member',
+  approval_status ENUM('pending', 'approved', 'rejected') DEFAULT 'approved',
   balance NUMERIC(10,2) DEFAULT 0,
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_users_phone ON users(phone);
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_role ON users(role);
+CREATE INDEX idx_users_approval_status ON users(approval_status);
 CREATE INDEX idx_users_is_active ON users(is_active);
 ```
 
 **Fields:**
 - `id` - UUID from Supabase Auth
+- `username` - Tên đăng nhập duy nhất để login bằng username/password
 - `name` - Member's full name
 - `phone` - Phone number (unique, used for WhatsApp/SMS communication)
 - `email` - Email address (unique, linked to Supabase Auth)
 - `role` - Admin or member (determines permissions)
+- `approval_status` - Trạng thái duyệt tài khoản: pending / approved / rejected
 - `balance` - Current balance after settlements
 - `is_active` - Soft delete flag (false = deactivated)
 - `created_at` - Account creation timestamp

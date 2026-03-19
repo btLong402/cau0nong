@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 export default function RegisterPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
+    username: '',
     name: '',
     email: '',
     phone: '',
@@ -38,6 +39,11 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!/^[a-zA-Z0-9_]{4,30}$/.test(formData.username)) {
+      setError('Username phải từ 4-30 ký tự, chỉ gồm chữ, số và dấu gạch dưới');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -45,6 +51,7 @@ export default function RegisterPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          username: formData.username.trim().toLowerCase(),
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
@@ -59,7 +66,7 @@ export default function RegisterPage() {
         return;
       }
 
-      router.push('/login?registered=true');
+      router.push('/login?pendingApproval=true');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -86,6 +93,23 @@ export default function RegisterPage() {
       )}
 
       <form onSubmit={handleRegister} className="space-y-4" noValidate>
+        <div>
+          <label htmlFor="username" className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
+            Username
+          </label>
+          <input
+            id="username"
+            name="username"
+            type="text"
+            value={formData.username}
+            onChange={handleChange}
+            placeholder="nguyenvana"
+            className="input-field"
+            required
+            autoComplete="username"
+          />
+        </div>
+
         <div>
           <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
             Họ tên

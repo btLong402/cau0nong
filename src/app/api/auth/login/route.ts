@@ -14,7 +14,7 @@ function isPhoneNumber(input: string): boolean {
 
 export const POST = createPostHandler({
   handler: async (req, context) => {
-    const { email, phone, password, identifier } = await req.json();
+    const { username, email, phone, password, identifier } = await req.json();
 
     if (!password) {
       throw new ValidationError('Missing required field: password');
@@ -23,20 +23,23 @@ export const POST = createPostHandler({
     const authService = await createAuthService();
     let result;
 
-    // Support 3 modes:
-    // 1. { email, password } — classic email login
-    // 2. { phone, password } — explicit phone login
-    // 3. { identifier, password } — auto-detect email vs phone
-    if (phone) {
+    // Support multiple modes for backward compatibility:
+    // 1. { username, password }
+    // 2. { identifier, password } (username/email/phone)
+    // 3. { email, password }
+    // 4. { phone, password }
+    if (username) {
+      result = await authService.signInWithUsername(username, password);
+    } else if (phone) {
       result = await authService.signInWithPhone(phone, password);
     } else if (identifier && isPhoneNumber(identifier)) {
       result = await authService.signInWithPhone(identifier, password);
     } else {
-      const emailValue = email || identifier;
-      if (!emailValue) {
-        throw new ValidationError('Missing required field: email, phone, or identifier');
+      const loginIdentifier = identifier || email;
+      if (!loginIdentifier) {
+        throw new ValidationError('Missing required field: username, identifier, email, or phone');
       }
-      result = await authService.signIn({ email: emailValue, password });
+      result = await authService.signIn({ identifier: loginIdentifier, password });
     }
 
     const response = NextResponse.json(

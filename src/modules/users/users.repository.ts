@@ -41,6 +41,43 @@ export class UsersRepository extends Repository<User> {
   }
 
   /**
+   * Find user by username
+   */
+  async findByUsername(username: string): Promise<User | null> {
+    try {
+      const users = await this.find({ username: username.toLowerCase() });
+      return users.length > 0 ? users[0] : null;
+    } catch (error) {
+      throw mapSupabaseError(error);
+    }
+  }
+
+  /**
+   * Find all users (including pending/rejected)
+   */
+  async findAll(limit?: number, offset?: number): Promise<User[]> {
+    try {
+      let query = this.supabase.from("users").select("*").order("created_at", { ascending: false });
+
+      if (typeof offset === "number" && typeof limit === "number") {
+        query = query.range(offset, offset + limit - 1);
+      } else if (typeof limit === "number") {
+        query = query.limit(limit);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        throw error;
+      }
+
+      return (data || []) as User[];
+    } catch (error) {
+      throw mapSupabaseError(error);
+    }
+  }
+
+  /**
    * Find all active users (members)
    */
   async findAllActive(limit?: number, offset?: number): Promise<User[]> {
@@ -110,6 +147,36 @@ export class UsersRepository extends Repository<User> {
         is_active: true,
         updated_at: new Date().toISOString(),
       } as any);
+    } catch (error) {
+      throw mapSupabaseError(error);
+    }
+  }
+
+  /**
+   * Update account approval status
+   */
+  async updateApprovalStatus(
+    userId: string,
+    approvalStatus: "pending" | "approved" | "rejected"
+  ): Promise<User> {
+    try {
+      const isActive = approvalStatus === "approved";
+      return await this.update(userId, {
+        approval_status: approvalStatus,
+        is_active: isActive,
+        updated_at: new Date().toISOString(),
+      } as any);
+    } catch (error) {
+      throw mapSupabaseError(error);
+    }
+  }
+
+  /**
+   * Count by approval status
+   */
+  async countByApprovalStatus(status: "pending" | "approved" | "rejected"): Promise<number> {
+    try {
+      return await this.count({ approval_status: status });
     } catch (error) {
       throw mapSupabaseError(error);
     }

@@ -4,16 +4,19 @@
 
 // User & Auth
 export type UserRole = "admin" | "member";
+export type UserApprovalStatus = "pending" | "approved" | "rejected";
 
 export interface User {
   id: string; // UUID from Supabase Auth
   name: string;
+  username: string;
   phone: string;
   email: string;
   role: UserRole;
   avatar_url?: string;
   balance: number;
   is_active: boolean;
+  approval_status: UserApprovalStatus;
   created_at: string;
   updated_at: string;
 }

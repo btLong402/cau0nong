@@ -6,11 +6,13 @@ import { useAuth } from '@/shared/hooks';
 interface User {
   id: string;
   name: string;
+  username: string;
   email: string;
   phone: string;
   role: string;
   balance: number;
   is_active: boolean;
+  approval_status: 'pending' | 'approved' | 'rejected';
 }
 
 export default function MembersPage() {
@@ -23,8 +25,10 @@ export default function MembersPage() {
   // Add Member Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [approvalProcessingId, setApprovalProcessingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
+    username: '',
     name: '',
     email: '',
     phone: '',
@@ -84,13 +88,49 @@ export default function MembersPage() {
 
       // Success
       setIsModalOpen(false);
-      setFormData({ name: '', email: '', phone: '', password: '', role: 'member' });
+      setFormData({ username: '', name: '', email: '', phone: '', password: '', role: 'member' });
       fetchMembers(); // Refresh list
     } catch (err: any) {
       setError(err.message);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleApprovalAction = async (memberId: string, action: 'approve' | 'reject') => {
+    setApprovalProcessingId(memberId);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/users/${memberId}/approval`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      });
+
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error?.message || `Không thể ${action === 'approve' ? 'duyệt' : 'từ chối'} tài khoản`);
+      }
+
+      await fetchMembers();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setApprovalProcessingId(null);
+    }
+  };
+
+  const getApprovalBadgeClass = (status: User['approval_status']) => {
+    if (status === 'approved') return 'badge-success';
+    if (status === 'rejected') return 'badge-neutral';
+    return 'badge-warning';
+  };
+
+  const getApprovalLabel = (status: User['approval_status']) => {
+    if (status === 'approved') return 'Đã duyệt';
+    if (status === 'rejected') return 'Từ chối';
+    return 'Chờ duyệt';
   };
 
   if (loading && members.length === 0) {
@@ -131,11 +171,13 @@ export default function MembersPage() {
             <thead>
               <tr>
                 <th>Họ tên</th>
+                <th>Username</th>
                 <th>Email</th>
                 <th>Điện thoại</th>
                 <th>Vai trò</th>
                 <th>Số dư</th>
                 <th>Trạng thái</th>
+                <th>Duyệt TK</th>
                 <th>Hành động</th>
               </tr>
             </thead>
@@ -143,6 +185,7 @@ export default function MembersPage() {
               {members.map((member) => (
                 <tr key={member.id}>
                   <td className="font-medium">{member.name}</td>
+                  <td className="font-mono text-sm text-[var(--muted)]">{member.username}</td>
                   <td className="text-[var(--muted)]">{member.email}</td>
                   <td>{member.phone}</td>
                   <td>
@@ -161,9 +204,36 @@ export default function MembersPage() {
                     </span>
                   </td>
                   <td>
-                    <a href={`/dashboard/members/${member.id}`} className="text-sm font-medium text-[var(--primary)] hover:text-[var(--primary-hover)] cursor-pointer">
-                      Chi tiết
-                    </a>
+                    <span className={`badge ${getApprovalBadgeClass(member.approval_status)}`}>
+                      {getApprovalLabel(member.approval_status)}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="flex items-center gap-3">
+                      {authUser?.role === 'admin' && member.approval_status === 'pending' && (
+                        <>
+                          <button
+                            type="button"
+                            className="text-xs font-semibold text-emerald-700 disabled:opacity-40"
+                            disabled={approvalProcessingId === member.id}
+                            onClick={() => handleApprovalAction(member.id, 'approve')}
+                          >
+                            Duyệt
+                          </button>
+                          <button
+                            type="button"
+                            className="text-xs font-semibold text-red-700 disabled:opacity-40"
+                            disabled={approvalProcessingId === member.id}
+                            onClick={() => handleApprovalAction(member.id, 'reject')}
+                          >
+                            Từ chối
+                          </button>
+                        </>
+                      )}
+                      <a href={`/dashboard/members/${member.id}`} className="text-sm font-medium text-[var(--primary)] hover:text-[var(--primary-hover)] cursor-pointer">
+                        Chi tiết
+                      </a>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -186,8 +256,11 @@ export default function MembersPage() {
                   <span className={`badge text-[10px] ${member.role === 'admin' ? 'badge-primary' : 'badge-neutral'}`}>
                     {member.role === 'admin' ? 'Admin' : 'TV'}
                   </span>
+                  <span className={`badge text-[10px] ${getApprovalBadgeClass(member.approval_status)}`}>
+                    {getApprovalLabel(member.approval_status)}
+                  </span>
                 </div>
-                <p className="text-xs text-[var(--muted)]">{member.phone}</p>
+                <p className="text-xs text-[var(--muted)]">@{member.username} • {member.phone}</p>
               </div>
               <div className="text-right">
                 <p className={`text-sm font-semibold ${member.balance >= 0 ? 'text-[var(--accent)]' : 'text-[var(--danger)]'}`}>
@@ -215,6 +288,17 @@ export default function MembersPage() {
             )}
 
             <form onSubmit={handleCreateMember} className="space-y-4 mt-2">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-[var(--muted)] uppercase">Username</label>
+                <input
+                  type="text"
+                  required
+                  className="input-field"
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  placeholder="nguyenvana"
+                />
+              </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-[var(--muted)] uppercase">Họ tên</label>
                 <input

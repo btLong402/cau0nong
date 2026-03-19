@@ -10,6 +10,7 @@ import { NotFoundError } from "@/shared/api";
 import { createAuthService } from "@/modules/auth/auth.service";
 
 export interface CreateUserData {
+  username?: string;
   name: string;
   email: string;
   phone: string;
@@ -33,9 +34,13 @@ export class UsersService {
    */
   async createMember(data: CreateUserData): Promise<User> {
     const authService = await createAuthService();
+    const normalizedUsername = (data.username || data.email.split("@")[0] || data.phone)
+      .trim()
+      .toLowerCase();
 
     // Sign up via AuthService (which also creates the profile)
     const result = await authService.createAdminUser({
+      username: normalizedUsername,
       email: data.email,
       password: data.password || "123456", // Default password if not provided
       name: data.name,
@@ -59,8 +64,8 @@ export class UsersService {
     hasMore: boolean;
   }> {
     const offset = (page - 1) * limit;
-    const members = await this.repository.findAllActive(limit, offset);
-    const total = await this.repository.countActive();
+    const members = await this.repository.findAll(limit, offset);
+    const total = await this.repository.count({});
     const hasMore = offset + limit < total;
 
     return { members, total, hasMore };
@@ -91,6 +96,13 @@ export class UsersService {
    */
   async getMemberByPhone(phone: string): Promise<User | null> {
     return await this.repository.findByPhone(phone);
+  }
+
+  /**
+   * Get member by username
+   */
+  async getMemberByUsername(username: string): Promise<User | null> {
+    return await this.repository.findByUsername(username);
   }
 
   /**
@@ -139,6 +151,22 @@ export class UsersService {
   }
 
   /**
+   * Approve account so user can login
+   */
+  async approveMember(userId: string): Promise<User> {
+    await this.getMember(userId);
+    return await this.repository.updateApprovalStatus(userId, "approved");
+  }
+
+  /**
+   * Reject account registration
+   */
+  async rejectMember(userId: string): Promise<User> {
+    await this.getMember(userId);
+    return await this.repository.updateApprovalStatus(userId, "rejected");
+  }
+
+  /**
    * Get members by role (admin only operation)
    */
   async getMembersByRole(role: "admin" | "member"): Promise<User[]> {
@@ -159,15 +187,18 @@ export class UsersService {
     totalMembers: number;
     activeMembers: number;
     admins: number;
+    pendingApprovals: number;
   }> {
     const total = await this.repository.count({});
     const active = await this.repository.countActive();
     const admins = (await this.repository.findByRole("admin")).length;
+    const pendingApprovals = await this.repository.countByApprovalStatus("pending");
 
     return {
       totalMembers: total,
       activeMembers: active,
       admins,
+      pendingApprovals,
     };
   }
 

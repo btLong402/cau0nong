@@ -25,7 +25,7 @@ function LoginForm() {
   const [checkingSession, setCheckingSession] = useState(true);
 
   const from = searchParams.get('from') || '/dashboard';
-  const registered = searchParams.get('registered') === 'true';
+  const pendingApproval = searchParams.get('pendingApproval') === 'true';
 
   useEffect(() => {
     async function checkCurrentSession() {
@@ -88,9 +88,9 @@ function LoginForm() {
         <p className="mt-1.5 text-sm text-[var(--muted)]">Đăng nhập để tiếp tục quản lý CLB cầu lông.</p>
       </div>
 
-      {registered && (
+      {pendingApproval && (
         <div className="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-          Đăng ký thành công. Vui lòng đăng nhập để bắt đầu.
+          Đăng ký thành công. Tài khoản của bạn đang chờ admin duyệt trước khi đăng nhập.
         </div>
       )}
 
@@ -103,14 +103,14 @@ function LoginForm() {
       <form onSubmit={handleLogin} className="space-y-4" noValidate>
         <div>
           <label htmlFor="identifier" className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
-            Email hoặc Số điện thoại
+            Username (hoặc Email/Số điện thoại)
           </label>
           <input
             id="identifier"
             type="text"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
-            placeholder="your@email.com hoặc 0909xxxxxx"
+            placeholder="username, your@email.com hoặc 0909xxxxxx"
             className="input-field"
             required
             autoComplete="username"

@@ -3,8 +3,11 @@ import { AuthService, createAuthService } from './auth.service';
 import * as supabaseModule from '@/lib/supabase';
 import { AuthenticationError, ConflictError, ServerError } from '@/shared/api';
 
+let mockAdminClient: any;
+
 vi.mock('@/lib/supabase', () => ({
   createServerSupabaseClient: vi.fn(),
+  createAdminClient: vi.fn(() => mockAdminClient),
 }));
 
 describe('AuthService', () => {
@@ -27,28 +30,40 @@ describe('AuthService', () => {
       select: vi.fn().mockReturnThis(),
       insert: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      or: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
       single: vi.fn(),
+    };
+
+    mockAdminClient = {
+      from: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      or: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      single: vi.fn(),
+      insert: vi.fn().mockResolvedValue({ error: null }),
     };
 
     service = new AuthService(mockSupabase);
   });
 
   describe('signUp', () => {
-    const validData = { email: 'a@b.c', password: '123', name: 'User', phone: '098' };
+    const validData = { username: 'user_01', email: 'a@b.c', password: '123', name: 'User', phone: '098' };
 
     it('should successfully sign up and create a user profile', async () => {
       mockSupabase.auth.signUp.mockResolvedValueOnce({
         data: { user: { id: 'u1', email: 'a@b.c' }, session: { access_token: 'token123' } },
         error: null,
       });
-      mockSupabase.insert.mockResolvedValueOnce({ error: null });
+      mockAdminClient.insert.mockResolvedValueOnce({ error: null });
 
       const result = await service.signUp(validData);
 
       expect(mockSupabase.auth.signUp).toHaveBeenCalled();
-      expect(mockSupabase.insert).toHaveBeenCalled();
-      expect(result.token).toBe('token123');
+      expect(mockAdminClient.insert).toHaveBeenCalled();
+      expect(result.token).toBe('');
       expect(result.user.id).toBe('u1');
+      expect(result.user.approvalStatus).toBe('pending');
     });
 
     it('should fallback empty token if session has no access_token', async () => {
@@ -56,7 +71,7 @@ describe('AuthService', () => {
         data: { user: { id: 'u1', email: 'a@b.c' }, session: { access_token: null } },
         error: null,
       });
-      mockSupabase.insert.mockResolvedValueOnce({ error: null });
+      mockAdminClient.insert.mockResolvedValueOnce({ error: null });
 
       const result = await service.signUp(validData);
       expect(result.token).toBe('');
@@ -95,7 +110,7 @@ describe('AuthService', () => {
         data: { user: { id: 'u1', email: 'a@b.c' }, session: { access_token: 'token123' } },
         error: null,
       });
-      mockSupabase.insert.mockResolvedValueOnce({ error: { message: 'DB Error' } });
+      mockAdminClient.insert.mockResolvedValueOnce({ error: { message: 'DB Error' } });
 
       const result = await service.signUp(validData);
       
@@ -118,7 +133,16 @@ describe('AuthService', () => {
         data: { user: { id: 'u1', email: 'a@b.c' }, session: { access_token: 'token123' } },
         error: null,
       });
-      mockSupabase.single.mockResolvedValueOnce({ data: { name: 'Full Name', role: 'admin' }, error: null });
+      mockSupabase.single.mockResolvedValueOnce({
+        data: {
+          username: 'admin_user',
+          name: 'Full Name',
+          role: 'admin',
+          approval_status: 'approved',
+          is_active: true,
+        },
+        error: null,
+      });
 
       const result = await service.signIn(validData);
 
@@ -127,15 +151,14 @@ describe('AuthService', () => {
       expect(result.user.role).toBe('admin');
     });
 
-    it('should default to member role if profile fetch fails', async () => {
+    it('should throw AuthenticationError if profile fetch fails', async () => {
       mockSupabase.auth.signInWithPassword.mockResolvedValueOnce({
         data: { user: { id: 'u1', email: 'a@b.c' }, session: { access_token: 'token123' } },
         error: null,
       });
       mockSupabase.single.mockResolvedValueOnce({ data: null, error: { message: 'Not found' } }); // getUserById fails
 
-      const result = await service.signIn(validData);
-      expect(result.user.role).toBe('member');
+      await expect(service.signIn(validData)).rejects.toThrow(AuthenticationError);
     });
 
     it('should throw AuthenticationError if invalid credentials', async () => {
@@ -163,21 +186,18 @@ describe('AuthService', () => {
   });
 
   describe('signInWithPhone', () => {
-    it('should lookup email from phone and delegate to signIn', async () => {
-      mockSupabase.single.mockResolvedValueOnce({ data: { email: 'test@email.com' }, error: null });
-      
+    it('should delegate phone identifier to signIn', async () => {
       const signInSpy = vi.spyOn(service, 'signIn').mockResolvedValueOnce({ token: '123' } as any);
 
       const result = await service.signInWithPhone('0987654321', 'password');
-      
-      expect(mockSupabase.from).toHaveBeenCalledWith('users');
-      expect(signInSpy).toHaveBeenCalledWith({ email: 'test@email.com', password: 'password' });
+
+      expect(signInSpy).toHaveBeenCalledWith({ identifier: '0987654321', password: 'password' });
       expect(result.token).toBe('123');
     });
 
     it('should throw AuthenticationError if phone not found', async () => {
-      mockSupabase.single.mockResolvedValueOnce({ data: null, error: { message: 'Not found' } });
-      await expect(service.signInWithPhone('000', '123')).rejects.toThrow('Phone number not found or inactive');
+      mockAdminClient.single.mockResolvedValueOnce({ data: null, error: { message: 'Not found' } });
+      await expect(service.signInWithPhone('000', '123')).rejects.toThrow('Invalid username/phone or password');
     });
   });
 

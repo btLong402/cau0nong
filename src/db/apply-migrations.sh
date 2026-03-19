@@ -60,6 +60,9 @@ run_migration() {
 # Apply migrations in order
 MIGRATIONS=(
     "001_initial_schema.sql"
+    "002_add_payer_offset_and_event_link.sql"
+    "004_add_session_status.sql"
+    "005_add_username_and_approval_status.sql"
 )
 
 for migration in "${MIGRATIONS[@]}"; do
@@ -69,9 +72,9 @@ done
 echo -e "\n${YELLOW}Manual Step Required:${NC}"
 echo "1. Go to https://app.supabase.com/project/<your-project-id>/sql"
 echo "2. Create a new query"
-echo "3. Copy the entire SQL from: src/db/migrations/001_initial_schema.sql"
-echo "4. Execute the query"
-echo "5. Verify all tables are created"
+echo "3. Chạy lần lượt các file migration trong src/db/migrations theo thứ tự số"
+echo "4. Execute từng migration"
+echo "5. Verify schema và index đã được cập nhật"
 echo
 
 echo -e "${GREEN}✓ Migration Instructions Complete${NC}"

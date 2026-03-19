@@ -57,20 +57,25 @@ export class AuthRepository extends Repository<User> {
    */
   async createUser(data: {
     id: string;
+    username: string;
     email: string;
     name: string;
     phone: string;
     role: "admin" | "member";
+    approval_status?: "pending" | "approved" | "rejected";
+    is_active?: boolean;
   }): Promise<User> {
     try {
       return await this.create({
         id: data.id,
+        username: data.username,
         email: data.email,
         name: data.name,
         phone: data.phone,
         role: data.role,
         balance: 0,
-        is_active: true,
+        is_active: data.is_active ?? false,
+        approval_status: data.approval_status ?? "pending",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       } as any);

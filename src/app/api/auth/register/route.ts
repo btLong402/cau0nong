@@ -5,10 +5,14 @@ import { ValidationError } from '@/shared/api/base-errors';
 
 export const POST = createPostHandler({
   handler: async (req) => {
-    const { email, password, name, phone } = await req.json();
+    const { username, email, password, name, phone } = await req.json();
     
-    if (!email || !password || !name || !phone) {
-      throw new ValidationError('Missing required fields: email, password, name, phone');
+    if (!username || !email || !password || !name || !phone) {
+      throw new ValidationError('Missing required fields: username, email, password, name, phone');
+    }
+
+    if (!/^[a-zA-Z0-9_]{4,30}$/.test(username)) {
+      throw new ValidationError('Username must be 4-30 characters and only include letters, numbers, underscore');
     }
 
     const emailValidation = emailSchema.safeParse(email);
@@ -24,6 +28,7 @@ export const POST = createPostHandler({
     const authService = await createAuthService();
     
     const user = await authService.signUp({
+      username: username.toLowerCase(),
       email,
       password,
       name,

@@ -15,6 +15,8 @@ function parseUserId(url: string): string {
 }
 
 export const GET = createGetHandler({
+  requireAuth: true,
+  requireRole: ['admin'],
   handler: async (req) => {
     const userId = parseUserId(req.url);
     const usersService = await createUsersService();
@@ -25,6 +27,8 @@ export const GET = createGetHandler({
 });
 
 export const PUT = createPutHandler({
+  requireAuth: true,
+  requireRole: ['admin'],
   handler: async (req) => {
     const userId = parseUserId(req.url);
     const data = await req.json();

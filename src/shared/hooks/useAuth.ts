@@ -115,6 +115,7 @@ export function useAuth() {
 
   const signup = useCallback(
     async (
+      username: string,
       name: string,
       email: string,
       phone: string,
@@ -133,6 +134,7 @@ export function useAuth() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
+            username,
             name,
             email,
             phone,

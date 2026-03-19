@@ -8,6 +8,7 @@ import { AuthenticationError, ConflictError, ServerError } from "@/shared/api";
 import { NextRequest } from "next/server";
 
 export interface SignUpData {
+  username: string;
   email: string;
   password: string;
   name: string;
@@ -15,25 +16,30 @@ export interface SignUpData {
 }
 
 export interface SignInData {
-  email: string;
+  identifier?: string;
+  email?: string;
   password: string;
 }
 
 export interface AuthResponse {
   user: {
     id: string;
+    username: string;
     email: string;
     name?: string;
     role: "admin" | "member";
+    approvalStatus: "pending" | "approved" | "rejected";
   };
   token: string;
 }
 
 export interface CurrentUserResponse {
   id: string;
+  username: string;
   email: string;
   name?: string;
   role: "admin" | "member";
+  approvalStatus: "pending" | "approved" | "rejected";
 }
 
 /**
@@ -59,9 +65,11 @@ export class AuthService {
         password: data.password,
         options: {
           data: {
+            username: data.username,
             name: data.name,
             phone: data.phone,
             role: "member", // Default role
+            approval_status: "pending",
           },
         },
       });
@@ -81,20 +89,25 @@ export class AuthService {
       const adminClient = createAdminClient();
       await this.createUserProfile(adminClient, {
         id: authData.user.id,
+        username: data.username,
         email: data.email,
         name: data.name,
         phone: data.phone,
         role: "member",
+        approval_status: "pending",
+        is_active: false,
       });
 
       return {
         user: {
           id: authData.user.id,
+          username: data.username,
           email: authData.user.email!,
           name: data.name,
           role: "member",
+          approvalStatus: "pending",
         },
-        token: authData.session?.access_token || "",
+        token: "",
       };
     } catch (error) {
       if (
@@ -120,9 +133,11 @@ export class AuthService {
         password: data.password,
         email_confirm: true, // Auto confirm so they can login immediately
         user_metadata: {
+          username: data.username,
           name: data.name,
           phone: data.phone,
           role: "member",
+          approval_status: "approved",
         },
       });
 
@@ -140,18 +155,23 @@ export class AuthService {
       // Create user profile in public.users table
       await this.createUserProfile(adminClient, {
         id: authData.user.id,
+        username: data.username,
         email: data.email,
         name: data.name,
         phone: data.phone,
         role: "member",
+        approval_status: "approved",
+        is_active: true,
       });
 
       return {
         user: {
           id: authData.user.id,
+          username: data.username,
           email: authData.user.email!,
           name: data.name,
           role: "member",
+          approvalStatus: "approved",
         },
         token: "", // No token when admin creates another user
       };
@@ -172,8 +192,15 @@ export class AuthService {
    */
   async signIn(data: SignInData): Promise<AuthResponse> {
     try {
+      const identifier = data.identifier || data.email;
+      if (!identifier) {
+        throw new AuthenticationError("Missing login identifier");
+      }
+
+      const emailForAuth = await this.resolveEmailForLogin(identifier);
+
       const { data: authData, error } = await this.supabase.auth.signInWithPassword({
-        email: data.email,
+        email: emailForAuth,
         password: data.password,
       });
 
@@ -187,13 +214,16 @@ export class AuthService {
 
       // Fetch user profile to get full details
       const userProfile = await this.getUserById(authData.user.id);
+      this.assertAccountCanLogin(userProfile);
 
       return {
         user: {
           id: authData.user.id,
+          username: userProfile?.username || "",
           email: authData.user.email!,
           name: userProfile?.name,
           role: userProfile?.role || "member",
+          approvalStatus: userProfile?.approval_status || "pending",
         },
         token: authData.session.access_token,
       };
@@ -210,20 +240,14 @@ export class AuthService {
    * Looks up email by phone, then delegates to signIn
    */
   async signInWithPhone(phone: string, password: string): Promise<AuthResponse> {
-    // Lookup user by phone to get email
-    const { data: userData, error: lookupError } = await this.supabase
-      .from("users")
-      .select("email")
-      .eq("phone", phone)
-      .eq("is_active", true)
-      .single();
+    return this.signIn({ identifier: phone, password });
+  }
 
-    if (lookupError || !userData?.email) {
-      throw new AuthenticationError("Phone number not found or inactive");
-    }
-
-    // Delegate to email-based sign in
-    return this.signIn({ email: userData.email, password });
+  /**
+   * Sign in with username + password
+   */
+  async signInWithUsername(username: string, password: string): Promise<AuthResponse> {
+    return this.signIn({ identifier: username, password });
   }
 
   /**
@@ -248,9 +272,13 @@ export class AuthService {
 
     return {
       id: session.user.id,
+      username: profile?.username || (session.user.user_metadata?.username as string | undefined) || "",
       email: session.user.email || profile?.email || "",
       name: profile?.name || (session.user.user_metadata?.name as string | undefined),
       role: (profile?.role as "admin" | "member") || "member",
+      approvalStatus:
+        (profile?.approval_status as "pending" | "approved" | "rejected") ||
+        ((session.user.user_metadata?.approval_status as "pending" | "approved" | "rejected") ?? "pending"),
     };
   }
 
@@ -284,20 +312,25 @@ export class AuthService {
    */
   private async createUserProfile(adminClient: any, profile: {
     id: string;
+    username: string;
     email: string;
     name: string;
     phone: string;
     role: "admin" | "member";
+    approval_status: "pending" | "approved" | "rejected";
+    is_active: boolean;
   }) {
     const { error } = await adminClient.from("users").insert([
       {
         id: profile.id,
+        username: profile.username,
         email: profile.email,
         name: profile.name,
         phone: profile.phone,
         role: profile.role,
         balance: 0,
-        is_active: true,
+        is_active: profile.is_active,
+        approval_status: profile.approval_status,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
@@ -325,6 +358,59 @@ export class AuthService {
     }
 
     return data;
+  }
+
+  private async resolveEmailForLogin(identifier: string): Promise<string> {
+    if (identifier.includes("@")) {
+      return identifier.trim().toLowerCase();
+    }
+
+    const normalized = identifier.trim().toLowerCase();
+    const escaped = normalized.replace(/,/g, "\\,");
+
+    // Pre-login lookup cannot rely on anon client because RLS blocks public.users.
+    // Use admin client for identifier -> email mapping and still return generic error.
+    const adminClient = createAdminClient();
+
+    const { data, error } = await adminClient
+      .from("users")
+      .select("email")
+      .or(`username.eq.${escaped},phone.eq.${escaped}`)
+      .limit(1)
+      .single();
+
+    if (error || !data?.email) {
+      throw new AuthenticationError("Invalid username/phone or password");
+    }
+
+    return data.email;
+  }
+
+  private assertAccountCanLogin(profile: any): asserts profile is {
+    username: string;
+    approval_status: "pending" | "approved" | "rejected";
+    is_active: boolean;
+    name?: string;
+    role: "admin" | "member";
+  } {
+    if (!profile) {
+      throw new AuthenticationError("Account profile not found");
+    }
+
+    if (profile.approval_status === "pending") {
+      void this.supabase.auth.signOut();
+      throw new AuthenticationError("Tài khoản đang chờ admin duyệt");
+    }
+
+    if (profile.approval_status === "rejected") {
+      void this.supabase.auth.signOut();
+      throw new AuthenticationError("Tài khoản đã bị từ chối. Vui lòng liên hệ admin");
+    }
+
+    if (!profile.is_active) {
+      void this.supabase.auth.signOut();
+      throw new AuthenticationError("Tài khoản đã bị vô hiệu hóa");
+    }
   }
 }
 

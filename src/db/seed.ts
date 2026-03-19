@@ -40,6 +40,7 @@ async function createAuthUser(email: string, password: string, role: string = 'm
 // Helper to insert user profile
 async function createUserProfile(
   id: string,
+  username: string,
   name: string,
   phone: string,
   email: string,
@@ -49,12 +50,14 @@ async function createUserProfile(
     .from('users')
     .insert({
       id,
+      username,
       name,
       phone,
       email,
       role,
       balance: 0,
       is_active: true,
+      approval_status: 'approved',
     });
 
   if (error) {
@@ -77,7 +80,14 @@ export async function seedDatabase() {
   console.log('👥 Creating admin user...');
 
   const testUsers = [
-    { email: 'admin@caulongclb.local', password: 'Admin@123456', name: 'Quản trị viên', phone: '0901000001', role: 'admin' as const },
+    {
+      username: 'admin',
+      email: 'admin@caulongclb.local',
+      password: 'Admin@123456',
+      name: 'Quản trị viên',
+      phone: '0901000001',
+      role: 'admin' as const,
+    },
   ];
 
   const userMap: Record<string, string> = {};
@@ -85,7 +95,14 @@ export async function seedDatabase() {
   for (const user of testUsers) {
     const userId = await createAuthUser(user.email, user.password, user.role);
     if (userId) {
-      const created = await createUserProfile(userId, user.name, user.phone, user.email, user.role);
+      const created = await createUserProfile(
+        userId,
+        user.username,
+        user.name,
+        user.phone,
+        user.email,
+        user.role,
+      );
       if (created) {
         userMap[user.email] = userId;
         console.log(`  ✓ ${user.name} (${user.email}) [${user.role}]`);

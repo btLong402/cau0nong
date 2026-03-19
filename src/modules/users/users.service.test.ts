@@ -5,14 +5,17 @@ import * as usersRepositoryModule from './users.repository';
 
 // Mock dependencies
 const mockUsersRepo = {
-  findAllActive: vi.fn(),
+  findAll: vi.fn(),
   countActive: vi.fn(),
+  countByApprovalStatus: vi.fn(),
   findById: vi.fn(),
   findByEmail: vi.fn(),
   findByPhone: vi.fn(),
+  findByUsername: vi.fn(),
   updateProfile: vi.fn(),
   deactivate: vi.fn(),
   reactivate: vi.fn(),
+  updateApprovalStatus: vi.fn(),
   findByRole: vi.fn(),
   updateBalance: vi.fn(),
   count: vi.fn(),
@@ -33,26 +36,26 @@ describe('UsersService', () => {
 
   describe('listMembers', () => {
     it('should correctly calculate pagination offset and hasMore (true)', async () => {
-      vi.mocked(mockUsersRepo.findAllActive).mockResolvedValueOnce([{ id: 1 }, { id: 2 }] as any);
-      vi.mocked(mockUsersRepo.countActive).mockResolvedValueOnce(5);
+      vi.mocked(mockUsersRepo.findAll).mockResolvedValueOnce([{ id: 1 }, { id: 2 }] as any);
+      vi.mocked(mockUsersRepo.count).mockResolvedValueOnce(5);
 
       // Page 1, Limit 2 => Offset 0, hasMore = true (0 + 2 < 5)
       const result = await service.listMembers(1, 2);
       
-      expect(mockUsersRepo.findAllActive).toHaveBeenCalledWith(2, 0); // limit, offset
+      expect(mockUsersRepo.findAll).toHaveBeenCalledWith(2, 0); // limit, offset
       expect(result.members).toHaveLength(2);
       expect(result.total).toBe(5);
       expect(result.hasMore).toBe(true);
     });
 
     it('should correctly calculate pagination offset and hasMore (false)', async () => {
-      vi.mocked(mockUsersRepo.findAllActive).mockResolvedValueOnce([{ id: 3 }] as any);
-      vi.mocked(mockUsersRepo.countActive).mockResolvedValueOnce(3);
+      vi.mocked(mockUsersRepo.findAll).mockResolvedValueOnce([{ id: 3 }] as any);
+      vi.mocked(mockUsersRepo.count).mockResolvedValueOnce(3);
 
       // Page 2, Limit 2 => Offset 2, hasMore = false (2 + 2 >= 3)
       const result = await service.listMembers(2, 2);
       
-      expect(mockUsersRepo.findAllActive).toHaveBeenCalledWith(2, 2);
+      expect(mockUsersRepo.findAll).toHaveBeenCalledWith(2, 2);
       expect(result.hasMore).toBe(false);
     });
   });
@@ -179,12 +182,14 @@ describe('UsersService', () => {
       vi.mocked(mockUsersRepo.count).mockResolvedValueOnce(10);
       vi.mocked(mockUsersRepo.countActive).mockResolvedValueOnce(8);
       vi.mocked(mockUsersRepo.findByRole).mockResolvedValueOnce([{ id: 'a1' }, { id: 'a2' }] as any);
+      vi.mocked(mockUsersRepo.countByApprovalStatus).mockResolvedValueOnce(2);
 
       const result = await service.getStats();
 
       expect(result.totalMembers).toBe(10);
       expect(result.activeMembers).toBe(8);
       expect(result.admins).toBe(2);
+      expect(result.pendingApprovals).toBe(2);
     });
   });
 
