@@ -26,3 +26,4 @@ export {
   EVENT_NAME_MIN_LENGTH,
   EVENT_DEFAULTS,
 } from "./constants";
+export { EventsDashboard } from "./components/events-dashboard";

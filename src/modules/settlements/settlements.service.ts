@@ -1,17 +1,16 @@
 import { calculateMonthlySettlement, calculateCarriedBalance } from "@/lib/calculations";
 import {
-  EventParticipant,
   MonthlySetting,
-  Session,
-  SessionAttendance,
-  ShuttlecockDetail,
 } from "@/lib/types";
 import { createMonthsService } from "@/modules/months/months.service";
 import { createSessionsService } from "@/modules/sessions/sessions.service";
-import { createShuttlecocksRepository } from "@/modules/shuttlecocks/shuttlecocks.repository";
 import { createUsersService } from "@/modules/users/users.service";
-import { createEventParticipantsRepository } from "@/modules/events/event-participants.repository";
-import { createEventsRepository } from "@/modules/events/events.repository";
+import {
+  getAttendanceForSessions,
+  getEventParticipantsForMonth,
+  getParticipantIds,
+  getShuttlecockDetails,
+} from "./settlements.helpers";
 import {
   ConflictError,
   InvalidStateError,
@@ -146,7 +145,7 @@ export class SettlementsService {
 
     const monthsService = await createMonthsService();
     const sessionsService = await createSessionsService();
-    const month = await monthsService.getMonth(monthId);
+    await monthsService.getMonth(monthId);
     const existing = await this.repository.findByMonth(monthId);
     const force = options?.force || false;
 
@@ -163,20 +162,20 @@ export class SettlementsService {
       );
     }
 
-    const attendances = await this.getAttendanceForSessions(
+    const attendances = await getAttendanceForSessions(
       sessions,
       sessionsService
     );
 
-    const participants = this.getParticipantIds(attendances);
+    const participants = getParticipantIds(attendances);
     if (participants.length === 0) {
       throw new InvalidStateError(
         "Cannot generate settlements: no attended records found"
       );
     }
 
-    const shuttlecockDetails = await this.getShuttlecockDetails(monthId);
-    const eventParticipants = await this.getEventParticipantsForMonth(monthId);
+    const shuttlecockDetails = await getShuttlecockDetails(monthId);
+    const eventParticipants = await getEventParticipantsForMonth(monthId);
 
     const rows: Array<Omit<MonthlySetting, "id" | "created_at">> = [];
     for (const userId of participants) {
@@ -244,68 +243,6 @@ export class SettlementsService {
     );
 
     return updatedSettlement;
-  }
-
-  private async getAttendanceForSessions(
-    sessions: Session[],
-    sessionsService: { getSessionAttendance: (sessionId: number) => Promise<SessionAttendance[]> }
-  ): Promise<SessionAttendance[]> {
-    const chunks = await Promise.all(
-      sessions.map((session) => sessionsService.getSessionAttendance(session.id))
-    );
-    return chunks.flat();
-  }
-
-  private getParticipantIds(attendances: SessionAttendance[]): string[] {
-    const ids = new Set<string>();
-    for (const row of attendances) {
-      if (row.is_attended) {
-        ids.add(row.user_id);
-      }
-    }
-    return Array.from(ids);
-  }
-
-  /**
-   * Fetch actual shuttlecock detail records for a month
-   */
-  private async getShuttlecockDetails(monthId: number): Promise<ShuttlecockDetail[]> {
-    try {
-      const repo = await createShuttlecocksRepository();
-      return await repo.findByMonth(monthId);
-    } catch {
-      return [];
-    }
-  }
-
-  /**
-   * Fetch event participants for events linked to this month
-   */
-  private async getEventParticipantsForMonth(monthId: number): Promise<EventParticipant[]> {
-    try {
-      const eventsRepo = await createEventsRepository();
-      const participantsRepo = await createEventParticipantsRepository();
-
-      // Find events linked to this month
-      const { data: events } = await (eventsRepo as any).supabase
-        .from("events")
-        .select("id")
-        .eq("month_id", monthId);
-
-      if (!events || events.length === 0) {
-        return [];
-      }
-
-      const allParticipants: EventParticipant[] = [];
-      for (const event of events) {
-        const participants = await participantsRepo.findByEvent(event.id);
-        allParticipants.push(...participants);
-      }
-
-      return allParticipants;
-    } catch {
-      return [];
-    }
   }
 }
 

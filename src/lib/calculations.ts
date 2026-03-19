@@ -2,7 +2,6 @@
  * Settlement & Payment Calculation Engines
  * Contains all formulas outlined in business specification
  */
-
 import type {
   Session,
   SessionAttendance,

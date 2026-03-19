@@ -2,7 +2,6 @@
  * Generic Repository Pattern for Data Access
  * Provides base class for all data access implementations
  */
-
 import { SupabaseClient } from "@supabase/supabase-js";
 import {
   ApiError,

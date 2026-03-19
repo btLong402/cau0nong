@@ -1,51 +1,19 @@
-/**
- * Authentication Service
- * Handles user registration, login, session management with Supabase Auth
- */
-
 import { createServerSupabaseClient, createAdminClient } from "@/lib/supabase";
 import { AuthenticationError, ConflictError, ServerError } from "@/shared/api";
-import { NextRequest } from "next/server";
+import {
+  assertAccountCanLogin,
+  createUserProfile,
+  getUserById,
+  resolveEmailForLogin,
+} from "./auth.service.helpers";
+import {
+  AuthResponse,
+  CurrentUserResponse,
+  SignInData,
+  SignUpData,
+} from "./auth.types";
 
-export interface SignUpData {
-  username: string;
-  email: string;
-  password: string;
-  name: string;
-  phone: string;
-}
-
-export interface SignInData {
-  identifier?: string;
-  email?: string;
-  password: string;
-}
-
-export interface AuthResponse {
-  user: {
-    id: string;
-    username: string;
-    email: string;
-    name?: string;
-    role: "admin" | "member";
-    approvalStatus: "pending" | "approved" | "rejected";
-  };
-  token: string;
-}
-
-export interface CurrentUserResponse {
-  id: string;
-  username: string;
-  email: string;
-  name?: string;
-  role: "admin" | "member";
-  approvalStatus: "pending" | "approved" | "rejected";
-}
-
-/**
- * Authentication Service
- * Handles all auth operations via Supabase
- */
+export type { SignUpData, SignInData, AuthResponse, CurrentUserResponse } from "./auth.types";
 export class AuthService {
   private supabase;
 
@@ -53,13 +21,8 @@ export class AuthService {
     this.supabase = supabaseClient;
   }
 
-  /**
-   * Sign up new user with email and password
-   * Creates both auth user and profile entry
-   */
   async signUp(data: SignUpData): Promise<AuthResponse> {
     try {
-      // Create Supabase Auth user
       const { data: authData, error: authError } = await this.supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -68,7 +31,7 @@ export class AuthService {
             username: data.username,
             name: data.name,
             phone: data.phone,
-            role: "member", // Default role
+            role: "member",
             approval_status: "pending",
           },
         },
@@ -85,9 +48,8 @@ export class AuthService {
         throw new ServerError("Failed to create user");
       }
 
-      // Create user profile in public.users table
       const adminClient = createAdminClient();
-      await this.createUserProfile(adminClient, {
+      await createUserProfile(adminClient, {
         id: authData.user.id,
         username: data.username,
         email: data.email,
@@ -121,17 +83,14 @@ export class AuthService {
     }
   }
 
-  /**
-   * Create a new user as an admin (bypasses rate limits and email confirmation)
-   */
   async createAdminUser(data: SignUpData): Promise<AuthResponse> {
     try {
       const adminClient = createAdminClient();
-      
+
       const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
         email: data.email,
         password: data.password,
-        email_confirm: true, // Auto confirm so they can login immediately
+        email_confirm: true,
         user_metadata: {
           username: data.username,
           name: data.name,
@@ -152,8 +111,7 @@ export class AuthService {
         throw new ServerError("Failed to create user");
       }
 
-      // Create user profile in public.users table
-      await this.createUserProfile(adminClient, {
+      await createUserProfile(adminClient, {
         id: authData.user.id,
         username: data.username,
         email: data.email,
@@ -173,7 +131,7 @@ export class AuthService {
           role: "member",
           approvalStatus: "approved",
         },
-        token: "", // No token when admin creates another user
+        token: "",
       };
     } catch (error) {
       if (
@@ -187,9 +145,6 @@ export class AuthService {
     }
   }
 
-  /**
-   * Sign in with user name or email and password
-   */
   async signIn(data: SignInData): Promise<AuthResponse> {
     try {
       const identifier = data.identifier || data.email;
@@ -197,7 +152,7 @@ export class AuthService {
         throw new AuthenticationError("Missing login identifier");
       }
 
-      const emailForAuth = await this.resolveEmailForLogin(identifier);
+      const emailForAuth = await resolveEmailForLogin(identifier);
 
       const { data: authData, error } = await this.supabase.auth.signInWithPassword({
         email: emailForAuth,
@@ -215,9 +170,8 @@ export class AuthService {
         throw new ServerError("Failed to authenticate");
       }
 
-      // Fetch user profile to get full details
       const userProfile = await this.getUserById(authData.user.id);
-      this.assertAccountCanLogin(userProfile);
+      assertAccountCanLogin(userProfile, () => this.supabase.auth.signOut());
 
       return {
         user: {
@@ -238,24 +192,14 @@ export class AuthService {
     }
   }
 
-  /**
-   * Sign in with phone number + password
-   * Looks up email by phone, then delegates to signIn
-   */
   async signInWithPhone(phone: string, password: string): Promise<AuthResponse> {
     return this.signIn({ identifier: phone, password });
   }
 
-  /**
-   * Sign in with username + password
-   */
   async signInWithUsername(username: string, password: string): Promise<AuthResponse> {
     return this.signIn({ identifier: username, password });
   }
 
-  /**
-   * Get current authenticated user session
-   */
   async getSession() {
     const { data, error } = await this.supabase.auth.getSession();
 
@@ -266,9 +210,6 @@ export class AuthService {
     return data.session;
   }
 
-  /**
-   * Get current authenticated user with profile data.
-   */
   async getCurrentUser(): Promise<CurrentUserResponse> {
     const session = await this.getSession();
     const profile = await this.getUserById(session.user.id);
@@ -285,9 +226,6 @@ export class AuthService {
     };
   }
 
-  /**
-   * Refresh JWT access token
-   */
   async refreshSession() {
     const { data, error } = await this.supabase.auth.refreshSession();
 
@@ -298,9 +236,6 @@ export class AuthService {
     return data.session;
   }
 
-  /**
-   * Sign out (invalidate session)
-   */
   async signOut() {
     const { error } = await this.supabase.auth.signOut();
 
@@ -309,9 +244,6 @@ export class AuthService {
     }
   }
 
-  /**
-   * Confirm auth email by user ID (admin operation)
-   */
   async confirmEmailForUser(userId: string): Promise<void> {
     const adminClient = createAdminClient();
     const { error } = await adminClient.auth.admin.updateUserById(userId, {
@@ -323,159 +255,11 @@ export class AuthService {
     }
   }
 
-  /**
-   * Create user profile in public.users table
-   * This mirrors the auth user for easier querying
-   */
-  private async createUserProfile(adminClient: any, profile: {
-    id: string;
-    username: string;
-    email: string;
-    name: string;
-    phone: string;
-    role: "admin" | "member";
-    approval_status: "pending" | "approved" | "rejected";
-    is_active: boolean;
-  }) {
-    const { error } = await adminClient.from("users").insert([
-      {
-        id: profile.id,
-        username: profile.username,
-        email: profile.email,
-        name: profile.name,
-        phone: profile.phone,
-        role: profile.role,
-        balance: 0,
-        is_active: profile.is_active,
-        approval_status: profile.approval_status,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-    ]);
-
-    if (error) {
-      console.error("Failed to create user profile:", error);
-      // Don't throw - auth user is already created
-      // This can be synced later or created manually
-    }
-  }
-
-  /**
-   * Get user by ID from public.users table
-   */
   async getUserById(userId: string) {
-    const { data, error } = await this.supabase
-      .from("users")
-      .select("*")
-      .eq("id", userId)
-      .single();
-
-    if (error) {
-      return null;
-    }
-
-    return data;
-  }
-
-  private async resolveEmailForLogin(identifier: string): Promise<string> {
-    if (identifier.includes("@")) {
-      return identifier.trim().toLowerCase();
-    }
-
-    const normalized = identifier.trim().toLowerCase();
-
-    // Pre-login lookup cannot rely on anon client because RLS blocks public.users.
-    // Use admin client for identifier -> email mapping and still return generic error.
-    const adminClient = createAdminClient();
-
-    const isPhoneLike = /^(\+?\d{9,15}|0\d{8,11})$/.test(normalized);
-
-    const getAuthEmailByUserId = async (userId: string): Promise<string | null> => {
-      try {
-        const authLookup = await adminClient.auth.admin.getUserById(userId);
-        const authEmail = authLookup?.data?.user?.email;
-        return authEmail ? String(authEmail).trim().toLowerCase() : null;
-      } catch {
-        return null;
-      }
-    };
-
-    if (isPhoneLike) {
-      const phoneLookup = await adminClient
-        .from("users")
-        .select("id,email")
-        .eq("phone", normalized)
-        .limit(1)
-        .single();
-
-      const profileUserId = phoneLookup.data?.id as string | undefined;
-      if (profileUserId) {
-        const authEmail = await getAuthEmailByUserId(profileUserId);
-        if (authEmail) {
-          return authEmail;
-        }
-      }
-
-      if (phoneLookup.data?.email) {
-        return String(phoneLookup.data.email).trim().toLowerCase();
-      }
-
-      throw new AuthenticationError("Invalid username/phone or password");
-    }
-
-    const usernameLookup = await adminClient
-      .from("users")
-      .select("id,email")
-      .eq("username", normalized)
-      .limit(1)
-      .single();
-
-    const profileUserId = usernameLookup.data?.id as string | undefined;
-    if (profileUserId) {
-      const authEmail = await getAuthEmailByUserId(profileUserId);
-      if (authEmail) {
-        return authEmail;
-      }
-    }
-
-    if (usernameLookup.data?.email) {
-      return String(usernameLookup.data.email).trim().toLowerCase();
-    }
-
-    throw new AuthenticationError("Invalid username/phone or password");
-  }
-
-  private assertAccountCanLogin(profile: any): asserts profile is {
-    username: string;
-    approval_status: "pending" | "approved" | "rejected";
-    is_active: boolean;
-    name?: string;
-    role: "admin" | "member";
-  } {
-    if (!profile) {
-      throw new AuthenticationError("Account profile not found");
-    }
-
-    if (profile.approval_status === "pending") {
-      void this.supabase.auth.signOut();
-      throw new AuthenticationError("Tài khoản đang chờ admin duyệt");
-    }
-
-    if (profile.approval_status === "rejected") {
-      void this.supabase.auth.signOut();
-      throw new AuthenticationError("Tài khoản đã bị từ chối. Vui lòng liên hệ admin");
-    }
-
-    if (!profile.is_active) {
-      void this.supabase.auth.signOut();
-      throw new AuthenticationError("Tài khoản đã bị vô hiệu hóa");
-    }
+    return getUserById(this.supabase, userId);
   }
 }
 
-/**
- * Create auth service instance with server Supabase client
- */
 export async function createAuthService() {
   const supabase = await createServerSupabaseClient();
   return new AuthService(supabase);

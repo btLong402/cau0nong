@@ -105,6 +105,17 @@ export class EventsRepository extends Repository<Event> {
   async deleteEvent(id: number): Promise<boolean> {
     return this.delete(id);
   }
+
+  async findIdsByMonth(monthId: number): Promise<number[]> {
+    const { data, error } = await this.supabase
+      .from(this.tableName)
+      .select("id")
+      .eq("month_id", monthId);
+
+    if (error) throw this.mapError(error);
+
+    return (data || []).map((row) => row.id as number);
+  }
 }
 
 export async function createEventsRepository(): Promise<EventsRepository> {

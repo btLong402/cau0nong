@@ -4,3 +4,4 @@ export {
   createSettlementsService,
   type GenerateSettlementResult,
 } from "./settlements.service";
+export { SettlementsDashboard } from "./components/dashboard";
