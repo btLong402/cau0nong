@@ -29,6 +29,10 @@ interface SessionsResponse {
   sessions: Session[];
 }
 
+interface SessionResponse {
+  session: Session;
+}
+
 interface AttendanceResponse {
   attendance: Attendance[];
 }
@@ -56,12 +60,14 @@ export function useSessions(monthId: number) {
 
 export function useSession(monthId: number, sessionId: number) {
   const url = `/api/months/${monthId}/sessions/${sessionId}`;
-  const { data, loading, error, refetch } = useFetch<Session>(url, {
+  const { data, loading, error, refetch } = useFetch<Session | SessionResponse>(url, {
     skip: !sessionId,
   });
 
+  const session = data && 'session' in data ? data.session : data;
+
   return {
-    session: data || null,
+    session: session || null,
     loading,
     error,
     refetch,

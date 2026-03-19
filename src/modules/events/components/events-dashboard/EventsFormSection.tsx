@@ -18,6 +18,16 @@ export function EventsFormSection({
   onSubmit,
   onCancel,
 }: EventsFormSectionProps) {
+  const initialData = editingEvent
+    ? {
+        event_name: editingEvent.event_name,
+        event_date: editingEvent.event_date,
+        total_support: editingEvent.total_support,
+        total_expense: editingEvent.total_expense,
+        month_id: editingEvent.month_id ?? undefined,
+      }
+    : undefined;
+
   if (!showForm) {
     return null;
   }
@@ -28,7 +38,7 @@ export function EventsFormSection({
         {editingEvent ? "Cập nhật sự kiện" : "Tạo sự kiện mới"}
       </h2>
       <EventForm
-        initialData={editingEvent || undefined}
+        initialData={initialData}
         onSubmit={onSubmit}
         onCancel={onCancel}
         isEditing={!!editingEvent}

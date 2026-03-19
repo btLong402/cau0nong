@@ -24,6 +24,12 @@ vi.mock('@/modules/sessions/sessions.service', () => ({
   })
 }));
 
+vi.mock('@/modules/users/users.service', () => ({
+  createUsersService: vi.fn().mockResolvedValue({
+    updateBalance: vi.fn().mockResolvedValue(undefined),
+  }),
+}));
+
 vi.mock('@/modules/shuttlecocks/shuttlecocks.repository', () => ({
   createShuttlecocksRepository: vi.fn().mockResolvedValue({
     findByMonth: vi.fn().mockResolvedValue([])

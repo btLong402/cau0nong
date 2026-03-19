@@ -1,5 +1,7 @@
+import type { User } from './auth-store';
+
 interface LoginResponseData {
-  user: unknown;
+  user: User | null;
   token: string | null;
 }
 
@@ -37,7 +39,7 @@ export async function loginRequest(identifier: string, password: string): Promis
   };
 }
 
-export async function registerRequest(data: RegisterPayload) {
+export async function registerRequest(data: RegisterPayload): Promise<User> {
   const response = await fetch('/api/auth/register', {
     method: 'POST',
     headers: {
@@ -51,7 +53,7 @@ export async function registerRequest(data: RegisterPayload) {
     throw new Error(asErrorMessage(payload, 'Registration failed'));
   }
 
-  return payload.data?.user;
+  return payload.data?.user as User;
 }
 
 export async function logoutRequest() {
@@ -70,7 +72,7 @@ export async function refreshTokenRequest(): Promise<LoginResponseData> {
   }
 
   return {
-    user: payload.data?.user,
+    user: (payload.data?.user as User) || null,
     token: payload.data?.token || null,
   };
 }

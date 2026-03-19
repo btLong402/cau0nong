@@ -29,7 +29,7 @@ export const PUT = createPutHandler({
     const data = await req.json();
 
     const service = await createShuttlecocksService();
-    const shuttlecock = await service.updateDetail(shuttlecockId, {
+    const shuttlecock = await service.updatePurchase(shuttlecockId, {
       purchase_date: data.purchase_date,
       quantity: data.quantity,
       unit_price: data.unit_price,
@@ -46,7 +46,7 @@ export const DELETE = createDeleteHandler({
     const { shuttlecockId } = parseIds(req.url);
 
     const service = await createShuttlecocksService();
-    await service.deleteDetail(shuttlecockId);
+    await service.deletePurchase(shuttlecockId);
 
     return { deleted: true };
   },

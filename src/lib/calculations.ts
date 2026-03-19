@@ -105,20 +105,40 @@ export const calculateCarriedBalance = (
   previousSettlement?: MonthlySetting
 ): number => {
   if (!previousSettlement) return 0;
+
+  const hasDetailedFields =
+    previousSettlement.court_fee !== undefined ||
+    previousSettlement.shuttlecock_fee !== undefined ||
+    previousSettlement.past_debt !== undefined ||
+    previousSettlement.event_debt !== undefined ||
+    previousSettlement.balance_carried !== undefined ||
+    previousSettlement.court_payer_offset !== undefined ||
+    previousSettlement.shuttlecock_buyer_offset !== undefined;
+
+  if (!hasDetailedFields) {
+    if (previousSettlement.is_paid) {
+      return 0;
+    }
+
+    const paid = Number(previousSettlement.paid_amount || 0);
+    const due = Number(previousSettlement.total_due || 0);
+    const overflow = paid - due;
+    return overflow > 0 ? Math.round(overflow * 100) / 100 : 0;
+  }
   
   // Total costs the user was responsible for in the previous month
   const totalCosts = 
-    previousSettlement.court_fee + 
-    previousSettlement.shuttlecock_fee + 
-    previousSettlement.past_debt + 
-    (previousSettlement.event_debt || 0);
+    Number(previousSettlement.court_fee || 0) + 
+    Number(previousSettlement.shuttlecock_fee || 0) + 
+    Number(previousSettlement.past_debt || 0) + 
+    Number(previousSettlement.event_debt || 0);
     
   // Total "funds" provided by the user (previous balance + new offsets + actual payment)
   const totalFunds = 
-    previousSettlement.balance_carried + 
-    previousSettlement.court_payer_offset + 
-    previousSettlement.shuttlecock_buyer_offset + 
-    (previousSettlement.paid_amount || 0);
+    Number(previousSettlement.balance_carried || 0) + 
+    Number(previousSettlement.court_payer_offset || 0) + 
+    Number(previousSettlement.shuttlecock_buyer_offset || 0) + 
+    Number(previousSettlement.paid_amount || 0);
     
   const netBalance = totalFunds - totalCosts;
   

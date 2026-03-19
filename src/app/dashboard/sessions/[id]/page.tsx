@@ -142,6 +142,11 @@ export default function AttendancePage({ params }: { params: Promise<{ id: strin
     );
   }
 
+  const sessionDateLabel = session?.session_date
+    ? new Date(session.session_date).toLocaleDateString('vi-VN')
+    : '--/--/----';
+  const sessionExpenseLabel = Number(session?.court_expense_amount ?? 0).toLocaleString('vi-VN');
+
   const isEditable = authUser?.role === 'admin' && monthStatus === 'open' && session?.status === 'open';
 
   return (
@@ -157,8 +162,8 @@ export default function AttendancePage({ params }: { params: Promise<{ id: strin
           <h1 className="text-xl font-bold text-[var(--foreground)]">Điểm danh</h1>
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-sm text-[var(--muted)]">
-              Ngày {new Date(session!.session_date).toLocaleDateString('vi-VN')} • 
-              Chi phí: {session!.court_expense_amount.toLocaleString('vi-VN')} đ
+              Ngày {sessionDateLabel} • 
+              Chi phí: {sessionExpenseLabel} đ
             </p>
             {monthStatus === 'closed' && (
               <span className="badge badge-neutral">Đã đóng kỳ</span>

@@ -6,9 +6,118 @@ import { ValidationError, NotFoundError } from "@/shared/api";
 export class ShuttlecocksService {
   constructor(private repository: ShuttlecocksRepository) {}
 
+  private validateId(id: number) {
+    if (!Number.isInteger(id) || id <= 0) {
+      throw new ValidationError("Invalid shuttlecock detail ID");
+    }
+  }
+
+  private validatePurchaseDate(date: string) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      throw new ValidationError("purchase_date must be in format YYYY-MM-DD");
+    }
+  }
+
+  private validateQuantity(quantity: number) {
+    if (!Number.isInteger(quantity) || quantity <= 0) {
+      throw new ValidationError("quantity must be a positive integer");
+    }
+  }
+
+  private validateUnitPrice(unitPrice: number) {
+    if (unitPrice <= 0) {
+      throw new ValidationError("unit_price must be greater than 0");
+    }
+  }
+
+  private validateBuyerUserId(buyerUserId: string) {
+    if (!buyerUserId?.trim()) {
+      throw new ValidationError("buyer_user_id is required");
+    }
+  }
+
   async listByMonth(monthId: number) {
-    if (!monthId || monthId <= 0) throw new ValidationError("Invalid month ID");
+    if (!Number.isInteger(monthId) || monthId <= 0) throw new ValidationError("Invalid month ID");
     return this.repository.findByMonthWithBuyer(monthId);
+  }
+
+  async getById(id: number) {
+    this.validateId(id);
+
+    try {
+      const detail = await this.repository.findById(id);
+      if (!detail) {
+        throw new NotFoundError("Shuttlecock detail");
+      }
+      return detail;
+    } catch {
+      throw new NotFoundError("Shuttlecock detail");
+    }
+  }
+
+  async createDetail(data: {
+    month_id: number;
+    purchase_date: string;
+    quantity: number;
+    unit_price: number;
+    buyer_user_id: string;
+    notes?: string;
+  }) {
+    if (!Number.isInteger(data.month_id) || data.month_id <= 0) {
+      throw new ValidationError("Invalid month ID");
+    }
+    this.validatePurchaseDate(data.purchase_date);
+    this.validateQuantity(data.quantity);
+    this.validateUnitPrice(data.unit_price);
+    this.validateBuyerUserId(data.buyer_user_id);
+
+    return this.repository.createDetail(data);
+  }
+
+  async updateDetail(
+    id: number,
+    data: Partial<{
+      purchase_date: string;
+      quantity: number;
+      unit_price: number;
+      buyer_user_id: string;
+      notes: string;
+    }>
+  ) {
+    this.validateId(id);
+
+    try {
+      await this.repository.findById(id);
+    } catch {
+      throw new NotFoundError("Shuttlecock detail");
+    }
+
+    if (data.purchase_date !== undefined) {
+      this.validatePurchaseDate(data.purchase_date);
+    }
+    if (data.quantity !== undefined) {
+      this.validateQuantity(data.quantity);
+    }
+    if (data.unit_price !== undefined) {
+      this.validateUnitPrice(data.unit_price);
+    }
+    if (data.buyer_user_id !== undefined) {
+      this.validateBuyerUserId(data.buyer_user_id);
+    }
+
+    return this.repository.updateDetail(id, data);
+  }
+
+  async deleteDetail(id: number) {
+    this.validateId(id);
+
+    try {
+      await this.repository.findById(id);
+    } catch {
+      throw new NotFoundError("Shuttlecock detail");
+    }
+
+    return this.repository.deleteDetail(id);
   }
 
   async addPurchase(data: {
