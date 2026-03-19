@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import {
   useAuth,
@@ -10,6 +10,8 @@ import {
   useSessions,
   useUpdateSession,
 } from "@/shared/hooks";
+import { useSessionsDashboardActions } from "@/modules/sessions/hooks/useSessionsDashboard.actions";
+import { useSessionsDashboardDefaults } from "@/modules/sessions/hooks/useSessionsDashboard.defaults";
 
 export interface DashboardMonth {
   id: number;
@@ -24,14 +26,6 @@ export interface DashboardSession {
   payer_user_id: string;
   notes?: string;
   status: "open" | "closed";
-}
-
-function getTodayDateValue(): string {
-  return new Date().toISOString().split("T")[0];
-}
-
-function getErrorMessage(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
 }
 
 export function useSessionsDashboard() {
@@ -63,33 +57,16 @@ export function useSessionsDashboard() {
   const [notes, setNotes] = useState("");
   const [formError, setFormError] = useState("");
 
-  useEffect(() => {
-    if (selectedMonth !== null || months.length === 0) {
-      return;
-    }
-
-    const openMonth = months.find((month: DashboardMonth) => month.status === "open");
-    if (openMonth) {
-      setSelectedMonth(openMonth.id);
-      return;
-    }
-
-    setSelectedMonth(months[0].id);
-  }, [months, selectedMonth]);
-
-  useEffect(() => {
-    if (!sessionDate) {
-      setSessionDate(getTodayDateValue());
-    }
-  }, [sessionDate]);
-
-  useEffect(() => {
-    if (!users.length || payerUserId) {
-      return;
-    }
-
-    setPayerUserId(users[0].id);
-  }, [payerUserId, users]);
+  useSessionsDashboardDefaults({
+    months,
+    selectedMonth,
+    setSelectedMonth,
+    sessionDate,
+    setSessionDate,
+    users,
+    payerUserId,
+    setPayerUserId,
+  });
 
   const selectedMonthData = useMemo(
     () => months.find((month: DashboardMonth) => month.id === selectedMonth),
@@ -110,52 +87,35 @@ export function useSessionsDashboard() {
     setShowNewSessionForm(false);
   };
 
-  const createSession = async () => {
-    if (!selectedMonth || !sessionDate || !courtExpense || !payerUserId) {
-      setFormError("Vui lòng điền đầy đủ các thông tin bắt buộc");
-      return;
-    }
+  const { createSession, closeSession } = useSessionsDashboardActions({
+    selectedMonth,
+    sessionDate,
+    courtExpense,
+    payerUserId,
+    notes,
+    create,
+    update,
+    refetchSessions,
+    setFormError,
+    setCreating,
+    setShowNewSessionForm,
+    setCourtExpense,
+    setNotes,
+  });
 
-    setCreating(true);
-    setFormError("");
-
-    try {
-      await create(
-        selectedMonth,
-        sessionDate,
-        parseInt(courtExpense, 10),
-        payerUserId,
-        notes,
-      );
-      await refetchSessions();
-      setShowNewSessionForm(false);
-      setCourtExpense("");
-      setNotes("");
-    } catch (createError: unknown) {
-      setFormError(getErrorMessage(createError, "Không thể tạo buổi tập."));
-    } finally {
-      setCreating(false);
-    }
+  const sessionFormState = {
+    sessionDate,
+    setSessionDate,
+    courtExpense,
+    setCourtExpense,
+    payerUserId,
+    setPayerUserId,
+    notes,
+    setNotes,
+    formError,
   };
 
-  const closeSession = async (sessionId: number) => {
-    if (!selectedMonth) {
-      return;
-    }
-
-    try {
-      await update(selectedMonth, sessionId, { status: "closed" });
-      await refetchSessions();
-    } catch (closeError) {
-      console.error("Error closing session:", closeError);
-    }
-  };
-
-  return {
-    authUser,
-    months,
-    users,
-    sessions,
+  const sessionUiState = {
     selectedMonth,
     setSelectedMonth,
     selectedMonthData,
@@ -167,16 +127,15 @@ export function useSessionsDashboard() {
     closeNewSessionForm,
     creating,
     creatingSession,
-    sessionDate,
-    setSessionDate,
-    courtExpense,
-    setCourtExpense,
-    payerUserId,
-    setPayerUserId,
-    notes,
-    setNotes,
-    formError,
-    setFormError,
+  };
+
+  return {
+    authUser,
+    months,
+    users,
+    sessions,
+    ...sessionUiState,
+    ...sessionFormState,
     createSession,
     closeSession,
   };
