@@ -3,6 +3,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/shared/hooks';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -10,13 +11,6 @@ import { usePathname, useRouter } from 'next/navigation';
 
 interface DashboardLayoutProps {
   children: ReactNode;
-}
-
-interface DashboardUser {
-  id: string;
-  email: string;
-  name?: string;
-  role: 'admin' | 'member';
 }
 
 /* ------------------------------------------------------------------ */
@@ -123,32 +117,18 @@ function UserAvatar({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' })
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [user, setUser] = useState<DashboardUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading, logout } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
-    async function fetchUser() {
-      try {
-        const response = await fetch('/api/auth/me', { cache: 'no-store' });
-
-        if (!response.ok) {
-          router.replace(`/login?from=${encodeURIComponent(pathname)}`);
-          return;
-        }
-
-        const data = await response.json();
-        setUser(data.data?.user);
-      } catch (error) {
-        console.error('Failed to fetch user:', error);
-        router.replace(`/login?from=${encodeURIComponent(pathname)}`);
-      } finally {
-        setLoading(false);
-      }
+    if (!loading && !user) {
+      // Capture current path from window, not from dependencies to avoid re-runs
+      const fromPath = typeof window !== 'undefined' 
+        ? window.location.pathname 
+        : '/dashboard';
+      router.replace(`/login?from=${encodeURIComponent(fromPath)}`);
     }
-
-    fetchUser();
-  }, [pathname, router]);
+  }, [loading, user, router]);
 
   // Close drawer on route change
   useEffect(() => {
@@ -156,13 +136,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [pathname]);
 
   async function handleLogout() {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      router.replace('/login');
-    }
+    await logout();
+    router.replace('/login');
   }
 
   function isActive(href: string) {

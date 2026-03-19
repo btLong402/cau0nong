@@ -155,7 +155,16 @@ export class UsersService {
    */
   async approveMember(userId: string): Promise<User> {
     await this.getMember(userId);
-    return await this.repository.updateApprovalStatus(userId, "approved");
+    const approvedUser = await this.repository.updateApprovalStatus(userId, "approved");
+
+    try {
+      const authService = await createAuthService();
+      await authService.confirmEmailForUser(userId);
+    } catch (error) {
+      console.error(`Failed to confirm auth email for user ${userId}:`, error);
+    }
+
+    return approvedUser;
   }
 
   /**

@@ -5,6 +5,8 @@
 
 import { useState, useCallback } from 'react';
 import { useFetch } from './useFetch';
+import { mutate } from 'swr';
+import { apiRequest } from '@/shared/lib';
 
 export interface Session {
   id: number;
@@ -13,6 +15,7 @@ export interface Session {
   court_expense_amount: number;
   payer_user_id: string;
   notes?: string;
+  status: 'open' | 'closed';
 }
 
 export interface Attendance {
@@ -30,10 +33,17 @@ interface AttendanceResponse {
   attendance: Attendance[];
 }
 
+function isSessionKeyForMonth(key: unknown, monthId: number): boolean {
+  return (
+    typeof key === 'string' &&
+    key.startsWith(`/api/months/${monthId}/sessions`)
+  );
+}
+
 export function useSessions(monthId: number) {
   const url = `/api/months/${monthId}/sessions`;
   const { data, loading, error, refetch } = useFetch<SessionsResponse>(url, {
-    skip: !monthId,
+    skip: monthId <= 0,
   });
 
   return {
@@ -47,7 +57,7 @@ export function useSessions(monthId: number) {
 export function useSession(monthId: number, sessionId: number) {
   const url = `/api/months/${monthId}/sessions/${sessionId}`;
   const { data, loading, error, refetch } = useFetch<Session>(url, {
-    skip: !monthId || !sessionId,
+    skip: !sessionId,
   });
 
   return {
@@ -89,12 +99,8 @@ export function useCreateSession() {
       setState({ loading: true, error: null });
 
       try {
-        const response = await fetch(`/api/months/${monthId}/sessions`, {
-          credentials: 'include',
+        const data = await apiRequest<{ session: Session }>(`/api/months/${monthId}/sessions`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
           body: JSON.stringify({
             session_date: sessionDate,
             court_expense_amount: courtExpenseAmount,
@@ -103,14 +109,10 @@ export function useCreateSession() {
           }),
         });
 
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error?.message || 'Failed to create session');
-        }
+        await mutate((key) => isSessionKeyForMonth(key, monthId));
 
         setState({ loading: false, error: null });
-        return data.data?.session;
+        return data.session;
       } catch (error) {
         const err =
           error instanceof Error
@@ -140,26 +142,18 @@ export function useUpdateSession() {
       setState({ loading: true, error: null });
 
       try {
-        const response = await fetch(
+        const data = await apiRequest<{ session: Session }>(
           `/api/months/${monthId}/sessions/${sessionId}`,
           {
-            credentials: 'include',
             method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-            },
             body: JSON.stringify(updates),
           },
         );
 
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error?.message || 'Failed to update session');
-        }
+        await mutate((key) => isSessionKeyForMonth(key, monthId));
 
         setState({ loading: false, error: null });
-        return data.data?.session;
+        return data.session;
       } catch (error) {
         const err =
           error instanceof Error
@@ -189,19 +183,14 @@ export function useDeleteSession() {
       setState({ loading: true, error: null });
 
       try {
-        const response = await fetch(
+        await apiRequest<Record<string, never>>(
           `/api/months/${monthId}/sessions/${sessionId}`,
           {
-            credentials: 'include',
             method: 'DELETE',
           },
         );
 
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error?.message || 'Failed to delete session');
-        }
+        await mutate((key) => isSessionKeyForMonth(key, monthId));
 
         setState({ loading: false, error: null });
       } catch (error) {
@@ -237,26 +226,18 @@ export function useRecordAttendance() {
       setState({ loading: true, error: null });
 
       try {
-        const response = await fetch(
+        const data = await apiRequest<{ attendance: Attendance[] }>(
           `/api/months/${monthId}/sessions/${sessionId}/attendance`,
           {
-            credentials: 'include',
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
             body: JSON.stringify({ records }),
           },
         );
 
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error?.message || 'Failed to record attendance');
-        }
+        await mutate((key) => isSessionKeyForMonth(key, monthId));
 
         setState({ loading: false, error: null });
-        return data.data?.attendance;
+        return data.attendance;
       } catch (error) {
         const err =
           error instanceof Error

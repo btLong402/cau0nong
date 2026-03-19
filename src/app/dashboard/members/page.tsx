@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/shared/hooks';
+import { useAuth, useMembers } from '@/shared/hooks';
+import { apiRequest } from '@/shared/lib';
 
 interface User {
   id: string;
@@ -18,10 +19,16 @@ interface User {
 
 export default function MembersPage() {
   const { user: authUser } = useAuth();
-  const [members, setMembers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const {
+    members,
+    total,
+    loading,
+    refetch,
+  } = useMembers(page, 20, {
+    enabled: authUser?.role === 'admin',
+  });
+  const totalPages = Math.max(1, Math.ceil(total / 20));
   
   // Add Member Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -37,60 +44,21 @@ export default function MembersPage() {
     role: 'member'
   });
 
-  const fetchMembers = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/users?page=${page}&limit=20`);
-
-      if (!response.ok) throw new Error('Failed to fetch members');
-
-      const data = await response.json();
-      setMembers(data.data?.members || []);
-      
-      const total = data.data?.total || 0;
-      setTotalPages(Math.ceil(total / 20));
-    } catch (error) {
-      console.error('Error fetching members:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchMembers();
-  }, [page]);
-
   const handleCreateMember = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
 
     try {
-      const response = await fetch('/api/users', {
+      await apiRequest<{ user: User }>('/api/users', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-
-      if (!response.ok) {
-        const result = await response.json();
-        let errorMessage = 'Failed to create member';
-        if (result.error) {
-          if (typeof result.error === 'string') {
-            errorMessage = result.error;
-          } else if (result.error.message) {
-            errorMessage = result.error.message;
-          } else {
-            errorMessage = JSON.stringify(result.error);
-          }
-        }
-        throw new Error(errorMessage);
-      }
 
       // Success
       setIsModalOpen(false);
       setFormData({ username: '', name: '', email: '', phone: '', password: '', role: 'member' });
-      fetchMembers(); // Refresh list
+      await refetch();
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -103,18 +71,12 @@ export default function MembersPage() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/users/${memberId}/approval`, {
+      await apiRequest<{ user: User }>(`/api/users/${memberId}/approval`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action }),
       });
 
-      if (!response.ok) {
-        const result = await response.json();
-        throw new Error(result.error?.message || `Không thể ${action === 'approve' ? 'duyệt' : 'từ chối'} tài khoản`);
-      }
-
-      await fetchMembers();
+      await refetch();
     } catch (err: any) {
       setError(err.message);
     } finally {

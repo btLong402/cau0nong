@@ -188,7 +188,7 @@ export class AuthService {
   }
 
   /**
-   * Sign in with email and password
+   * Sign in with user name or email and password
    */
   async signIn(data: SignInData): Promise<AuthResponse> {
     try {
@@ -205,6 +205,9 @@ export class AuthService {
       });
 
       if (error) {
+        if (error.message?.toLowerCase().includes("email not confirmed")) {
+          throw new AuthenticationError("Email chưa được xác nhận. Vui lòng liên hệ admin để kích hoạt tài khoản.");
+        }
         throw new AuthenticationError("Invalid email or password");
       }
 
@@ -307,6 +310,20 @@ export class AuthService {
   }
 
   /**
+   * Confirm auth email by user ID (admin operation)
+   */
+  async confirmEmailForUser(userId: string): Promise<void> {
+    const adminClient = createAdminClient();
+    const { error } = await adminClient.auth.admin.updateUserById(userId, {
+      email_confirm: true,
+    });
+
+    if (error) {
+      throw new ServerError(`Failed to confirm user email: ${error.message}`);
+    }
+  }
+
+  /**
    * Create user profile in public.users table
    * This mirrors the auth user for easier querying
    */
@@ -366,24 +383,66 @@ export class AuthService {
     }
 
     const normalized = identifier.trim().toLowerCase();
-    const escaped = normalized.replace(/,/g, "\\,");
 
     // Pre-login lookup cannot rely on anon client because RLS blocks public.users.
     // Use admin client for identifier -> email mapping and still return generic error.
     const adminClient = createAdminClient();
 
-    const { data, error } = await adminClient
-      .from("users")
-      .select("email")
-      .or(`username.eq.${escaped},phone.eq.${escaped}`)
-      .limit(1)
-      .single();
+    const isPhoneLike = /^(\+?\d{9,15}|0\d{8,11})$/.test(normalized);
 
-    if (error || !data?.email) {
+    const getAuthEmailByUserId = async (userId: string): Promise<string | null> => {
+      try {
+        const authLookup = await adminClient.auth.admin.getUserById(userId);
+        const authEmail = authLookup?.data?.user?.email;
+        return authEmail ? String(authEmail).trim().toLowerCase() : null;
+      } catch {
+        return null;
+      }
+    };
+
+    if (isPhoneLike) {
+      const phoneLookup = await adminClient
+        .from("users")
+        .select("id,email")
+        .eq("phone", normalized)
+        .limit(1)
+        .single();
+
+      const profileUserId = phoneLookup.data?.id as string | undefined;
+      if (profileUserId) {
+        const authEmail = await getAuthEmailByUserId(profileUserId);
+        if (authEmail) {
+          return authEmail;
+        }
+      }
+
+      if (phoneLookup.data?.email) {
+        return String(phoneLookup.data.email).trim().toLowerCase();
+      }
+
       throw new AuthenticationError("Invalid username/phone or password");
     }
 
-    return data.email;
+    const usernameLookup = await adminClient
+      .from("users")
+      .select("id,email")
+      .eq("username", normalized)
+      .limit(1)
+      .single();
+
+    const profileUserId = usernameLookup.data?.id as string | undefined;
+    if (profileUserId) {
+      const authEmail = await getAuthEmailByUserId(profileUserId);
+      if (authEmail) {
+        return authEmail;
+      }
+    }
+
+    if (usernameLookup.data?.email) {
+      return String(usernameLookup.data.email).trim().toLowerCase();
+    }
+
+    throw new AuthenticationError("Invalid username/phone or password");
   }
 
   private assertAccountCanLogin(profile: any): asserts profile is {

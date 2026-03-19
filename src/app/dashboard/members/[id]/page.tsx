@@ -1,29 +1,17 @@
 'use client';
 
-import { use, useEffect, useMemo, useState } from 'react';
+import { use, useMemo } from 'react';
 import Link from 'next/link';
-
-interface MemberDetail {
-  id: string;
-  name: string;
-  username: string;
-  email: string;
-  phone: string;
-  role: 'admin' | 'member';
-  balance: number;
-  is_active: boolean;
-  approval_status: 'pending' | 'approved' | 'rejected';
-  created_at: string;
-  updated_at: string;
-}
+import { useMember } from '@/shared/hooks';
+import { ApiRequestError } from '@/shared/lib';
 
 export default function MemberDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: memberId } = use(params);
+  const { member, loading, error, refetch } = useMember(memberId);
 
-  const [member, setMember] = useState<MemberDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
-  const [fetchError, setFetchError] = useState<string | null>(null);
+  const apiError = error as ApiRequestError | null;
+  const notFound = apiError?.status === 404;
+  const fetchError = !notFound ? error?.message || null : null;
 
   const statusTone = useMemo(() => {
     if (!member) return 'badge-neutral';
@@ -44,53 +32,16 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
     return 'Chờ duyệt';
   }, [member]);
 
-  const formatDateTime = (value: string) => {
+  const formatDateTime = (value?: string) => {
+    if (!value) return '--';
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return '--';
     return date.toLocaleString('vi-VN');
   };
 
-  const loadMember = async () => {
-    setLoading(true);
-    setFetchError(null);
-    setNotFound(false);
-
-    try {
-      const response = await fetch(`/api/users/${memberId}`, {
-        credentials: 'include',
-        cache: 'no-store',
-      });
-      const result = await response.json();
-
-      if (!response.ok) {
-        const message = result?.error?.message || 'Không thể tải thông tin thành viên';
-
-        if (response.status === 404) {
-          setNotFound(true);
-          return;
-        }
-
-        throw new Error(message);
-      }
-
-      const payload = result?.data?.user as MemberDetail | undefined;
-      if (!payload) {
-        throw new Error('Dữ liệu thành viên không hợp lệ');
-      }
-
-      setMember(payload);
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Không thể tải thông tin thành viên';
-      setFetchError(message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadMember();
-  }, [memberId]);
+  async function loadMember() {
+    await refetch();
+  }
 
   if (loading) {
     return (

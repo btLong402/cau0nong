@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '@/shared/hooks';
 
 function LoginSkeleton() {
   return (
@@ -18,32 +19,20 @@ function LoginSkeleton() {
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user, loading: authLoading, login } = useAuth();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [checkingSession, setCheckingSession] = useState(true);
 
   const from = searchParams.get('from') || '/dashboard';
   const pendingApproval = searchParams.get('pendingApproval') === 'true';
 
   useEffect(() => {
-    async function checkCurrentSession() {
-      try {
-        const response = await fetch('/api/auth/me', { cache: 'no-store' });
-        if (response.ok) {
-          router.replace(from);
-          return;
-        }
-      } catch {
-        // Keep user on login page if session check fails.
-      } finally {
-        setCheckingSession(false);
-      }
+    if (!authLoading && user) {
+      router.replace(from);
     }
-
-    checkCurrentSession();
-  }, [from, router]);
+  }, [authLoading, user, from, router]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -51,20 +40,8 @@ function LoginForm() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error?.message || 'Login failed');
-        return;
-      }
-
-      router.push(from);
+      await login(identifier, password);
+      router.replace(from);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -72,7 +49,7 @@ function LoginForm() {
     }
   }
 
-  if (checkingSession) {
+  if (authLoading) {
     return <LoginSkeleton />;
   }
 

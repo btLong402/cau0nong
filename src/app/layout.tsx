@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
+import { SWRProvider } from "@/shared/providers/SWRProvider";
 
 const bodyFont = Inter({
   variable: "--font-body",
@@ -27,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <body className={`${bodyFont.variable} ${headingFont.variable} antialiased`}>
-        {children}
+        <SWRProvider>{children}</SWRProvider>
       </body>
     </html>
   );

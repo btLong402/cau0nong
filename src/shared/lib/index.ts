@@ -18,3 +18,8 @@ export {
   PG_ERROR_CODES,
   SUPABASE_ERROR_CODES,
 } from "./supabase-errors";
+
+// ============================================
+// API Client
+// ============================================
+export { apiRequest, apiFetcher, ApiRequestError } from "./api-client";

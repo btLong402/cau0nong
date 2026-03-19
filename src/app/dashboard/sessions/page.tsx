@@ -3,7 +3,14 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { CustomSelect } from '@/shared/components/CustomSelect';
-import { useAuth } from '@/shared/hooks';
+import {
+  useAuth,
+  useCreateSession,
+  useMembers,
+  useMonths,
+  useSessions,
+  useUpdateSession,
+} from '@/shared/hooks';
 
 interface Month {
   id: number;
@@ -22,10 +29,24 @@ interface Session {
 
 export default function SessionsPage() {
   const { user: authUser } = useAuth();
-  const [months, setMonths] = useState<Month[]>([]);
-  const [sessions, setSessions] = useState<Session[]>([]);
+  const {
+    months,
+    loading: monthsLoading,
+    error: monthsError,
+  } = useMonths();
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
+  const {
+    sessions,
+    loading: sessionsLoading,
+    error: sessionsError,
+    refetch: refetchSessions,
+  } = useSessions(selectedMonth ?? 0);
+  const { members: users } = useMembers(1, 200, {
+    enabled: authUser?.role === 'admin',
+  });
+  const { create, loading: creatingSession } = useCreateSession();
+  const { update } = useUpdateSession();
+
   const [showNewSessionForm, setShowNewSessionForm] = useState(false);
   const [creating, setCreating] = useState(false);
 
@@ -34,79 +55,37 @@ export default function SessionsPage() {
   const [courtExpense, setCourtExpense] = useState('');
   const [payerUserId, setPayerUserId] = useState('');
   const [notes, setNotes] = useState('');
-  const [users, setUsers] = useState<any[]>([]);
   const [formError, setFormError] = useState('');
 
   useEffect(() => {
-    async function fetchMonths() {
-      try {
-        const response = await fetch('/api/months');
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch months');
-        }
-
-        const data = await response.json();
-        const monthsList = data.data?.months || [];
-        setMonths(monthsList);
-
-        const openMonth = monthsList.find((m: Month) => m.status === 'open');
-        if (openMonth) {
-          setSelectedMonth(openMonth.id);
-        } else if (monthsList.length > 0) {
-          setSelectedMonth(monthsList[0].id);
-        }
-      } catch (error) {
-        console.error('Error fetching months:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    async function fetchUsers() {
-      try {
-        const response = await fetch('/api/users');
-        if (response.ok) {
-          const data = await response.json();
-          setUsers(data.data?.members || []);
-          if (data.data?.members?.length > 0) {
-            setPayerUserId(data.data.members[0].id);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching users:', error);
-      }
-    }
-
-    fetchMonths();
-    fetchUsers();
-  }, []);
-
-  useEffect(() => {
-    if (!selectedMonth) {
+    if (selectedMonth !== null || months.length === 0) {
       return;
     }
 
-    async function fetchSessions() {
-      try {
-        const response = await fetch(`/api/months/${selectedMonth}/sessions`);
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch sessions');
-        }
-
-        const data = await response.json();
-        setSessions(data.data?.sessions || []);
-      } catch (error) {
-        console.error('Error fetching sessions:', error);
-      }
+    const openMonth = months.find((m: Month) => m.status === 'open');
+    if (openMonth) {
+      setSelectedMonth(openMonth.id);
+    } else {
+      setSelectedMonth(months[0].id);
     }
+  }, [months, selectedMonth]);
 
-    fetchSessions();
+  useEffect(() => {
+    if (sessionDate) {
+      return;
+    }
 
     const today = new Date().toISOString().split('T')[0];
     setSessionDate(today);
-  }, [selectedMonth]);
+  }, [sessionDate]);
+
+  useEffect(() => {
+    if (!users.length || payerUserId) {
+      return;
+    }
+
+    setPayerUserId(users[0].id);
+  }, [payerUserId, users]);
 
   async function handleCreateSession() {
     if (!selectedMonth || !sessionDate || !courtExpense || !payerUserId) {
@@ -118,26 +97,14 @@ export default function SessionsPage() {
     setFormError('');
 
     try {
-      const response = await fetch(`/api/months/${selectedMonth}/sessions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          session_date: sessionDate,
-          court_expense_amount: parseInt(courtExpense, 10),
-          payer_user_id: payerUserId,
-          notes: notes,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error?.message || 'Không thể tạo buổi tập');
-      }
-
-      const data = await response.json();
-      setSessions((prev) => [data.data.session, ...prev]);
+      await create(
+        selectedMonth,
+        sessionDate,
+        parseInt(courtExpense, 10),
+        payerUserId,
+        notes,
+      );
+      await refetchSessions();
       setShowNewSessionForm(false);
       
       setCourtExpense('');
@@ -147,6 +114,18 @@ export default function SessionsPage() {
     } finally {
       setCreating(false);
     }
+  }
+
+  const loading = monthsLoading || (selectedMonth !== null && sessionsLoading);
+
+  if (monthsError || sessionsError) {
+    return (
+      <div className="surface-card p-5 border-l-4 border-l-[var(--danger)]">
+        <p className="text-sm text-[var(--danger)]">
+          Không thể tải dữ liệu buổi tập. Vui lòng thử lại.
+        </p>
+      </div>
+    );
   }
 
   if (loading) {
@@ -250,10 +229,10 @@ export default function SessionsPage() {
             <div className="flex gap-2 pt-1">
               <button 
                 onClick={handleCreateSession}
-                disabled={creating}
+                disabled={creating || creatingSession}
                 className="btn-primary flex-1"
               >
-                {creating ? 'Đang tạo...' : 'Tạo'}
+                {creating || creatingSession ? 'Đang tạo...' : 'Tạo'}
               </button>
               <button
                 onClick={() => setShowNewSessionForm(false)}
@@ -311,16 +290,10 @@ export default function SessionsPage() {
                       <button
                         onClick={async () => {
                           if (!confirm('Bạn có chắc muốn đóng buổi tập này? Sau khi đóng sẽ không thể sửa điểm danh.')) return;
+                          if (!selectedMonth) return;
                           try {
-                            const res = await fetch(`/api/months/${selectedMonth}/sessions/${session.id}`, {
-                              method: 'PUT',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ status: 'closed' }),
-                            });
-                            if (res.ok) {
-                              const data = await res.json();
-                              setSessions(prev => prev.map(s => s.id === session.id ? data.data.session : s));
-                            }
+                            await update(selectedMonth, session.id, { status: 'closed' });
+                            await refetchSessions();
                           } catch (err) {
                             console.error('Error closing session:', err);
                           }

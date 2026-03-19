@@ -3,11 +3,14 @@
  * Handles loading, error, and data states for GET requests
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import useSWR from 'swr';
+import { apiFetcher } from '@/shared/lib';
 
 export interface UseFetchOptions {
   skip?: boolean;
   refetch?: number; // milliseconds to refetch
+  revalidateOnFocus?: boolean;
+  dedupingInterval?: number;
 }
 
 interface UseFetchState<T> {
@@ -20,58 +23,24 @@ export function useFetch<T>(
   url: string,
   options?: UseFetchOptions,
 ): UseFetchState<T> & { refetch: () => Promise<void> } {
-  const [state, setState] = useState<UseFetchState<T>>({
-    data: null,
-    loading: true,
-    error: null,
-  });
+  const { data, error, isLoading, mutate } = useSWR<T>(
+    options?.skip ? null : url,
+    apiFetcher,
+    {
+      refreshInterval: options?.refetch,
+      revalidateOnFocus: options?.revalidateOnFocus,
+      dedupingInterval: options?.dedupingInterval,
+    },
+  );
 
-  const refetch = useCallback(async () => {
-    setState((prev) => ({ ...prev, loading: true }));
-    try {
-      const response = await fetch(url, {
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-      setState({
-        data: data.data || null,
-        loading: false,
-        error: null,
-      });
-    } catch (error) {
-      setState({
-        data: null,
-        loading: false,
-        error: error instanceof Error ? error : new Error('Unknown error'),
-      });
-    }
-  }, [url]);
-
-  useEffect(() => {
-    if (options?.skip) {
-      setState({
-        data: null,
-        loading: false,
-        error: null,
-      });
-      return;
-    }
-
-    refetch();
-
-    if (options?.refetch) {
-      const interval = setInterval(refetch, options.refetch);
-      return () => clearInterval(interval);
-    }
-  }, [url, options?.skip, options?.refetch, refetch]);
+  async function refetch() {
+    await mutate();
+  }
 
   return {
-    ...state,
+    data: data ?? null,
+    loading: Boolean(!options?.skip && isLoading),
+    error: (error as Error | null) ?? null,
     refetch,
   };
 }

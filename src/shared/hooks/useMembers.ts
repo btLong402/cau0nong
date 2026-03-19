@@ -3,17 +3,23 @@
  * Manage member list, pagination, and member details
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useFetch } from './useFetch';
+import { mutate } from 'swr';
+import { apiRequest } from '@/shared/lib';
 
 export interface Member {
   id: string;
   name: string;
+  username: string;
   email: string;
   phone: string;
   role: 'admin' | 'member';
   balance: number;
   is_active: boolean;
+  approval_status: 'pending' | 'approved' | 'rejected';
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface MembersResponse {
@@ -24,9 +30,19 @@ interface MembersResponse {
   hasMore: boolean;
 }
 
-export function useMembers(page: number = 1, limit: number = 20) {
+interface UseMembersOptions {
+  enabled?: boolean;
+}
+
+export function useMembers(
+  page: number = 1,
+  limit: number = 20,
+  options?: UseMembersOptions,
+) {
   const url = `/api/users?page=${page}&limit=${limit}`;
-  const { data, loading, error, refetch } = useFetch<MembersResponse>(url);
+  const { data, loading, error, refetch } = useFetch<MembersResponse>(url, {
+    skip: options?.enabled === false,
+  });
 
   return {
     members: data?.members || [],
@@ -65,23 +81,15 @@ export function useUpdateMember() {
       setState({ loading: true, error: null });
 
       try {
-        const response = await fetch(`/api/users/${memberId}`, {
-          credentials: 'include',
+        const data = await apiRequest<{ user: Member }>(`/api/users/${memberId}`, {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
           body: JSON.stringify(updates),
         });
 
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error?.message || 'Failed to update member');
-        }
+        await mutate((key) => typeof key === 'string' && key.startsWith('/api/users'));
 
         setState({ loading: false, error: null });
-        return data.data?.user;
+        return data.user;
       } catch (error) {
         const err =
           error instanceof Error ? error : new Error('Failed to update member');
@@ -109,23 +117,15 @@ export function useUpdateMemberBalance() {
       setState({ loading: true, error: null });
 
       try {
-        const response = await fetch(`/api/users/${memberId}/balance`, {
-          credentials: 'include',
+        const data = await apiRequest<{ user: Member }>(`/api/users/${memberId}/balance`, {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
           body: JSON.stringify({ amount }),
         });
 
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error?.message || 'Failed to update balance');
-        }
+        await mutate((key) => typeof key === 'string' && key.startsWith('/api/users'));
 
         setState({ loading: false, error: null });
-        return data.data?.user;
+        return data.user;
       } catch (error) {
         const err =
           error instanceof Error

@@ -38,10 +38,17 @@ describe('AuthService', () => {
     mockAdminClient = {
       from: vi.fn().mockReturnThis(),
       select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
       or: vi.fn().mockReturnThis(),
       limit: vi.fn().mockReturnThis(),
       single: vi.fn(),
       insert: vi.fn().mockResolvedValue({ error: null }),
+      auth: {
+        admin: {
+          getUserById: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
+          updateUserById: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
+        },
+      },
     };
 
     service = new AuthService(mockSupabase);
@@ -170,6 +177,15 @@ describe('AuthService', () => {
       await expect(service.signIn(validData)).rejects.toThrow(AuthenticationError);
     });
 
+    it('should throw explicit error when email is not confirmed', async () => {
+      mockSupabase.auth.signInWithPassword.mockResolvedValueOnce({
+        data: { user: null, session: null },
+        error: { message: 'Email not confirmed' },
+      });
+
+      await expect(service.signIn(validData)).rejects.toThrow('Email chưa được xác nhận');
+    });
+
     it('should throw ServerError if authData.user or session is missing without error', async () => {
       mockSupabase.auth.signInWithPassword.mockResolvedValueOnce({
         data: { user: { id: 'u1' }, session: null }, // Valid user, missing session
@@ -182,6 +198,72 @@ describe('AuthService', () => {
     it('should wrap unknown errors in ServerError unless it is AuthenticationError', async () => {
       mockSupabase.auth.signInWithPassword.mockRejectedValueOnce(new Error('DB connection dead'));
       await expect(service.signIn(validData)).rejects.toThrow(ServerError);
+    });
+
+    it('should resolve username to email before password sign-in', async () => {
+      mockAdminClient.single.mockResolvedValueOnce({
+        data: { id: 'u2', email: 'member@test.com' },
+        error: null,
+      });
+      mockAdminClient.auth.admin.getUserById.mockResolvedValueOnce({
+        data: { user: { id: 'u2', email: 'member@test.com' } },
+        error: null,
+      });
+      mockSupabase.auth.signInWithPassword.mockResolvedValueOnce({
+        data: { user: { id: 'u2', email: 'member@test.com' }, session: { access_token: 'token-2' } },
+        error: null,
+      });
+      mockSupabase.single.mockResolvedValueOnce({
+        data: {
+          username: 'member01',
+          name: 'Member 01',
+          role: 'member',
+          approval_status: 'approved',
+          is_active: true,
+        },
+        error: null,
+      });
+
+      const result = await service.signIn({ identifier: 'member01', password: '123' });
+
+      expect(mockSupabase.auth.signInWithPassword).toHaveBeenCalledWith({
+        email: 'member@test.com',
+        password: '123',
+      });
+      expect(result.user.username).toBe('member01');
+      expect(result.token).toBe('token-2');
+    });
+
+    it('should use auth email when profile email is outdated for username login', async () => {
+      mockAdminClient.single.mockResolvedValueOnce({
+        data: { id: 'u3', email: 'old-profile-email@test.com' },
+        error: null,
+      });
+      mockAdminClient.auth.admin.getUserById.mockResolvedValueOnce({
+        data: { user: { id: 'u3', email: 'real-auth-email@test.com' } },
+        error: null,
+      });
+      mockSupabase.auth.signInWithPassword.mockResolvedValueOnce({
+        data: { user: { id: 'u3', email: 'real-auth-email@test.com' }, session: { access_token: 'token-3' } },
+        error: null,
+      });
+      mockSupabase.single.mockResolvedValueOnce({
+        data: {
+          username: 'longbt',
+          name: 'Long',
+          role: 'member',
+          approval_status: 'approved',
+          is_active: true,
+        },
+        error: null,
+      });
+
+      await service.signIn({ identifier: 'longbt', password: '123456' });
+
+      expect(mockSupabase.auth.signInWithPassword).toHaveBeenCalledWith({
+        email: 'real-auth-email@test.com',
+        password: '123456',
+      });
     });
   });
 

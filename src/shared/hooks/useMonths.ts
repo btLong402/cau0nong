@@ -5,6 +5,8 @@
 
 import { useState, useCallback } from 'react';
 import { useFetch } from './useFetch';
+import { mutate } from 'swr';
+import { apiRequest } from '@/shared/lib';
 
 export interface Month {
   id: number;
@@ -63,23 +65,15 @@ export function useCreateMonth() {
       setState({ loading: true, error: null });
 
       try {
-        const response = await fetch('/api/months', {
-          credentials: 'include',
+        const data = await apiRequest<{ month: Month }>('/api/months', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
           body: JSON.stringify({ month_year: monthYear, status }),
         });
 
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error?.message || 'Failed to create month');
-        }
+        await mutate((key) => typeof key === 'string' && key.startsWith('/api/months'));
 
         setState({ loading: false, error: null });
-        return data.data?.month;
+        return data.month;
       } catch (error) {
         const err =
           error instanceof Error ? error : new Error('Failed to create month');
@@ -107,23 +101,15 @@ export function useUpdateMonth() {
       setState({ loading: true, error: null });
 
       try {
-        const response = await fetch(`/api/months/${monthId}`, {
-          credentials: 'include',
+        const data = await apiRequest<{ month: Month }>(`/api/months/${monthId}`, {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
           body: JSON.stringify(updates),
         });
 
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error?.message || 'Failed to update month');
-        }
+        await mutate((key) => typeof key === 'string' && key.startsWith('/api/months'));
 
         setState({ loading: false, error: null });
-        return data.data?.month;
+        return data.month;
       } catch (error) {
         const err =
           error instanceof Error ? error : new Error('Failed to update month');
@@ -150,19 +136,14 @@ export function useCloseMonth() {
     setState({ loading: true, error: null });
 
     try {
-      const response = await fetch(`/api/months/${monthId}/close`, {
-        credentials: 'include',
+      const data = await apiRequest<{ month: Month }>(`/api/months/${monthId}/close`, {
         method: 'PUT',
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error?.message || 'Failed to close month');
-      }
+      await mutate((key) => typeof key === 'string' && key.startsWith('/api/months'));
 
       setState({ loading: false, error: null });
-      return data.data?.month;
+      return data.month;
     } catch (error) {
       const err =
         error instanceof Error ? error : new Error('Failed to close month');

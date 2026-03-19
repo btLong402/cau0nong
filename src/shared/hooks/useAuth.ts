@@ -21,56 +21,124 @@ interface AuthState {
   error: Error | null;
 }
 
-export function useAuth() {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    token: null,
-    loading: true,
-    error: null,
-  });
+const initialAuthState: AuthState = {
+  user: null,
+  token: null,
+  loading: true,
+  error: null,
+};
 
-  // Initialize auth from server session cookie.
-  useEffect(() => {
-    fetchCurrentUser();
-  }, []);
+let authStateCache: AuthState = initialAuthState;
+let authInitialized = false;
+let authRequestInFlight: Promise<void> | null = null;
+const authSubscribers = new Set<(state: AuthState) => void>();
+let pendingStateUpdate: AuthState | null = null;
+let updateScheduled = false;
 
-  async function fetchCurrentUser() {
+function scheduleStateUpdate(nextState: AuthState) {
+  pendingStateUpdate = nextState;
+  
+  if (!updateScheduled) {
+    updateScheduled = true;
+    // Batch updates in microtask queue
+    Promise.resolve().then(() => {
+      if (pendingStateUpdate) {
+        authStateCache = pendingStateUpdate;
+        authSubscribers.forEach((subscriber) => subscriber(authStateCache));
+        pendingStateUpdate = null;
+      }
+      updateScheduled = false;
+    });
+  }
+}
+
+function publishAuthState(nextState: AuthState) {
+  // Only update if state actually changed
+  if (
+    authStateCache.user?.id === nextState.user?.id &&
+    authStateCache.loading === nextState.loading &&
+    authStateCache.error === nextState.error
+  ) {
+    return;
+  }
+  
+  scheduleStateUpdate(nextState);
+}
+
+function updateAuthState(updater: (prev: AuthState) => AuthState) {
+  publishAuthState(updater(authStateCache));
+}
+
+async function syncCurrentUser(force = false): Promise<void> {
+  if (authRequestInFlight) {
+    return authRequestInFlight;
+  }
+
+  if (authInitialized && !force) {
+    return;
+  }
+
+  authRequestInFlight = (async () => {
     try {
-        const response = await fetch('/api/auth/me', {
-          cache: 'no-store',
-          credentials: 'include',
-        });
+      const response = await fetch('/api/auth/me', {
+        cache: 'no-store',
+        credentials: 'include',
+      });
 
       if (!response.ok) {
-        setState({
+        publishAuthState({
           user: null,
           token: null,
           loading: false,
           error: null,
         });
+        authInitialized = true;
         return;
       }
 
       const data = await response.json();
-      setState({
+      publishAuthState({
         user: data.data?.user || null,
         token: null,
         loading: false,
         error: null,
       });
+      authInitialized = true;
     } catch (error) {
-      setState({
+      publishAuthState({
         user: null,
         token: null,
         loading: false,
         error: error instanceof Error ? error : new Error('Failed to fetch user'),
       });
+      authInitialized = true;
+    } finally {
+      authRequestInFlight = null;
     }
-  }
+  })();
+
+  return authRequestInFlight;
+}
+
+export function useAuth() {
+  const [state, setState] = useState<AuthState>(authStateCache);
+
+  // Initialize auth from server session cookie.
+  useEffect(() => {
+    authSubscribers.add(setState);
+
+    if (!authInitialized && !authRequestInFlight) {
+      void syncCurrentUser();
+    }
+
+    return () => {
+      authSubscribers.delete(setState);
+    };
+  }, []);
 
   const login = useCallback(
-    async (email: string, password: string) => {
-      setState((prev) => ({
+    async (identifier: string, password: string) => {
+      updateAuthState((prev) => ({
         ...prev,
         loading: true,
         error: null,
@@ -82,7 +150,8 @@ export function useAuth() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ email, password }),
+          credentials: 'include',
+          body: JSON.stringify({ identifier, password }),
         });
 
         const data = await response.json();
@@ -91,18 +160,19 @@ export function useAuth() {
           throw new Error(data.error?.message || 'Login failed');
         }
 
-        setState({
+        publishAuthState({
           user: data.data?.user,
           token: data.data?.token || null,
           loading: false,
           error: null,
         });
+        authInitialized = true;
 
         return { user: data.data?.user, token: data.data?.token || null };
       } catch (error) {
         const err =
           error instanceof Error ? error : new Error('Login failed');
-        setState((prev) => ({
+        updateAuthState((prev) => ({
           ...prev,
           loading: false,
           error: err,
@@ -121,7 +191,7 @@ export function useAuth() {
       phone: string,
       password: string,
     ) => {
-      setState((prev) => ({
+      updateAuthState((prev) => ({
         ...prev,
         loading: true,
         error: null,
@@ -149,18 +219,19 @@ export function useAuth() {
         }
 
         // After signup, user needs to login
-        setState({
+        publishAuthState({
           user: null,
           token: null,
           loading: false,
           error: null,
         });
+        authInitialized = true;
 
         return data.data?.user;
       } catch (error) {
         const err =
           error instanceof Error ? error : new Error('Registration failed');
-        setState((prev) => ({
+        updateAuthState((prev) => ({
           ...prev,
           loading: false,
           error: err,
@@ -177,12 +248,13 @@ export function useAuth() {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      setState({
+      publishAuthState({
         user: null,
         token: null,
         loading: false,
         error: null,
       });
+      authInitialized = true;
     }
   }, []);
 
@@ -201,19 +273,21 @@ export function useAuth() {
 
       const newToken = data.data?.token;
 
-      setState({
+      publishAuthState({
         user: data.data?.user,
         token: newToken || null,
         loading: false,
         error: null,
       });
+      authInitialized = true;
 
       return newToken;
     } catch (error) {
       // Token refresh failed, logout
-      logout();
+      await logout();
+      return null;
     }
-  }, [state.token, logout]);
+  }, [logout]);
 
   return {
     ...state,

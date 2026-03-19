@@ -3,7 +3,14 @@
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/shared/hooks';
+import {
+  useAuth,
+  useMembers,
+  useMonths,
+  useRecordAttendance,
+  useSession,
+  useSessionAttendance,
+} from '@/shared/hooks';
 
 interface User {
   id: string;
@@ -11,75 +18,52 @@ interface User {
   email: string;
 }
 
-interface Attendance {
-  user_id: string;
-  is_attended: boolean;
-}
-
-interface Session {
-  id: number;
-  month_id: number;
-  session_date: string;
-  court_expense_amount: number;
-  notes?: string;
-  status: 'open' | 'closed';
-}
-
 export default function AttendancePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { id: sessionId } = use(params);
+  const sessionIdNumber = Number(sessionId);
   const { user: authUser } = useAuth();
-  
-  const [session, setSession] = useState<Session | null>(null);
-  const [monthStatus, setMonthStatus] = useState<string>('open');
-  const [users, setUsers] = useState<User[]>([]);
+  const {
+    session,
+    loading: sessionLoading,
+    error: sessionError,
+  } = useSession(0, Number.isNaN(sessionIdNumber) ? 0 : sessionIdNumber);
+  const { months, loading: monthsLoading, error: monthsError } = useMonths();
+  const monthStatus = months.find((month) => month.id === session?.month_id)?.status || 'open';
+  const {
+    members: users,
+    loading: usersLoading,
+    error: usersError,
+  } = useMembers(1, 200, {
+    enabled: authUser?.role === 'admin',
+  });
+  const {
+    attendance: attendanceList,
+    loading: attendanceLoading,
+    error: attendanceError,
+    refetch: refetchAttendance,
+  } = useSessionAttendance(
+    session?.month_id || 0,
+    Number.isNaN(sessionIdNumber) ? 0 : sessionIdNumber,
+  );
+  const { record } = useRecordAttendance();
+
   const [attendance, setAttendance] = useState<Record<string, boolean>>({});
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const usersResponse = await fetch('/api/users');
-        const usersData = await usersResponse.json();
-        const allUsers = usersData.data?.members || [];
-        setUsers(allUsers);
-
-        const sessionResponse = await fetch(`/api/months/0/sessions/${sessionId}`); 
-        const sessionData = await sessionResponse.json();
-        const sessionObj = sessionData.data?.session;
-        setSession(sessionObj);
-
-        if (sessionObj) {
-          const monthRes = await fetch('/api/months');
-          const monthData = await monthRes.json();
-          const currentMonth = monthData.data?.months?.find((m: any) => m.id === sessionObj.month_id);
-          if (currentMonth) {
-            setMonthStatus(currentMonth.status);
-          }
-
-          const attendanceResponse = await fetch(`/api/months/${sessionObj.month_id}/sessions/${sessionId}/attendance`);
-          const attendanceData = await attendanceResponse.json();
-          const existingAttendance = attendanceData.data?.attendance || [];
-          
-          const attendanceMap: Record<string, boolean> = {};
-          existingAttendance.forEach((item: any) => {
-            attendanceMap[item.user_id] = item.is_attended;
-          });
-          setAttendance(attendanceMap);
-        }
-      } catch (err) {
-        console.error('Error fetching attendance data:', err);
-        setError('Không thể tải dữ liệu điểm danh. Vui lòng thử lại sau.');
-      } finally {
-        setLoading(false);
-      }
+    if (!attendanceList.length) {
+      return;
     }
 
-    fetchData();
-  }, [sessionId]);
+    const attendanceMap: Record<string, boolean> = {};
+    attendanceList.forEach((item) => {
+      attendanceMap[item.user_id] = item.is_attended;
+    });
+    setAttendance(attendanceMap);
+  }, [attendanceList]);
 
   const toggleAttendance = (userId: string) => {
     if (monthStatus === 'closed' || session?.status === 'closed') return;
@@ -96,23 +80,14 @@ export default function AttendancePage({ params }: { params: Promise<{ id: strin
     setError('');
     setSuccess(false);
 
-    const records = Object.entries(attendance).map(([userId, isAttended]) => ({
-      userId,
-      isAttended,
+    const records = Object.entries(attendance).map(([user_id, is_attended]) => ({
+      user_id,
+      is_attended,
     }));
 
     try {
-      const response = await fetch(`/api/months/${session.month_id}/sessions/${sessionId}/attendance`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ records }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Không thể lưu điểm danh');
-      }
+      await record(session.month_id, session.id, records);
+      await refetchAttendance();
 
       setSuccess(true);
       setTimeout(() => {
@@ -124,6 +99,24 @@ export default function AttendancePage({ params }: { params: Promise<{ id: strin
       setSaving(false);
     }
   };
+
+  const loading =
+    sessionLoading ||
+    monthsLoading ||
+    attendanceLoading ||
+    (authUser?.role === 'admin' && usersLoading);
+
+  const dataError =
+    sessionError ||
+    monthsError ||
+    attendanceError ||
+    (authUser?.role === 'admin' ? usersError : null);
+
+  useEffect(() => {
+    if (dataError) {
+      setError(dataError.message || 'Không thể tải dữ liệu điểm danh. Vui lòng thử lại sau.');
+    }
+  }, [dataError]);
 
   const attendedCount = Object.values(attendance).filter(Boolean).length;
 
