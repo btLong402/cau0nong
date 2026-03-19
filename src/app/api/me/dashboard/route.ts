@@ -99,6 +99,7 @@ export const GET = createGetHandler({
             name: profile.name,
             phone: profile.phone,
             email: profile.email,
+            avatar_url: profile.avatar_url || null,
             balance: profile.balance,
             role: profile.role,
           }

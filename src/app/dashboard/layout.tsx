@@ -100,9 +100,29 @@ function NavIcon({ name, className = '' }: { name: string; className?: string })
 /*  User avatar                                                        */
 /* ------------------------------------------------------------------ */
 
-function UserAvatar({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' }) {
+function UserAvatar({
+  name,
+  avatarUrl,
+  size = 'md',
+}: {
+  name: string;
+  avatarUrl?: string | null;
+  size?: 'sm' | 'md';
+}) {
   const initial = (name || '?').charAt(0).toUpperCase();
   const sizeClass = size === 'sm' ? 'h-8 w-8 text-xs' : 'h-10 w-10 text-sm';
+
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={`Avatar của ${name}`}
+        className={`${sizeClass} rounded-full object-cover border border-[var(--surface-border)]`}
+        loading="lazy"
+      />
+    );
+  }
+
   return (
     <div className={`${sizeClass} flex items-center justify-center rounded-full bg-[var(--primary-soft)] font-bold text-[var(--primary)]`}>
       {initial}
@@ -204,7 +224,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* User section */}
         <div className="border-t border-[var(--surface-border)] p-4">
           <div className="flex items-center gap-3 rounded-lg bg-[var(--surface-hover)] p-3">
-            <UserAvatar name={user.name || user.email} />
+            <UserAvatar name={user.name || user.email} avatarUrl={user.avatar_url} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-[var(--foreground)]">
                 {user.name || user.email}
@@ -270,7 +290,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
             {/* User info */}
             <div className="flex items-center gap-3 px-5 pb-3 mb-1 border-b border-[var(--surface-border)]">
-              <UserAvatar name={user.name || user.email} size="sm" />
+              <UserAvatar name={user.name || user.email} avatarUrl={user.avatar_url} size="sm" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-[var(--foreground)]">
                   {user.name || user.email}

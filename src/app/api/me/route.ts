@@ -45,9 +45,25 @@ const updateMyProfileSchema = z.object({
     .string()
     .trim()
     .min(2, "Name must be at least 2 characters")
-    .max(100, "Name must be at most 100 characters"),
-  phone: phoneSchema,
-});
+    .max(100, "Name must be at most 100 characters")
+    .optional(),
+  phone: phoneSchema.optional(),
+  avatar_url: z
+    .union([
+      z.string().trim().url("Invalid avatar URL format"),
+      z.literal(""),
+      z.null(),
+    ])
+    .optional(),
+}).refine(
+  (data) =>
+    data.name !== undefined ||
+    data.phone !== undefined ||
+    data.avatar_url !== undefined,
+  {
+    message: "At least one profile field must be provided",
+  }
+);
 
 type UpdateMyProfileRequest = z.infer<typeof updateMyProfileSchema>;
 
@@ -71,10 +87,13 @@ export const PUT = createPutHandler<UpdateMyProfileRequest>({
   handler: async (req, context, validatedData) => {
     const authContext = context as RequestContext;
     const usersService = await createUsersService();
+    const avatarUrl =
+      validatedData?.avatar_url === "" ? null : validatedData?.avatar_url;
 
     const user = await usersService.updateMember(authContext.auth.userId, {
       name: validatedData?.name,
       phone: validatedData?.phone,
+      avatar_url: avatarUrl,
     });
 
     return { user };

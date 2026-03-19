@@ -12,6 +12,7 @@ export interface User {
   phone: string;
   role: 'admin' | 'member';
   balance: number;
+  avatar_url?: string | null;
 }
 
 interface AuthState {
@@ -53,9 +54,22 @@ function scheduleStateUpdate(nextState: AuthState) {
 }
 
 function publishAuthState(nextState: AuthState) {
+  const currentUser = authStateCache.user;
+  const nextUser = nextState.user;
+
+  const isSameUser =
+    currentUser?.id === nextUser?.id &&
+    currentUser?.name === nextUser?.name &&
+    currentUser?.email === nextUser?.email &&
+    currentUser?.phone === nextUser?.phone &&
+    currentUser?.role === nextUser?.role &&
+    currentUser?.balance === nextUser?.balance &&
+    currentUser?.avatar_url === nextUser?.avatar_url;
+
   // Only update if state actually changed
   if (
-    authStateCache.user?.id === nextState.user?.id &&
+    isSameUser &&
+    authStateCache.token === nextState.token &&
     authStateCache.loading === nextState.loading &&
     authStateCache.error === nextState.error
   ) {
@@ -127,12 +141,23 @@ export function useAuth() {
   useEffect(() => {
     authSubscribers.add(setState);
 
+    const handleUserUpdated = () => {
+      void syncCurrentUser(true);
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('auth:user-updated', handleUserUpdated);
+    }
+
     if (!authInitialized && !authRequestInFlight) {
       void syncCurrentUser();
     }
 
     return () => {
       authSubscribers.delete(setState);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('auth:user-updated', handleUserUpdated);
+      }
     };
   }, []);
 
@@ -282,7 +307,7 @@ export function useAuth() {
       authInitialized = true;
 
       return newToken;
-    } catch (error) {
+    } catch {
       // Token refresh failed, logout
       await logout();
       return null;

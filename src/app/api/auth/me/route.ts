@@ -1,5 +1,4 @@
 import { createGetHandler } from '@/shared/api';
-import { decodeJWT } from '@/shared/api/auth-context';
 import { createAdminClient } from '@/lib/supabase';
 import { AuthenticationError } from '@/shared/api';
 
@@ -33,6 +32,7 @@ export const GET = createGetHandler({
         name: profile.name,
         phone: profile.phone,
         role: profile.role,
+        avatar_url: profile.avatar_url || null,
         balance: profile.balance || 0,
       },
     };

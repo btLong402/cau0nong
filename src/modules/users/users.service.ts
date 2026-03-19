@@ -21,6 +21,7 @@ export interface UpdateUserData {
   name?: string;
   email?: string;
   phone?: string;
+  avatar_url?: string | null;
 }
 
 /**
@@ -131,6 +132,8 @@ export class UsersService {
       name: data.name || user.name,
       email: data.email || user.email,
       phone: data.phone || user.phone,
+      avatar_url:
+        data.avatar_url === undefined ? user.avatar_url : data.avatar_url,
     });
   }
 

@@ -8,6 +8,7 @@ interface DashboardData {
     name: string;
     phone: string;
     email: string;
+    avatar_url?: string | null;
     balance: number;
     role: string;
   } | null;
@@ -71,6 +72,10 @@ export default function MyAccountPage() {
     name: '',
     phone: '',
   });
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
+  const [avatarObjectUrl, setAvatarObjectUrl] = useState<string | null>(null);
+  const [avatarInputKey, setAvatarInputKey] = useState(0);
 
   useEffect(() => {
     async function fetchDashboard() {
@@ -95,8 +100,55 @@ export default function MyAccountPage() {
         name: profile.name || '',
         phone: profile.phone || '',
       });
+      setAvatarPreviewUrl(profile.avatar_url || null);
+      setAvatarFile(null);
+      setAvatarObjectUrl((prev) => {
+        if (prev) {
+          URL.revokeObjectURL(prev);
+        }
+        return null;
+      });
+      setAvatarInputKey((prev) => prev + 1);
     }
   }, [data?.profile]);
+
+  useEffect(() => {
+    return () => {
+      if (avatarObjectUrl) {
+        URL.revokeObjectURL(avatarObjectUrl);
+      }
+    };
+  }, [avatarObjectUrl]);
+
+  function handleAvatarFileChange(file: File | null) {
+    if (!file) return;
+
+    const maxSize = 5 * 1024 * 1024;
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+    if (!allowedTypes.includes(file.type)) {
+      setFormError('Ảnh không hợp lệ. Chỉ hỗ trợ JPG, PNG, WEBP hoặc GIF.');
+      setFormSuccess(null);
+      return;
+    }
+
+    if (file.size > maxSize) {
+      setFormError('Ảnh quá lớn. Dung lượng tối đa là 5MB.');
+      setFormSuccess(null);
+      return;
+    }
+
+    setFormError(null);
+    setAvatarFile(file);
+
+    if (avatarObjectUrl) {
+      URL.revokeObjectURL(avatarObjectUrl);
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    setAvatarObjectUrl(objectUrl);
+    setAvatarPreviewUrl(objectUrl);
+  }
 
   async function handleSaveProfile() {
     if (!data?.profile || isSaving) return;
@@ -115,6 +167,26 @@ export default function MyAccountPage() {
     setFormSuccess(null);
 
     try {
+      let latestAvatarUrl = data.profile.avatar_url || null;
+
+      if (avatarFile) {
+        const avatarFormData = new FormData();
+        avatarFormData.append('avatar', avatarFile);
+
+        const avatarRes = await fetch('/api/me/avatar', {
+          method: 'POST',
+          credentials: 'include',
+          body: avatarFormData,
+        });
+        const avatarJson = await avatarRes.json();
+
+        if (!avatarRes.ok) {
+          throw new Error(avatarJson.error?.message || 'Không thể cập nhật avatar.');
+        }
+
+        latestAvatarUrl = avatarJson.data?.avatar_url || null;
+      }
+
       const res = await fetch('/api/me', {
         method: 'PUT',
         headers: {
@@ -144,9 +216,21 @@ export default function MyAccountPage() {
             name: updatedUser.name,
             phone: updatedUser.phone,
             email: updatedUser.email || prev.profile.email,
+            avatar_url: latestAvatarUrl,
           },
         };
       });
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('auth:user-updated'));
+      }
+
+      setAvatarFile(null);
+      setAvatarInputKey((prev) => prev + 1);
+      if (avatarObjectUrl) {
+        URL.revokeObjectURL(avatarObjectUrl);
+        setAvatarObjectUrl(null);
+      }
 
       setFormSuccess('Đã cập nhật thông tin cá nhân thành công.');
       setIsEditing(false);
@@ -163,10 +247,67 @@ export default function MyAccountPage() {
         name: data.profile.name,
         phone: data.profile.phone,
       });
+      setAvatarPreviewUrl(data.profile.avatar_url || null);
+    }
+
+    setAvatarFile(null);
+    setAvatarInputKey((prev) => prev + 1);
+    if (avatarObjectUrl) {
+      URL.revokeObjectURL(avatarObjectUrl);
+      setAvatarObjectUrl(null);
     }
     setFormError(null);
     setFormSuccess(null);
     setIsEditing(false);
+  }
+
+  async function handleRemoveAvatar() {
+    if (!data?.profile || isSaving) return;
+
+    setIsSaving(true);
+    setFormError(null);
+    setFormSuccess(null);
+
+    try {
+      const res = await fetch('/api/me/avatar', {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error?.message || 'Không thể xóa avatar.');
+      }
+
+      setData((prev) => {
+        if (!prev || !prev.profile) return prev;
+        return {
+          ...prev,
+          profile: {
+            ...prev.profile,
+            avatar_url: null,
+          },
+        };
+      });
+
+      setAvatarPreviewUrl(null);
+      setAvatarFile(null);
+      setAvatarInputKey((prev) => prev + 1);
+      if (avatarObjectUrl) {
+        URL.revokeObjectURL(avatarObjectUrl);
+        setAvatarObjectUrl(null);
+      }
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('auth:user-updated'));
+      }
+
+      setFormSuccess('Đã xóa avatar thành công.');
+    } catch (error: unknown) {
+      setFormError(getErrorMessage(error, 'Đã có lỗi xảy ra khi xóa avatar.'));
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   if (loading) {
@@ -204,9 +345,18 @@ export default function MyAccountPage() {
         <div className="surface-card p-5">
           <div className="flex items-center justify-between gap-4 mb-4">
             <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--primary-soft)] text-lg font-bold text-[var(--primary)]">
-              {profile.name.charAt(0).toUpperCase()}
-            </div>
+            {profile.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt={`Avatar của ${profile.name}`}
+                className="h-12 w-12 rounded-full object-cover border border-[var(--surface-border)]"
+                loading="lazy"
+              />
+            ) : (
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--primary-soft)] text-lg font-bold text-[var(--primary)]">
+                {profile.name.charAt(0).toUpperCase()}
+              </div>
+            )}
             <div>
               <h2 className="text-lg font-bold text-[var(--foreground)]">{profile.name}</h2>
               <p className="text-sm text-[var(--muted)]">{profile.role === 'admin' ? 'Quản trị viên' : 'Thành viên'}</p>
@@ -275,6 +425,32 @@ export default function MyAccountPage() {
                     placeholder="Nhập số điện thoại"
                   />
                 </label>
+
+                <label className="space-y-1 sm:col-span-2">
+                  <span className="text-xs text-[var(--muted)]">Ảnh avatar</span>
+                  <input
+                    key={avatarInputKey}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="input-field"
+                    onChange={(e) => handleAvatarFileChange(e.target.files?.[0] || null)}
+                  />
+                </label>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <p className="text-xs text-[var(--muted)]">Xem trước avatar:</p>
+                {avatarPreviewUrl ? (
+                  <img
+                    src={avatarPreviewUrl}
+                    alt="Xem trước avatar"
+                    className="h-10 w-10 rounded-full object-cover border border-[var(--surface-border)]"
+                  />
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--primary-soft)] text-sm font-bold text-[var(--primary)]">
+                    {profile.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
               </div>
 
               <div>
@@ -291,6 +467,16 @@ export default function MyAccountPage() {
                 >
                   {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
                 </button>
+                {(avatarPreviewUrl || profile.avatar_url) && (
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={handleRemoveAvatar}
+                    disabled={isSaving}
+                  >
+                    Xóa avatar
+                  </button>
+                )}
                 <button
                   type="button"
                   className="btn-secondary"

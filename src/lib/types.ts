@@ -13,7 +13,7 @@ export interface User {
   phone: string;
   email: string;
   role: UserRole;
-  avatar_url?: string;
+  avatar_url?: string | null;
   balance: number;
   is_active: boolean;
   approval_status: UserApprovalStatus;
