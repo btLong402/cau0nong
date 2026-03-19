@@ -24,13 +24,31 @@ fi
 
 source .env.local
 
-if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
-    echo -e "${RED}Error: Missing Supabase credentials in .env.local${NC}"
+if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ]; then
+    echo -e "${RED}Error: Missing NEXT_PUBLIC_SUPABASE_URL in .env.local${NC}"
+    exit 1
+fi
+
+if [ -z "$SUPABASE_DB_URL" ]; then
+    echo -e "${RED}Error: Missing SUPABASE_DB_URL in .env.local${NC}"
+    echo
+    echo "Add this variable to .env.local (from Supabase Project Settings -> Database -> Connection string):"
+    echo "  SUPABASE_DB_URL=postgresql://postgres:<password>@db.<project-ref>.supabase.co:5432/postgres?sslmode=require"
+    echo
+    echo "Note: URL must include sslmode=require"
+    exit 1
+fi
+
+if ! command -v psql >/dev/null 2>&1; then
+    echo -e "${RED}Error: 'psql' is not installed${NC}"
+    echo "Install PostgreSQL client tools first:"
+    echo "  brew install libpq"
+    echo "  brew link --force libpq"
     exit 1
 fi
 
 echo -e "${YELLOW}Supabase Project URL:${NC} $NEXT_PUBLIC_SUPABASE_URL"
-echo -e "${YELLOW}Applying migrations...${NC}\n"
+echo -e "${YELLOW}Applying migrations to database...${NC}\n"
 
 # Function to run SQL migration
 run_migration() {
@@ -43,17 +61,19 @@ run_migration() {
     fi
     
     echo -e "${YELLOW}Applying: $migration_file${NC}"
-    
-    # Extract the SQL content from the file
-    # This assumes you're using Supabase CLI or direct SQL execution
-    # For now, we'll just display instructions
-    
-    echo -e "${GREEN}✓ Migration ready: $migration_file${NC}"
-    echo "  → Copy the SQL from: $file_path"
-    echo "  → Paste into Supabase Dashboard → SQL Editor"
-    echo "  → Execute the migration"
+
+    # Execute SQL file directly against Supabase Postgres.
+    if psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f "$file_path" >/tmp/cau0nong_migration.log 2>&1; then
+        echo -e "${GREEN}✓ Applied: $migration_file${NC}"
+    else
+        echo -e "${RED}❌ Failed: $migration_file${NC}"
+        echo "----- psql output -----"
+        cat /tmp/cau0nong_migration.log
+        echo "-----------------------"
+        return 1
+    fi
+
     echo
-    
     return 0
 }
 
@@ -66,18 +86,10 @@ MIGRATIONS=(
 )
 
 for migration in "${MIGRATIONS[@]}"; do
-    run_migration "$migration"
+    run_migration "$migration" || exit 1
 done
 
-echo -e "\n${YELLOW}Manual Step Required:${NC}"
-echo "1. Go to https://app.supabase.com/project/<your-project-id>/sql"
-echo "2. Create a new query"
-echo "3. Chạy lần lượt các file migration trong src/db/migrations theo thứ tự số"
-echo "4. Execute từng migration"
-echo "5. Verify schema và index đã được cập nhật"
-echo
-
-echo -e "${GREEN}✓ Migration Instructions Complete${NC}"
+echo -e "${GREEN}✓ All migrations applied successfully${NC}"
 echo -e "\n${YELLOW}Next Steps:${NC}"
 echo "1. Run: npm run db:seed (to populate test data)"
 echo "2. Test API endpoints: npm run dev"
