@@ -18,6 +18,9 @@ const headingFont = Be_Vietnam_Pro({
 export const metadata: Metadata = {
   title: "CLB Cầu Lông | Quản Lý Vận Hành",
   description: "Hệ thống quản lý CLB cầu lông: thành viên, buổi tập, kỳ và quyết toán.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
