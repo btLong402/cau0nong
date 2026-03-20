@@ -154,7 +154,10 @@ export class ShuttlecocksService {
     const detail = await this.repository.findById(id);
     if (!detail) throw new NotFoundError("chi tiết mua cầu");
     
+    // Delete will verify success automatically
     await this.repository.deleteDetail(id);
+    
+    // Sync month total after successful deletion
     await this.syncMonthTotal(detail.month_id);
     return true;
   }

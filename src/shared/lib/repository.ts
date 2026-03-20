@@ -200,9 +200,17 @@ export class Repository<T extends Record<string, any>> {
 
   /**
    * Delete record by ID
+   * Verifies record exists before deleting and confirms deletion
    */
   async delete(id: string | number) {
     try {
+      // First, verify record exists
+      const existing = await this.findById(id);
+      if (!existing) {
+        throw new NotFoundError(`${this.tableName} with ${this.primaryKey}=${id} not found`);
+      }
+
+      // Perform delete
       const { error } = await this.supabase
         .from(this.tableName)
         .delete()
@@ -210,6 +218,21 @@ export class Repository<T extends Record<string, any>> {
 
       if (error) {
         throw error;
+      }
+
+      // Verify deletion was successful
+      try {
+        const stillExists = await this.findById(id);
+        if (stillExists) {
+          throw new Error(`Failed to delete ${this.tableName} record - record still exists after deletion`);
+        }
+      } catch (verifyError: any) {
+        // Expected: findById should throw NotFoundError if record was deleted
+        if (verifyError?.constructor?.name === 'NotFoundError' || verifyError?.message?.includes('not found')) {
+          // Good - record was actually deleted
+          return true;
+        }
+        throw verifyError;
       }
 
       return true;

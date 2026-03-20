@@ -246,6 +246,11 @@ CREATE POLICY "Only admins can update shuttlecock details"
   ON shuttlecock_details FOR UPDATE
   USING (public.is_admin());
 
+DROP POLICY IF EXISTS "Only admins can delete shuttlecock details" ON shuttlecock_details;
+CREATE POLICY "Only admins can delete shuttlecock details"
+  ON shuttlecock_details FOR DELETE
+  USING (public.is_admin());
+
 -- ============================================================================
 -- TABLE: monthly_settlements
 -- ============================================================================
